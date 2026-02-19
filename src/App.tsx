@@ -21,13 +21,10 @@ import avatarTable from './assets/avatar_table.svg';
 
 import evmConnectIcon from './assets/EVM_connect_logos.png';
 import tonConnectIcon from './assets/ton_connect.png';
-import walletConnectIcon from './assets/wallet_connect.png';
-import etherIcon from './assets/ether_icon.png';
 import sendIcon from './assets/send_icon.svg';
 import receiveIcon from './assets/receive_icon.svg';
 import sellIcon from './assets/sell_icon.svg';
 import { useTonWallet } from '@tonconnect/ui-react';
-import WalletConnectModal from './components/connectors/WalletConnectModal';
 import { useDispatch, useSelector } from 'react-redux';
 import { setConnectionState } from './redux/connectionSlice';
 
@@ -38,51 +35,41 @@ enum View {
     WALLET = 3,
 }
 
-// Thay đổi màu thanh tiêu đề Telegram sang màu xanh đậm của uST/SWC
+// Màu thương hiệu uST/SWC (Xanh đậm)
 WebApp.setHeaderColor('#00457C');
 
 const BRIDGE_URL = import.meta.env.VITE_BRIDGE_URL || '';
 
 function App() {
     const [view, setView] = useState<View>(View.LANDING);
-
-    const connectionState = useSelector(
-        (state: RootState) => state.connection.connectionState
-    );
-
+    const connectionState = useSelector((state: RootState) => state.connection.connectionState);
     const dispatch = useDispatch<AppDispatch>();
 
-    const skip = () => {
-        setView(view + 1);
-    };
+    const skip = () => setView(view + 1);
     const goBack = () => {
-        if (view === View.LANDING) {
-            return;
-        }
-        setView(view - 1);
+        if (view !== View.LANDING) setView(view - 1);
     };
-
-    const openWallet = () => {
-        setView(View.WALLET);
-    };
+    const openWallet = () => setView(View.WALLET);
 
     const [account, setAccount] = useState<string | null>(null);
     const [balance, setBalance] = useState<string | null>(null);
 
     const getAccountData = async () => {
         const providerId = window.localStorage.getItem('providerId');
-        await axios
-            .get(BRIDGE_URL + '/account/' + providerId, {
+        if (!providerId) return;
+        try {
+            const response = await axios.get(`${BRIDGE_URL}/account/${providerId}`, {
                 withCredentials: true,
                 headers: {
                     'Content-Type': 'application/json',
                     'ngrok-skip-browser-warning': 'true',
                 },
-            })
-            .then((response) => {
-                setAccount(response.data.account);
-                setBalance(response.data.balance);
             });
+            setAccount(response.data.account);
+            setBalance(response.data.balance);
+        } catch (error) {
+            console.error("Lỗi lấy dữ liệu ví:", error);
+        }
     };
 
     const handleConnect = () => {
@@ -91,25 +78,24 @@ function App() {
     };
 
     useEffect(() => {
-        if (view === View.CONNECTED) {
-            getAccountData();
-        }
+        if (view === View.CONNECTED) getAccountData();
     }, [view]);
 
     const tonWallet = useTonWallet();
     useEffect(() => {
-        if (!tonWallet) return;
+        if (tonWallet) {
+            // Xử lý ví TON nếu cần
+        }
     }, [tonWallet]);
 
     const [signedMessage, setSignedMessage] = useState<string | null>(null);
-    const triggerTestMessageSign = () => {
+    
+    const triggerTestMessageSign = async () => {
         const providerId = window.localStorage.getItem('providerId');
-        if (!providerId) return;
-        
         const wallet = window.localStorage.getItem('walletProvider');
-        if (!wallet) return;
-
         const uri = window.localStorage.getItem('walletConnectURI');
+
+        if (!providerId || !wallet || !uri) return;
 
         if (wallet === 'metamask') {
             WebApp.openLink(`https://metamask.app.link/wc?uri=${uri}`);
@@ -117,20 +103,17 @@ function App() {
             WebApp.openLink(`https://link.trustwallet.com/wc?uri=${uri}`);
         }
 
-        axios
-            .post(BRIDGE_URL + '/sign', {
+        try {
+            const response = await axios.post(`${BRIDGE_URL}/sign`, {
                 message: 'Xác nhận kết nối Cộng đồng SWC',
                 account: account,
                 providerId: providerId,
-            })
-            .then((response) => {
-                setSignedMessage(response.data.signature);
             });
+            setSignedMessage(response.data.signature);
+        } catch (error) {
+            console.error("Lỗi ký tin nhắn:", error);
+        }
     };
-
-    const sendFunds = () => {};
-    const receiveFunds = () => {};
-    const sell = () => {};
 
     const [showConnectOverlay, setShowConnectOverlay] = useState(false);
     const [slideAnimation, setSlideAnimation] = useState('in');
@@ -145,152 +128,95 @@ function App() {
     };
 
     const handleDisconnect = async () => {
-        WebApp.showConfirm(
-            'Bạn có chắc chắn muốn ngắt kết nối ví?',
-            async (confirmed: boolean) => {
-                if (!confirmed) return;
-                window.localStorage.removeItem('providerId');
-                window.localStorage.removeItem('walletConnectURI');
-                window.localStorage.removeItem('walletProvider');
-                window.localStorage.removeItem('walletconnect');
-                dispatch(setConnectionState('disconnected'));
-                setSignedMessage(null);
-                setView(View.CONNECT);
-
-                await axios.post(BRIDGE_URL + '/disconnect', {
-                    providerId: window.localStorage.getItem('providerId'),
-                });
-            }
-        );
+        WebApp.showConfirm('Bạn có chắc chắn muốn ngắt kết nối ví?', async (confirmed) => {
+            if (!confirmed) return;
+            const pid = window.localStorage.getItem('providerId');
+            window.localStorage.clear();
+            dispatch(setConnectionState('disconnected'));
+            setSignedMessage(null);
+            setView(View.CONNECT);
+            if (pid) await axios.post(`${BRIDGE_URL}/disconnect`, { providerId: pid });
+        });
     };
 
     return (
-        <div className="flex flex-col h-full min-h-screen w-screen rounded-xl bg-customGrayWallet">
+        <div className="flex flex-col h-full min-h-screen w-screen rounded-xl bg-customGrayWallet font-sans">
             {view === View.LANDING && (
                 <div className="flex flex-col flex-grow min-h-full justify-end">
                     <div className="components-container mb-2">
                         <SkipButton skip={skip} />
                         <Avatar src={avatarScooter} />
-                        <div className="flex flex-col bg-white pt-4 pr-8 pb-8 pl-8 gap-4 rounded-t-3xl rounded-b-xl shadow-custom-white">
-                            <div>
-                                <h2 className="headline text-blue-900">
-                                    Cộng Đồng SWC Việt Nam
-                                </h2>
-                            </div>
-                            <div>
-                                <p className="text-customGrayText mt-0 mr-0 mb-4 ml-0">
-                                    Chào mừng bạn đến với ứng dụng quản lý tài sản số của Cộng đồng nhà đầu tư uST.
-                                </p>
-                                <p className="text-customGrayText mt-0 mr-0 mb-4 ml-0">
-                                    Hãy kết nối ví của bạn để bắt đầu tham gia các hoạt động và nhận phần thưởng từ hệ sinh thái.
-                                </p>
-                            </div>
+                        <div className="flex flex-col bg-white pt-6 px-8 pb-8 gap-4 rounded-t-3xl shadow-lg">
+                            <h2 className="headline text-blue-800 text-2xl font-bold">Cộng Đồng SWC</h2>
+                            <p className="text-gray-600">Chào mừng bạn đến với ứng dụng quản lý tài sản số của Cộng đồng nhà đầu tư uST Việt Nam.</p>
+                            <p className="text-gray-600 text-sm italic">Kết nối ví để nhận phần thưởng SWGT từ hệ sinh thái.</p>
                         </div>
                     </div>
-                    <div className="p-2 mb-4">
-                        <PrimaryButton
-                            title="Bắt Đầu Kết Nối"
-                            callback={skip}
-                        />
+                    <div className="p-4 mb-4">
+                        <PrimaryButton title="Bắt Đầu Ngay" callback={skip} />
                     </div>
                 </div>
             )}
+
             {view === View.CONNECT && (
                 <div className="components-container">
-                    <div className={`transition-opacity duration-1000 ease-in-out ${showConnectOverlay && 'blur-sm brightness-90'}`}>
-                        <div className="flex justify-between">
+                    <div className={`transition-all duration-500 ${showConnectOverlay ? 'blur-md' : ''}`}>
+                        <div className="flex justify-between p-4">
                             <BackButton goBack={goBack} />
-                            {connectionState === 'connected' && <SkipButton skip={skip} />}
                         </div>
                         <Avatar src={avatarPhone} />
-                        <div className="flex flex-col absolute w-full bottom-0 bg-white pt-4 px-8 pb-14 gap-4 rounded-t-3xl rounded-b-xl shadow-custom-white">
-                            <h2 className="headline">KẾT NỐI VÍ</h2>
-                            <EVMConnectModal
-                                title="Ví EVM (Metamask/Trust)"
-                                icon={evmConnectIcon}
-                                callback={openConnectOverlay}
-                            />
-                            <TonConnectModal
-                                title="Ví TON"
-                                icon={tonConnectIcon}
-                            />
+                        <div className="flex flex-col absolute w-full bottom-0 bg-white pt-6 px-8 pb-10 gap-4 rounded-t-3xl shadow-2xl">
+                            <h2 className="headline text-xl font-bold text-center">KẾT NỐI VÍ CỦA BẠN</h2>
+                            <EVMConnectModal title="Ví Metamask / Trust" icon={evmConnectIcon} callback={openConnectOverlay} />
+                            <TonConnectModal title="Ví Telegram (TON)" icon={tonConnectIcon} />
                         </div>
                     </div>
                     {showConnectOverlay && (
-                        <ConnectOverlay
-                            slideAnimation={slideAnimation}
-                            close={closeConnectOverlay}
-                            onConnect={handleConnect}
-                            account={account}
-                        />
+                        <ConnectOverlay slideAnimation={slideAnimation} close={closeConnectOverlay} onConnect={handleConnect} account={account} />
                     )}
                 </div>
             )}
+
             {view === View.CONNECTED && (
-                <>
-                    <div className="components-container mb-2">
-                        <BackButton goBack={goBack} />
+                <div className="flex flex-col flex-grow justify-center px-4">
+                    <div className="bg-white rounded-3xl p-8 shadow-xl text-center">
                         <Avatar src={avatarTable} />
-                        <div className="flex flex-col bg-white pt-4 px-8 pb-2 min-h-fit gap-2 rounded-t-3xl rounded-b-xl shadow-custom-white">
-                            <h2 className="headline text-green-600">THÀNH CÔNG!</h2>
-                            <div className="text-xs break-all font-semibold text-center text-customGrayAddress">
-                                <p className="my-0 mx-auto">{account}</p>
-                            </div>
-                            <div className="flex flex-col items-center">
-                                <div className="flex justify-between items-center gap-4 text-lg font-semibold">
-                                    <p className="m-0">Tổng số dư</p>
-                                    <Tooltip
-                                        headline="Số dư"
-                                        content="Tổng số tài sản hiện có trong ví của bạn."
-                                    />
-                                </div>
-                                <div className="text-2xl font-bold mb-4">
-                                    {balance || 0}
-                                </div>
-                            </div>
+                        <h2 className="text-green-600 font-bold text-xl mt-4">KẾT NỐI THÀNH CÔNG</h2>
+                        <p className="text-xs text-gray-400 mt-2 break-all">{account}</p>
+                        <div className="mt-6 p-4 bg-gray-50 rounded-xl">
+                            <p className="text-gray-500 text-sm">Tổng số dư khả dụng</p>
+                            <p className="text-3xl font-black text-blue-900">{balance || 0} SWGT</p>
+                        </div>
+                        <div className="mt-8 flex flex-col gap-3">
+                            <PrimaryButton title="Quản Lý Ví" callback={openWallet} />
+                            <button onClick={handleDisconnect} className="text-red-500 text-sm font-medium py-2">Ngắt kết nối</button>
                         </div>
                     </div>
-                    <div className="flex flex-col gap-2 p-2 mb-4">
-                        <PrimaryButton
-                            title="Vào Ví Của Tôi"
-                            callback={openWallet}
-                        />
-                        <div>
-                            <PrimaryButton
-                                title="Ngắt Kết Nối"
-                                className="bg-red-200 border border-red-300 active:bg-red-300"
-                                textColor="customBlackText"
-                                callback={handleDisconnect}
-                            />
-                        </div>
-                    </div>
-                </>
+                </div>
             )}
+
             {view === View.WALLET && (
-                <div className="h-screen bg-customGrayWallet rounded-t-xl">
-                    <BackButton goBack={goBack} />
-                    <div className="flex flex-col gap-4 p-4">
-                        <div className="flex flex-col">
-                            <p className="m-0 text-xl font-semibold">Tổng số dư</p>
-                            <p className="m-0 text-5xl font-extrabold">
-                                <span className="text-customGrayAddress text-2xl mr-2">TOKEN</span>
-                                {balance || 0}
-                            </p>
-                        </div>
-                        <div className="flex justify-around gap-4 py-4 px-8">
-                            <TransactionButton text="Gửi" icon={sendIcon} callback={sendFunds} />
-                            <TransactionButton text="Nhận" icon={receiveIcon} callback={receiveFunds} />
-                            <TransactionButton text="Bán" icon={sellIcon} callback={sell} />
-                        </div>
-                        <div className="flex flex-col min-h-32 gap-2">
-                            <TransactionHistoryItem currency="SWGT Token" symbol="SWGT" valueSpot={parseFloat(balance || '0.0')} />
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <PrimaryButton
-                                title="Xác minh giao dịch thử nghiệm"
-                                callback={triggerTestMessageSign}
-                            />
-                        </div>
+                <div className="flex flex-col h-full p-6 bg-white rounded-t-3xl mt-10 shadow-2xl">
+                    <div className="flex items-center mb-8">
+                        <BackButton goBack={goBack} />
+                        <h2 className="ml-4 font-bold text-lg">Ví Cá Nhân</h2>
+                    </div>
+                    <div className="bg-gradient-to-br from-blue-900 to-blue-700 p-6 rounded-2xl text-white shadow-lg">
+                        <p className="opacity-80 text-sm">Số dư hiện tại</p>
+                        <p className="text-4xl font-bold mt-1">{balance || 0} <span className="text-lg font-light">SWGT</span></p>
+                    </div>
+                    <div className="flex justify-between mt-8">
+                        <TransactionButton text="Gửi" icon={sendIcon} callback={() => {}} />
+                        <TransactionButton text="Nhận" icon={receiveIcon} callback={() => {}} />
+                        <TransactionButton text="Bán" icon={sellIcon} callback={() => {}} />
+                    </div>
+                    <div className="mt-10">
+                        <p className="font-bold text-gray-800 mb-4">Lịch sử giao dịch</p>
+                        <TransactionHistoryItem currency="SWGT Token" symbol="SWGT" valueSpot={parseFloat(balance || '0.0')} />
+                    </div>
+                    <div className="mt-auto pb-6">
+                        <PrimaryButton title="Xác Minh Giao Dịch" callback={triggerTestMessageSign} />
+                        {signedMessage && <p className="text-[10px] text-gray-400 mt-2 break-all">ID: {signedMessage}</p>}
                     </div>
                 </div>
             )}
