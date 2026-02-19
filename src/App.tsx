@@ -38,14 +38,14 @@ enum View {
     WALLET = 3,
 }
 
-WebApp.setHeaderColor('#1a1a1a');
+// Thay đổi màu thanh tiêu đề Telegram sang màu xanh đậm của uST/SWC
+WebApp.setHeaderColor('#00457C');
 
 const BRIDGE_URL = import.meta.env.VITE_BRIDGE_URL || '';
 
 function App() {
     const [view, setView] = useState<View>(View.LANDING);
 
-    // Connection State
     const connectionState = useSelector(
         (state: RootState) => state.connection.connectionState
     );
@@ -66,7 +66,6 @@ function App() {
         setView(View.WALLET);
     };
 
-    // Get Accounts
     const [account, setAccount] = useState<string | null>(null);
     const [balance, setBalance] = useState<string | null>(null);
 
@@ -80,7 +79,6 @@ function App() {
                     'ngrok-skip-browser-warning': 'true',
                 },
             })
-
             .then((response) => {
                 setAccount(response.data.account);
                 setBalance(response.data.balance);
@@ -92,41 +90,24 @@ function App() {
         setView(View.CONNECTED);
     };
 
-    // Handle MainButton changes on view change
     useEffect(() => {
-        if (view === View.LANDING) {
-        }
-        // Change the Main Buttons color and textColor to match telegrams background color, to "hide" the button
-        if (view === View.CONNECT) {
-        }
         if (view === View.CONNECTED) {
             getAccountData();
         }
-        if (view === View.WALLET) {
-        }
     }, [view]);
 
-    // TON Connect
     const tonWallet = useTonWallet();
     useEffect(() => {
         if (!tonWallet) return;
-        // setAccount(tonWallet.account.address);
-        // setView(View.CONNECTED);
     }, [tonWallet]);
 
-    // Test Functions
     const [signedMessage, setSignedMessage] = useState<string | null>(null);
     const triggerTestMessageSign = () => {
         const providerId = window.localStorage.getItem('providerId');
-        if (!providerId) {
-            console.error('Provider ID not found.');
-            return;
-        }
+        if (!providerId) return;
+        
         const wallet = window.localStorage.getItem('walletProvider');
-        if (!wallet) {
-            console.error('Wallet not found.');
-            return;
-        }
+        if (!wallet) return;
 
         const uri = window.localStorage.getItem('walletConnectURI');
 
@@ -138,30 +119,19 @@ function App() {
 
         axios
             .post(BRIDGE_URL + '/sign', {
-                message: 'This is a test message.',
+                message: 'Xác nhận kết nối Cộng đồng SWC',
                 account: account,
                 providerId: providerId,
             })
             .then((response) => {
-                console.log(response.data.signature);
                 setSignedMessage(response.data.signature);
             });
     };
 
-    // Transaction Functions
-    const sendFunds = () => {
-        // Send Funds
-    };
+    const sendFunds = () => {};
+    const receiveFunds = () => {};
+    const sell = () => {};
 
-    const receiveFunds = () => {
-        // Receive Funds
-    };
-
-    const sell = () => {
-        // Sell
-    };
-
-    // Connect Overlay
     const [showConnectOverlay, setShowConnectOverlay] = useState(false);
     const [slideAnimation, setSlideAnimation] = useState('in');
 
@@ -174,17 +144,15 @@ function App() {
         setTimeout(() => setShowConnectOverlay(false), 100);
     };
 
-    // Disconnect
     const handleDisconnect = async () => {
         WebApp.showConfirm(
-            'Are you sure you want to disconnect?',
+            'Bạn có chắc chắn muốn ngắt kết nối ví?',
             async (confirmed: boolean) => {
                 if (!confirmed) return;
                 window.localStorage.removeItem('providerId');
                 window.localStorage.removeItem('walletConnectURI');
                 window.localStorage.removeItem('walletProvider');
                 window.localStorage.removeItem('walletconnect');
-                window.localStorage.removeItem('WALLETCONNECT_DEEPLINK_CHOICE');
                 dispatch(setConnectionState('disconnected'));
                 setSignedMessage(null);
                 setView(View.CONNECT);
@@ -205,27 +173,23 @@ function App() {
                         <Avatar src={avatarScooter} />
                         <div className="flex flex-col bg-white pt-4 pr-8 pb-8 pl-8 gap-4 rounded-t-3xl rounded-b-xl shadow-custom-white">
                             <div>
-                                <h2 className="headline">
-                                    Telegram Mini App Demo
+                                <h2 className="headline text-blue-900">
+                                    Cộng Đồng SWC Việt Nam
                                 </h2>
                             </div>
                             <div>
                                 <p className="text-customGrayText mt-0 mr-0 mb-4 ml-0">
-                                    Click on the button below and follow the
-                                    instructions to link your wallet to this
-                                    telegram mini app demo.
+                                    Chào mừng bạn đến với ứng dụng quản lý tài sản số của Cộng đồng nhà đầu tư uST.
                                 </p>
                                 <p className="text-customGrayText mt-0 mr-0 mb-4 ml-0">
-                                    Softstack is a Web3 software development,
-                                    cybersecurity and consulting service
-                                    partner.
+                                    Hãy kết nối ví của bạn để bắt đầu tham gia các hoạt động và nhận phần thưởng từ hệ sinh thái.
                                 </p>
                             </div>
                         </div>
                     </div>
                     <div className="p-2 mb-4">
                         <PrimaryButton
-                            title="Connect Your Wallet"
+                            title="Bắt Đầu Kết Nối"
                             callback={skip}
                         />
                     </div>
@@ -233,33 +197,22 @@ function App() {
             )}
             {view === View.CONNECT && (
                 <div className="components-container">
-                    <div
-                        className={`transition-opacity duration-1000 ease-in-out ${
-                            showConnectOverlay && 'blur-sm brightness-90'
-                        }`}
-                    >
+                    <div className={`transition-opacity duration-1000 ease-in-out ${showConnectOverlay && 'blur-sm brightness-90'}`}>
                         <div className="flex justify-between">
                             <BackButton goBack={goBack} />
-                            {connectionState === 'connected' && (
-                                <SkipButton skip={skip} />
-                            )}
+                            {connectionState === 'connected' && <SkipButton skip={skip} />}
                         </div>
                         <Avatar src={avatarPhone} />
                         <div className="flex flex-col absolute w-full bottom-0 bg-white pt-4 px-8 pb-14 gap-4 rounded-t-3xl rounded-b-xl shadow-custom-white">
-                            <h2 className="headline">CONNECT</h2>
+                            <h2 className="headline">KẾT NỐI VÍ</h2>
                             <EVMConnectModal
-                                title="t:connect"
+                                title="Ví EVM (Metamask/Trust)"
                                 icon={evmConnectIcon}
                                 callback={openConnectOverlay}
                             />
                             <TonConnectModal
-                                title="TON Connect"
+                                title="Ví TON"
                                 icon={tonConnectIcon}
-                            />
-                            <WalletConnectModal
-                                title="Wallet Connect (TEST)"
-                                icon={walletConnectIcon}
-                                accountCallback={() => {}}
                             />
                         </div>
                     </div>
@@ -279,23 +232,16 @@ function App() {
                         <BackButton goBack={goBack} />
                         <Avatar src={avatarTable} />
                         <div className="flex flex-col bg-white pt-4 px-8 pb-2 min-h-fit gap-2 rounded-t-3xl rounded-b-xl shadow-custom-white">
-                            <h2 className="headline">HORRAY!</h2>
+                            <h2 className="headline text-green-600">THÀNH CÔNG!</h2>
                             <div className="text-xs break-all font-semibold text-center text-customGrayAddress">
                                 <p className="my-0 mx-auto">{account}</p>
                             </div>
-                            <div className="flex justify-center items-center max-w-10 my-0 mx-auto">
-                                <img
-                                    className="h-auto max-w-full"
-                                    src={etherIcon}
-                                    alt=""
-                                />
-                            </div>
                             <div className="flex flex-col items-center">
                                 <div className="flex justify-between items-center gap-4 text-lg font-semibold">
-                                    <p className="m-0">Total Balance</p>
+                                    <p className="m-0">Tổng số dư</p>
                                     <Tooltip
-                                        headline="Balance"
-                                        content="The balance your wallet is currently holding."
+                                        headline="Số dư"
+                                        content="Tổng số tài sản hiện có trong ví của bạn."
                                     />
                                 </div>
                                 <div className="text-2xl font-bold mb-4">
@@ -306,12 +252,12 @@ function App() {
                     </div>
                     <div className="flex flex-col gap-2 p-2 mb-4">
                         <PrimaryButton
-                            title="Open my Wallet"
+                            title="Vào Ví Của Tôi"
                             callback={openWallet}
                         />
                         <div>
                             <PrimaryButton
-                                title="Disconnect"
+                                title="Ngắt Kết Nối"
                                 className="bg-red-200 border border-red-300 active:bg-red-300"
                                 textColor="customBlackText"
                                 callback={handleDisconnect}
@@ -321,76 +267,32 @@ function App() {
                 </>
             )}
             {view === View.WALLET && (
-                <>
-                    <div className="h-screen bg-customGrayWallet rounded-t-xl">
-                        <BackButton goBack={goBack} />
-                        <div className="flex flex-col gap-4 p-4">
-                            <div className="flex flex-col">
-                                <p className="m-0 text-xl font-semibold">
-                                    Total Balance
-                                </p>
-                                <p className="m-0 text-5xl font-extrabold">
-                                    <span className="text-customGrayAddress">
-                                        ETH
-                                    </span>
-                                    {balance || 0}
-                                </p>
-                            </div>
-                            <div className="flex justify-around gap-4 py-4 px-8">
-                                <TransactionButton
-                                    text="Send"
-                                    icon={sendIcon}
-                                    callback={sendFunds}
-                                />
-                                <TransactionButton
-                                    text="Receive"
-                                    icon={receiveIcon}
-                                    callback={receiveFunds}
-                                />
-                                <TransactionButton
-                                    text="Sell"
-                                    icon={sellIcon}
-                                    callback={sell}
-                                />
-                            </div>
-                            <div className="flex flex-col min-h-32 gap-2">
-                                <TransactionHistoryItem
-                                    currency="Ether"
-                                    symbol="ETH"
-                                    valueSpot={parseFloat(balance || '0.0')}
-                                />
-                                <TransactionHistoryItem
-                                    currency="Ether"
-                                    symbol="ETH"
-                                    valueSpot={parseFloat(balance || '0.0')}
-                                />
-                                <TransactionHistoryItem
-                                    currency="Ether"
-                                    symbol="ETH"
-                                    valueSpot={parseFloat(balance || '0.0')}
-                                />
-                            </div>
-                            {signedMessage && (
-                                <div
-                                    style={{
-                                        color: 'black',
-                                    }}
-                                >
-                                    <p>Signed Message:</p>
-                                    <p className="my-0 mx-auto text-xs break-all text-center text-wrap">
-                                        {signedMessage}
-                                    </p>
-                                </div>
-                            )}
-                            <div className="flex flex-col gap-2">
-                                <PrimaryButton
-                                    title="Sign Test Message in Wallet"
-                                    callback={triggerTestMessageSign}
-                                />
-                            </div>
+                <div className="h-screen bg-customGrayWallet rounded-t-xl">
+                    <BackButton goBack={goBack} />
+                    <div className="flex flex-col gap-4 p-4">
+                        <div className="flex flex-col">
+                            <p className="m-0 text-xl font-semibold">Tổng số dư</p>
+                            <p className="m-0 text-5xl font-extrabold">
+                                <span className="text-customGrayAddress text-2xl mr-2">TOKEN</span>
+                                {balance || 0}
+                            </p>
+                        </div>
+                        <div className="flex justify-around gap-4 py-4 px-8">
+                            <TransactionButton text="Gửi" icon={sendIcon} callback={sendFunds} />
+                            <TransactionButton text="Nhận" icon={receiveIcon} callback={receiveFunds} />
+                            <TransactionButton text="Bán" icon={sellIcon} callback={sell} />
+                        </div>
+                        <div className="flex flex-col min-h-32 gap-2">
+                            <TransactionHistoryItem currency="SWGT Token" symbol="SWGT" valueSpot={parseFloat(balance || '0.0')} />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <PrimaryButton
+                                title="Xác minh giao dịch thử nghiệm"
+                                callback={triggerTestMessageSign}
+                            />
                         </div>
                     </div>
-                </>
+                </div>
             )}
         </div>
     );
