@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from 'react';
 import WebApp from '@twa-dev/sdk';
 import axios from 'axios';
@@ -24,7 +23,6 @@ import tonConnectIcon from './assets/ton_connect.png';
 import sendIcon from './assets/send_icon.svg';
 import receiveIcon from './assets/receive_icon.svg';
 import sellIcon from './assets/sell_icon.svg';
-import { useTonWallet } from '@tonconnect/ui-react';
 import { useDispatch } from 'react-redux';
 import { setConnectionState } from './redux/connectionSlice';
 
@@ -79,8 +77,6 @@ function App() {
         if (view === View.CONNECTED) getAccountData();
     }, [view]);
 
-    const tonWallet = useTonWallet();
-    
     const [signedMessage, setSignedMessage] = useState<string | null>(null);
     
     const triggerTestMessageSign = async () => {
