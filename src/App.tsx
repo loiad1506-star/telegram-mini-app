@@ -1,8 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 function App() {
     // Quản lý việc chuyển đổi giữa 3 Tab
     const [activeTab, setActiveTab] = useState('home');
+
+    // --- CÁC BIẾN DỮ LIỆU ĐƯỢC THÊM VÀO ---
+    const [balance, setBalance] = useState(0);
+    const [wallet, setWallet] = useState('');
+    const [userId, setUserId] = useState('');
+
+    // LINK NÃO BỘ (BACKEND) CỦA BẠN - Đảm bảo link này đúng 100%
+    const BACKEND_URL = 'https://swc-bot-backend.onrender.com';
 
     // Bảng màu chuẩn VIP (Dark Mode & Gold)
     const theme = {
@@ -12,6 +20,42 @@ function App() {
         textLight: '#FFFFFF', // Trắng sáng
         textDim: '#8E8E93',   // Xám nhạt
         border: '#333333'     // Viền mỏng
+    };
+
+    // --- HỆ THỐNG NỐI DÂY (TỰ ĐỘNG CHẠY KHI MỞ APP) ---
+    useEffect(() => {
+        const tg = (window as any).Telegram?.WebApp;
+        if (tg) {
+            tg.ready();
+            const user = tg.initDataUnsafe?.user;
+            if (user) {
+                const uid = user.id.toString();
+                setUserId(uid);
+                
+                // Gọi tới Backend để xin số dư và địa chỉ ví đã lưu
+                fetch(`${BACKEND_URL}/api/user?id=${uid}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        setBalance(data.balance);
+                        if (data.wallet) setWallet(data.wallet);
+                    })
+                    .catch(err => console.error("Lỗi lấy dữ liệu:", err));
+            }
+        }
+    }, []);
+
+    // --- HÀM LƯU VÍ LÊN MÁY CHỦ ---
+    const handleSaveWallet = () => {
+        if (!wallet) return alert("Vui lòng nhập địa chỉ ví của bạn!");
+        if (!userId) return alert("Không tìm thấy ID người dùng. Hãy mở bằng Telegram!");
+
+        fetch(`${BACKEND_URL}/api/save-wallet`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, wallet })
+        })
+        .then(() => alert('✅ Đã lưu ví Gate.io thành công!'))
+        .catch(() => alert('❌ Lỗi khi lưu ví. Hãy thử lại!'));
     };
 
     // --------------------------------------------------
@@ -50,7 +94,7 @@ function App() {
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', border: `1px solid ${theme.border}` }}>
                 <p style={{ color: theme.textDim, fontSize: '13px', marginBottom: '10px' }}>Link giới thiệu của bạn:</p>
                 <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '8px', color: theme.gold, fontSize: '14px', wordBreak: 'break-all', marginBottom: '15px', border: `1px dashed ${theme.gold}` }}>
-                    https://t.me/Dau_Tu_SWC_bot?start=ref_vip
+                    https://t.me/Dau_Tu_SWC_bot?start={userId || 'ref_vip'}
                 </div>
                 <button style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '16px', cursor: 'pointer' }}>
                     📋 Sao chép link
@@ -60,7 +104,7 @@ function App() {
     );
 
     // --------------------------------------------------
-    // TAB 3: VÍ (WALLET)
+    // TAB 3: VÍ (WALLET) - ĐÃ ĐƯỢC NÂNG CẤP
     // --------------------------------------------------
     const renderWallet = () => (
         <div style={{ padding: '20px' }}>
@@ -69,12 +113,31 @@ function App() {
                 <h2 style={{ color: theme.textLight, margin: '15px 0 5px 0', fontSize: '20px' }}>Ví SWGT</h2>
                 <p style={{ color: theme.textDim, fontSize: '14px', margin: 0 }}>Quản lý & Rút tiền</p>
             </div>
+            
+            {/* Khối hiển thị số dư tự động cập nhật */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '25px 20px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
                 <p style={{ color: theme.textDim, fontSize: '14px', margin: '0 0 10px 0' }}>Số dư hiện tại</p>
-                <h1 style={{ color: theme.gold, margin: '0 0 20px 0', fontSize: '40px', fontWeight: '900' }}>0 <span style={{fontSize: '20px', fontWeight: 'normal'}}>SWGT</span></h1>
-                <button style={{ width: '100%', backgroundColor: '#333', color: theme.gold, padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '16px' }}>
-                    🔒 Chưa đủ điều kiện rút
-                </button>
+                <h1 style={{ color: theme.gold, margin: '0 0 20px 0', fontSize: '40px', fontWeight: '900' }}>
+                    {balance} <span style={{fontSize: '20px', fontWeight: 'normal'}}>SWGT</span>
+                </h1>
+                
+                {/* Khu vực nhập và lưu ví Gate.io */}
+                <div style={{ marginTop: '20px', textAlign: 'left' }}>
+                    <p style={{ color: theme.textDim, fontSize: '13px', marginBottom: '5px' }}>Địa chỉ ví SWGT (Mạng BEP20/ERC20):</p>
+                    <input 
+                        type="text"
+                        value={wallet}
+                        onChange={(e) => setWallet(e.target.value)}
+                        placeholder="Dán địa chỉ ví 0x... tại đây"
+                        style={{ width: '100%', padding: '12px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.gold, boxSizing: 'border-box' }}
+                    />
+                    <button 
+                        onClick={handleSaveWallet}
+                        style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '12px', borderRadius: '8px', fontWeight: 'bold', border: 'none', marginTop: '10px', fontSize: '15px', cursor: 'pointer' }}
+                    >
+                        💾 LƯU ĐỊA CHỈ VÍ
+                    </button>
+                </div>
             </div>
         </div>
     );
