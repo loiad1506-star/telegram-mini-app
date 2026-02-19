@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from 'react';
 import WebApp from '@twa-dev/sdk';
 import axios from 'axios';
@@ -79,12 +80,7 @@ function App() {
     }, [view]);
 
     const tonWallet = useTonWallet();
-    useEffect(() => {
-        if (tonWallet) {
-            // Logic cho ví TON
-        }
-    }, [tonWallet]);
-
+    
     const [signedMessage, setSignedMessage] = useState<string | null>(null);
     
     const triggerTestMessageSign = async () => {
@@ -146,7 +142,6 @@ function App() {
                         <div className="flex flex-col bg-white pt-6 px-8 pb-8 gap-4 rounded-t-3xl shadow-lg">
                             <h2 className="headline text-blue-800 text-2xl font-bold">Cộng Đồng SWC</h2>
                             <p className="text-gray-600">Ứng dụng quản lý tài sản số của Cộng đồng nhà đầu tư uST Việt Nam.</p>
-                            <p className="text-gray-600 text-sm">Kết nối ví để nhận phần thưởng từ hệ sinh thái.</p>
                         </div>
                     </div>
                     <div className="p-4 mb-4">
@@ -213,6 +208,11 @@ function App() {
                     </div>
                     <div className="mt-auto pb-6">
                         <PrimaryButton title="Xác Minh Giao Dịch" callback={triggerTestMessageSign} />
+                        {signedMessage && (
+                            <div className="mt-2 p-2 bg-gray-100 rounded text-[10px] break-all">
+                                Mã ký: {signedMessage}
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
