@@ -1,5 +1,3 @@
-import { useState } from 'react';
-
 function App() {
     return (
         <div style={{ backgroundColor: '#121212', color: '#F4D03F', minHeight: '100vh', padding: '20px', fontFamily: 'sans-serif' }}>
