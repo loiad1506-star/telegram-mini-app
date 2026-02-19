@@ -33,11 +33,22 @@ enum View {
     WALLET = 3,
 }
 
-WebApp.setHeaderColor('#00457C');
-
 const BRIDGE_URL = import.meta.env.VITE_BRIDGE_URL || '';
 
 function App() {
+    // Đưa lệnh đổi màu vào useEffect để chống lỗi sập màn hình trắng
+    useEffect(() => {
+        try {
+            WebApp.ready();
+            WebApp.setHeaderColor('#00457C');
+        } catch (error) {
+            console.log("Đang mở ngoài Telegram, bỏ qua đổi màu.");
+        }
+    }, []);
+
+    const [view, setView] = useState<View>(View.LANDING);
+    const dispatch = useDispatch<AppDispatch>();
+// ... (PHẦN CODE BÊN DƯỚI GIỮ NGUYÊN NHƯ CŨ) ...
     const [view, setView] = useState<View>(View.LANDING);
     const dispatch = useDispatch<AppDispatch>();
 
