@@ -76,13 +76,12 @@ function App() {
     };
 
     // --------------------------------------------------
-    // HEADER GỐC SWC (Avatar + Info)
+    // HEADER GỐC SWC (Avatar + Info + Logo Mới)
     // --------------------------------------------------
     const renderHeader = () => (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', backgroundColor: theme.bg }}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-                <div style={{ width: '40px', height: '40px', backgroundColor: '#000', borderRadius: '50%', border: `1px solid ${theme.gold}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.gold, fontWeight: 'bold', fontSize: '12px', marginRight: '10px' }}>
-{/* Trái: Logo dự án - Đã thay ảnh mới */}
+            
+            {/* Trái: Logo dự án */}
             <div style={{ display: 'flex', alignItems: 'center' }}>
                 <img 
                     src="/logo.png" 
@@ -93,12 +92,9 @@ function App() {
                     <h1 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: theme.textLight }}>CỘNG ĐỒNG</h1>
                     <p style={{ margin: 0, fontSize: '12px', color: theme.gold }}>Đầu tư uST</p>
                 </div>
-            </div>                </div>
-                <div>
-                    <h1 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: theme.textLight }}>CỘNG ĐỒNG</h1>
-                    <p style={{ margin: 0, fontSize: '12px', color: theme.gold }}>Đầu tư uST</p>
-                </div>
             </div>
+
+            {/* Phải: Thông tin user */}
             <div style={{ display: 'flex', alignItems: 'center', textAlign: 'right' }}>
                 <div style={{ marginRight: '10px' }}>
                     <h2 style={{ margin: 0, fontSize: '15px', color: theme.textLight, fontWeight: 'bold' }}>{userProfile.name}</h2>
@@ -145,7 +141,7 @@ function App() {
                 </div>
             </div>
 
-{/* CƠ CẤU PHẦN THƯỞNG */}
+            {/* CƠ CẤU PHẦN THƯỞNG */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '15px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '16px' }}>💎 Cơ Cấu Phần Thưởng SWGT</h2>
                 
