@@ -4,6 +4,7 @@ function App() {
     const [activeTab, setActiveTab] = useState('home');
     const [balance, setBalance] = useState(0);
     const [wallet, setWallet] = useState('');
+    const [referrals, setReferrals] = useState(0); // THÊM BIẾN LƯU SỐ NGƯỜI ĐÃ MỜI
     
     // Lưu trữ thông tin thật từ Telegram
     const [userId, setUserId] = useState('');
@@ -31,6 +32,7 @@ function App() {
             .then(data => {
                 setBalance(data.balance || 0);
                 if (data.wallet) setWallet(data.wallet);
+                setReferrals(data.referralCount || 0); // LẤY DỮ LIỆU REFERRAL TỪ BACKEND
             })
             .catch(err => console.error("Lỗi:", err));
     };
@@ -121,7 +123,7 @@ function App() {
                     <p style={{ margin: '5px 0 0 0', color: theme.textDim, fontSize: '11px' }}>Số dư SWGT</p>
                 </div>
                 <div style={{ flex: 1, backgroundColor: theme.cardBg, borderRadius: '12px', padding: '15px 5px', textAlign: 'center', border: `1px solid ${theme.border}` }}>
-                    <h3 style={{ margin: 0, color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>0</h3>
+                    <h3 style={{ margin: 0, color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{referrals}</h3>
                     <p style={{ margin: '5px 0 0 0', color: theme.textDim, fontSize: '11px' }}>Đã mời</p>
                 </div>
                 <div style={{ flex: 1, backgroundColor: theme.cardBg, borderRadius: '12px', padding: '15px 5px', textAlign: 'center', border: `1px solid ${theme.border}` }}>
@@ -213,7 +215,7 @@ function App() {
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '15px' }}>
                 <div style={{ flex: 1, backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
                     <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 5px 0' }}>Số người bạn đã mời</p>
-                    <h2 style={{ color: theme.gold, margin: 0, fontSize: '24px' }}>0</h2>
+                    <h2 style={{ color: theme.gold, margin: 0, fontSize: '24px' }}>{referrals}</h2>
                 </div>
                 <div style={{ flex: 1, backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
                     <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 5px 0' }}>Lịch sử thưởng</p>
@@ -247,7 +249,7 @@ function App() {
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '15px', border: `1px solid ${theme.border}` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', borderBottom: `1px solid ${theme.border}`, paddingBottom: '15px' }}>
                     <span style={{ color: theme.textLight, fontSize: '14px' }}>Số người đã giới thiệu</span>
-                    <span style={{ color: theme.gold, fontSize: '16px', fontWeight: 'bold' }}>0</span>
+                    <span style={{ color: theme.gold, fontSize: '16px', fontWeight: 'bold' }}>{referrals}</span>
                 </div>
                 
                 <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 10px 0' }}>• Thời gian → Unlock sau 3 tháng <span style={{color: '#34C759'}}>✓</span></p>
