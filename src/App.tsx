@@ -82,8 +82,18 @@ function App() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', backgroundColor: theme.bg }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
                 <div style={{ width: '40px', height: '40px', backgroundColor: '#000', borderRadius: '50%', border: `1px solid ${theme.gold}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.gold, fontWeight: 'bold', fontSize: '12px', marginRight: '10px' }}>
-                    SWC
+{/* Trái: Logo dự án - Đã thay ảnh mới */}
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+                <img 
+                    src="/logo.png" 
+                    alt="SWC Logo" 
+                    style={{ width: '45px', height: '45px', borderRadius: '50%', border: `2px solid ${theme.gold}`, marginRight: '12px', objectFit: 'cover' }} 
+                />
+                <div>
+                    <h1 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: theme.textLight }}>CỘNG ĐỒNG</h1>
+                    <p style={{ margin: 0, fontSize: '12px', color: theme.gold }}>Đầu tư uST</p>
                 </div>
+            </div>                </div>
                 <div>
                     <h1 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: theme.textLight }}>CỘNG ĐỒNG</h1>
                     <p style={{ margin: 0, fontSize: '12px', color: theme.gold }}>Đầu tư uST</p>
