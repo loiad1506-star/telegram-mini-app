@@ -13,7 +13,7 @@ function App() {
         photoUrl: ''
     });
 
-    const BACKEND_URL = 'https://swc-bot-backend.onrender.com';
+    const BACKEND_URL = 'https://swc-bot-brain.onrender.com';
 
     const theme = {
         bg: '#0F0F0F',        
