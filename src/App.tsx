@@ -135,21 +135,21 @@ function App() {
                 </div>
             </div>
 
-            {/* CƠ CẤU PHẦN THƯỞNG */}
+{/* CƠ CẤU PHẦN THƯỞNG */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '15px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '16px' }}>💎 Cơ Cấu Phần Thưởng SWGT</h2>
                 
                 <p style={{ color: theme.textLight, fontSize: '13px', fontWeight: 'bold', marginBottom: '8px' }}>📌 Thành viên Thường sẽ được nhận thưởng khi đáp ứng các điều kiện sau:</p>
-                <ul style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 15px 0', paddingLeft: '20px', lineHeight: '1.6' }}>
-                    <li>Tham gia Channel (Nhóm chính): <span style={{color: '#34C759'}}>+10 SWGT/người</span></li>
-                    <li>Tham gia Nhóm Chat (Chat 2 dòng trên nhóm): <span style={{color: '#34C759'}}>+10 SWGT/người</span></li>
-                </ul>
+                <div style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 15px 0', lineHeight: '1.6' }}>
+                    <p style={{ margin: 0 }}>Tham gia Channel (Nhóm chính): <span style={{color: '#34C759'}}>+10 SWGT/người</span></p>
+                    <p style={{ margin: 0 }}>Tham gia Nhóm Chat (Chat 2 dòng trên nhóm): <span style={{color: '#34C759'}}>+10 SWGT/người</span></p>
+                </div>
 
                 <p style={{ color: theme.gold, fontSize: '13px', fontWeight: 'bold', marginBottom: '8px' }}>⭐ Thành Viên Premium (+5 SWGT)</p>
-                <ul style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 10px 0', paddingLeft: '20px', lineHeight: '1.6' }}>
-                    <li>Tham gia Channel (Nhóm chính): <span style={{color: '#34C759'}}>+20 SWGT/người</span></li>
-                    <li>Tham gia Nhóm Chat (Chat 2 dòng trên nhóm): <span style={{color: '#34C759'}}>+20 SWGT/người</span></li>
-                </ul>
+                <div style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 10px 0', lineHeight: '1.6' }}>
+                    <p style={{ margin: 0 }}>Tham gia Channel (Nhóm chính): <span style={{color: '#34C759'}}>+20 SWGT/người</span></p>
+                    <p style={{ margin: 0 }}>Tham gia Nhóm Chat (Chat 2 dòng trên nhóm): <span style={{color: '#34C759'}}>+20 SWGT/người</span></p>
+                </div>
                 <p style={{ color: '#5E92F3', fontSize: '13px', fontWeight: 'bold', margin: 0 }}>💫 Cộng ngay: +5 SWGT bonus!</p>
             </div>
 
