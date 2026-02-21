@@ -6,7 +6,6 @@ function App() {
     const [wallet, setWallet] = useState('');
     const [referrals, setReferrals] = useState(0); 
     
-    // Lưu trữ thông tin thật từ Telegram
     const [userId, setUserId] = useState('');
     const [userProfile, setUserProfile] = useState({
         name: 'Đang tải...',
@@ -14,7 +13,6 @@ function App() {
         photoUrl: ''
     });
 
-    // Trạng thái mới cho Điểm danh và Leaderboard
     const [lastCheckIn, setLastCheckIn] = useState<string | null>(null);
     const [leaderboard, setLeaderboard] = useState<any[]>([]);
 
@@ -30,7 +28,6 @@ function App() {
         green: '#34C759'      
     };
 
-    // --- ĐỒNG HỒ ĐẾM NGƯỢC THỜI GIAN THỰC ---
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0, secs: 0 });
     useEffect(() => {
         const unlockDate = new Date("2026-12-31T00:00:00").getTime(); 
@@ -48,7 +45,6 @@ function App() {
         return () => clearInterval(interval);
     }, []);
 
-    // HÀM ÉP LẤY DỮ LIỆU TỪ BACKEND
     const fetchUserData = (uid: string) => {
         fetch(`${BACKEND_URL}/api/user?id=${uid}`)
             .then(res => res.json())
@@ -61,7 +57,6 @@ function App() {
             .catch(err => console.error("Lỗi:", err));
     };
 
-    // KHI VỪA MỞ APP
     useEffect(() => {
         const tg = (window as any).Telegram?.WebApp;
         if (tg) {
@@ -82,14 +77,12 @@ function App() {
             }
         }
         
-        // Lấy danh sách Top 10 Bảng xếp hạng
         fetch(`${BACKEND_URL}/api/leaderboard`)
             .then(res => res.json())
             .then(data => setLeaderboard(data))
             .catch(() => {});
     }, []);
 
-    // --- LOGIC ĐIỂM DANH MỖI NGÀY ---
     const isCheckedInToday = lastCheckIn ? new Date(lastCheckIn).toDateString() === new Date().toDateString() : false;
 
     const handleCheckIn = () => {
@@ -107,7 +100,6 @@ function App() {
         }).catch(() => alert("⚠️ Lỗi kết nối, vui lòng thử lại sau!"));
     };
 
-    // HÀM LƯU VÍ
     const handleSaveWallet = () => {
         if (!wallet) return alert("Vui lòng nhập địa chỉ ví!");
         fetch(`${BACKEND_URL}/api/save-wallet`, {
@@ -117,7 +109,6 @@ function App() {
         }).then(() => alert('✅ Đã lưu/cập nhật ví thành công!'));
     };
 
-    // HÀM ĐỔI QUÀ VIP
     const redeemItem = (itemName: string, cost: number) => {
         if (balance < cost) return alert(`⚠️ Bạn cần thêm ${cost - balance} SWGT nữa để đổi quyền lợi này!`);
         if (window.confirm(`Xác nhận dùng ${cost} SWGT để đổi ${itemName}?`)) {
@@ -136,7 +127,6 @@ function App() {
         }
     };
 
-    // HÀM SAO CHÉP LINK GIỚI THIỆU
     const handleCopyLink = () => {
         const link = `https://t.me/Dau_Tu_SWC_bot?start=${userId || 'ref'}`;
         navigator.clipboard.writeText(link)
@@ -144,9 +134,6 @@ function App() {
             .catch(() => alert('❌ Lỗi sao chép. Vui lòng thử lại!'));
     };
 
-    // --------------------------------------------------
-    // HEADER GỐC SWC (Avatar + Info + Logo Mới)
-    // --------------------------------------------------
     const renderHeader = () => (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', backgroundColor: theme.bg }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -174,12 +161,8 @@ function App() {
         </div>
     );
 
-    // --------------------------------------------------
-    // TAB 1: TRANG CHỦ (HOME)
-    // --------------------------------------------------
     const renderHome = () => (
         <div style={{ padding: '0 20px 20px 20px' }}>
-            {/* 3 Ô THỐNG KÊ */}
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', marginBottom: '20px' }}>
                 <div style={{ flex: 1, backgroundColor: theme.cardBg, borderRadius: '12px', padding: '15px 5px', textAlign: 'center', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: 0, color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{balance}</h3>
@@ -195,7 +178,6 @@ function App() {
                 </div>
             </div>
 
-            {/* KHỐI ĐIỂM DANH MỚI */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '15px', textAlign: 'center', border: `1px solid ${theme.border}`, marginBottom: '20px' }}>
                 <h3 style={{ margin: '0 0 8px 0', color: '#fff', fontSize: '15px' }}>📅 Điểm Danh Hàng Ngày</h3>
                 <button 
@@ -207,15 +189,13 @@ function App() {
                 </button>
             </div>
 
-            {/* CÁCH HOẠT ĐỘNG (ĐÃ CẬP NHẬT CHAT-TO-EARN) */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '15px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '16px' }}>🎯 Cách Hoạt Động</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <p style={{ margin: 0, color: theme.textDim, fontSize: '13px', lineHeight: '1.5' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>📱 Bước 1: Tham gia Bot SWC</span><br/>Liên kết với @Dau_Tu_SWC_bot trên Telegram để bắt đầu.</p>
                     <p style={{ margin: 0, color: theme.textDim, fontSize: '13px', lineHeight: '1.5' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>👥 Bước 2: Mời bạn bè</span><br/>Chia sẻ link giới thiệu và mời bạn bè tham gia cộng đồng SWC.</p>
-                    <p style={{ margin: 0, color: theme.textDim, fontSize: '13px', lineHeight: '1.5' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>💰 Bước 3: Nhận SWGT</span><br/>Mỗi người bạn mời (Nick Premium & Nick thường đủ điều kiện bên dưới) sẽ giúp bạn kiếm SWGT thưởng.</p>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '13px', lineHeight: '1.5' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>💰 Bước 3: Nhận SWGT</span><br/>Mỗi người bạn mời sẽ giúp bạn kiếm SWGT thưởng.</p>
                     
-                    {/* BỔ SUNG TIP TƯƠNG TÁC NHÓM (CHAT-TO-EARN) */}
                     <div style={{ backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, padding: '12px', borderRadius: '8px', marginTop: '5px', marginBottom: '5px' }}>
                         <p style={{ margin: 0, color: theme.green, fontSize: '13px', lineHeight: '1.5' }}>
                             <span style={{fontWeight:'bold'}}>💬 MẸO: Tương tác kiếm thêm điểm</span><br/>
@@ -227,25 +207,22 @@ function App() {
                 </div>
             </div>
 
-            {/* CƠ CẤU PHẦN THƯỞNG */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '15px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '16px' }}>💎 Cơ Cấu Phần Thưởng SWGT</h2>
-                
                 <p style={{ color: theme.textLight, fontSize: '13px', fontWeight: 'bold', marginBottom: '8px' }}>📌 Thành viên Thường sẽ được nhận thưởng khi đáp ứng các điều kiện sau:</p>
                 <div style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 15px 0', lineHeight: '1.6' }}>
                     <p style={{ margin: 0 }}>Tham gia Channel (Nhóm chính): <span style={{color: '#34C759'}}>+10 SWGT/người</span></p>
-                    <p style={{ margin: 0 }}>Tham gia Nhóm Chat (Chat 2 dòng trên nhóm): <span style={{color: '#34C759'}}>+10 SWGT/người</span></p>
+                    <p style={{ margin: 0 }}>Tham gia Nhóm Chat (Chat trên nhóm): <span style={{color: '#34C759'}}>+10 SWGT/người</span></p>
                 </div>
 
                 <p style={{ color: theme.gold, fontSize: '13px', fontWeight: 'bold', marginBottom: '8px' }}>⭐ Thành Viên Premium (+5 SWGT)</p>
                 <div style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 10px 0', lineHeight: '1.6' }}>
                     <p style={{ margin: 0 }}>Tham gia Channel (Nhóm chính): <span style={{color: '#34C759'}}>+20 SWGT/người</span></p>
-                    <p style={{ margin: 0 }}>Tham gia Nhóm Chat (Chat 2 dòng trên nhóm): <span style={{color: '#34C759'}}>+20 SWGT/người</span></p>
+                    <p style={{ margin: 0 }}>Tham gia Nhóm Chat (Chat trên nhóm): <span style={{color: '#34C759'}}>+20 SWGT/người</span></p>
                 </div>
                 <p style={{ color: '#5E92F3', fontSize: '13px', fontWeight: 'bold', margin: 0 }}>💫 Cộng ngay: +5 SWGT bonus!</p>
             </div>
 
-            {/* ĐIỀU KIỆN RÚT TIỀN */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '16px' }}>⏱️ Điều Kiện Rút Tiền</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -255,7 +232,6 @@ function App() {
                 </div>
             </div>
 
-            {/* BẢNG XẾP HẠNG TOP 10 (HIỂN THỊ TẠI TRANG CHỦ) */}
             <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '15px'}}>🏆 BẢNG VÀNG GIỚI THIỆU</h3>
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '15px', border: `1px solid ${theme.border}`, marginBottom: '20px' }}>
                 {leaderboard.length === 0 ? <p style={{color: theme.textDim, textAlign: 'center', fontSize: '12px', margin: 0}}>Chưa có dữ liệu. Hãy là người đầu tiên bứt phá!</p> : null}
@@ -280,7 +256,6 @@ function App() {
                 })}
             </div>
 
-            {/* TÍNH NĂNG ĐANG BỔ SUNG */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '14px', textTransform: 'uppercase' }}>Các tính năng đang bổ sung</h2>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -293,9 +268,6 @@ function App() {
         </div>
     );
 
-    // --------------------------------------------------
-    // TAB 2: PHẦN THƯỞNG (REWARDS) - GIAO DIỆN "DOPAMINE"
-    // --------------------------------------------------
     const renderRewards = () => {
         let nextTarget = 10;
         let nextReward = "+50 SWGT";
@@ -312,7 +284,6 @@ function App() {
                     <p style={{ color: theme.textDim, fontSize: '13px', margin: 0 }}>Xây dựng hệ thống - Tạo thu nhập thụ động</p>
                 </div>
 
-                {/* KHỐI TIẾN ĐỘ */}
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}`, position: 'relative', overflow: 'hidden' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '10px' }}>
                         <div>
@@ -333,7 +304,6 @@ function App() {
                     </p>
                 </div>
 
-                {/* CÔNG CỤ CHIA SẺ */}
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '15px' }}>🔗 Công cụ lan tỏa</h3>
                     <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '8px', color: theme.gold, fontSize: '14px', wordBreak: 'break-all', marginBottom: '15px', border: `1px dashed ${theme.border}` }}>
@@ -349,7 +319,6 @@ function App() {
                     </div>
                 </div>
 
-                {/* BẢNG XẾP HẠNG TOP 10 (HIỂN THỊ TẠI TAB REWARDS) */}
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '15px'}}>🏆 BẢNG VÀNG GIỚI THIỆU</h3>
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '15px', border: `1px solid ${theme.border}`, marginBottom: '20px' }}>
                     {leaderboard.length === 0 ? <p style={{color: theme.textDim, textAlign: 'center', fontSize: '12px', margin: 0}}>Chưa có dữ liệu. Hãy là người đầu tiên bứt phá!</p> : null}
@@ -374,7 +343,6 @@ function App() {
                     })}
                 </div>
 
-                {/* RƯƠNG HUY HIỆU */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
                     <div style={{ flex: 1, backgroundColor: theme.cardBg, borderRadius: '15px', padding: '15px', border: `1px solid ${theme.border}`, textAlign: 'center', opacity: referrals >= 10 ? 1 : 0.5 }}>
                         <div style={{ fontSize: '24px', marginBottom: '5px' }}>{referrals >= 10 ? '🌟' : '🔒'}</div>
@@ -391,13 +359,9 @@ function App() {
         );
     };
 
-    // --------------------------------------------------
-    // TAB 3: VÍ (WALLET)
-    // --------------------------------------------------
     const renderWallet = () => (
         <div style={{ padding: '0 20px 20px 20px' }}>
             
-            {/* SỐ DƯ */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '25px 20px', border: `1px solid ${theme.border}`, textAlign: 'center', marginBottom: '15px' }}>
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
                     <p style={{ color: theme.textDim, fontSize: '14px', margin: 0 }}>Số dư hiện tại</p>
@@ -411,7 +375,6 @@ function App() {
                 </button>
             </div>
 
-            {/* TIẾN ĐỘ RÚT TIỀN */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '15px', border: `1px solid ${theme.border}` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', borderBottom: `1px solid ${theme.border}`, paddingBottom: '15px' }}>
                     <span style={{ color: theme.textLight, fontSize: '14px' }}>Số người đã giới thiệu</span>
@@ -433,7 +396,6 @@ function App() {
                 </div>
             </div>
 
-            {/* LƯU ĐỊA CHỈ VÍ */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
                     <span style={{ fontSize: '18px' }}>🛡️</span>
@@ -453,7 +415,6 @@ function App() {
                 </button>
             </div>
 
-            {/* KHO VIP ĐỔI THƯỞNG O2O */}
             <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '15px'}}>💎 KHO ĐẶC QUYỀN VIP</h3>
             
             <div style={{ backgroundColor: theme.cardBg, padding: '15px', borderRadius: '10px', marginBottom: '15px', border: `1px solid ${theme.border}`}}>
@@ -468,7 +429,6 @@ function App() {
                 <button onClick={() => redeemItem('Group Private', 500)} style={{backgroundColor: '#34C759', color: '#fff', border: 'none', padding: '8px 15px', borderRadius: '5px', fontWeight: 'bold', fontSize: '12px'}}>Đổi lấy: 500 SWGT</button>
             </div>
 
-            {/* HỖ TRỢ & LỊCH SỬ */}
             <div style={{ display: 'flex', gap: '10px' }}>
                 <div style={{ flex: 1, backgroundColor: theme.cardBg, borderRadius: '12px', padding: '15px', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: '0 0 5px 0', color: theme.textLight, fontSize: '13px' }}>Hỗ trợ 24/7</h3>
