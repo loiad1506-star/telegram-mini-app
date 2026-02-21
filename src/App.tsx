@@ -28,8 +28,8 @@ function App() {
         green: '#34C759'      
     };
 
+    // --- LOGIC ĐẾM NGƯỢC THỜI GIAN ---
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0, secs: 0 });
-    
     useEffect(() => {
         const unlockDate = new Date("2026-12-31T00:00:00").getTime(); 
         const interval = setInterval(() => {
@@ -46,6 +46,7 @@ function App() {
         return () => clearInterval(interval);
     }, []);
 
+    // --- LẤY DỮ LIỆU NGƯỜI DÙNG ---
     const fetchUserData = (uid: string) => {
         fetch(`${BACKEND_URL}/api/user?id=${uid}`)
             .then(res => res.json())
@@ -110,24 +111,7 @@ function App() {
         }).then(() => alert('✅ Đã lưu/cập nhật ví thành công!'));
     };
 
-    const redeemItem = (itemName: string, cost: number) => {
-        if (balance < cost) return alert(`⚠️ Bạn cần thêm ${cost - balance} SWGT nữa để đổi quyền lợi này!`);
-        if (window.confirm(`Xác nhận dùng ${cost} SWGT để đổi ${itemName}?`)) {
-            fetch(`${BACKEND_URL}/api/redeem`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, itemName, cost })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.success) {
-                    setBalance(data.balance);
-                    alert("🎉 Đổi quà thành công! Admin sẽ liên hệ bạn sớm qua Telegram.");
-                }
-            });
-        }
-    };
-
+    // --- HÀM RÚT TIỀN (MỚI BỔ SUNG) ---
     const handleWithdraw = () => {
         if (!wallet) {
             return alert("⚠️ Vui lòng lướt xuống dưới và lưu địa chỉ ví Gate.io trước khi rút tiền!");
@@ -147,10 +131,28 @@ function App() {
                     setBalance(data.balance);
                     alert("💸 Yêu cầu rút tiền đã được gửi! Vui lòng kiểm tra tin nhắn từ Bot.");
                 } else {
-                    alert(data.message || "❌ Có lỗi xảy ra hoặc chưa đủ điều kiện!");
+                    alert("❌ Có lỗi xảy ra hoặc chưa đủ điều kiện!");
                 }
             })
             .catch(() => alert('❌ Lỗi kết nối đến máy chủ!'));
+        }
+    };
+
+    const redeemItem = (itemName: string, cost: number) => {
+        if (balance < cost) return alert(`⚠️ Bạn cần thêm ${cost - balance} SWGT nữa để đổi quyền lợi này!`);
+        if (window.confirm(`Xác nhận dùng ${cost} SWGT để đổi ${itemName}?`)) {
+            fetch(`${BACKEND_URL}/api/redeem`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, itemName, cost })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    setBalance(data.balance);
+                    alert("🎉 Đổi quà thành công! Admin sẽ liên hệ bạn sớm qua Telegram.");
+                }
+            });
         }
     };
 
@@ -161,186 +163,241 @@ function App() {
             .catch(() => alert('❌ Lỗi sao chép. Vui lòng thử lại!'));
     };
 
-    let nextTarget = 10;
-    let nextReward = "+50 SWGT";
-    if (referrals >= 10 && referrals < 50) { nextTarget = 50; nextReward = "+300 SWGT"; }
-    else if (referrals >= 50) { nextTarget = 100; nextReward = "+1000 SWGT"; }
-    const progressPercent = Math.min((referrals / nextTarget) * 100, 100);
+    const renderHeader = () => (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', backgroundColor: theme.bg }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+                <img 
+                    src="/logo.png" 
+                    alt="SWC Logo" 
+                    style={{ width: '45px', height: '45px', borderRadius: '50%', border: `2px solid ${theme.gold}`, marginRight: '12px', objectFit: 'cover' }} 
+                />
+                <div>
+                    <h1 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: theme.textLight }}>CỘNG ĐỒNG</h1>
+                    <p style={{ margin: 0, fontSize: '12px', color: theme.gold }}>Đầu tư uST</p>
+                </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', textAlign: 'right' }}>
+                <div style={{ marginRight: '10px' }}>
+                    <h2 style={{ margin: 0, fontSize: '15px', color: theme.textLight, fontWeight: 'bold' }}>{userProfile.name}</h2>
+                    <p style={{ margin: 0, fontSize: '12px', color: theme.textDim }}>{userProfile.username}</p>
+                </div>
+                {userProfile.photoUrl ? (
+                    <img src={userProfile.photoUrl} alt="avatar" style={{ width: '45px', height: '45px', borderRadius: '50%', border: `2px solid ${theme.border}` }} />
+                ) : (
+                    <div style={{ width: '45px', height: '45px', borderRadius: '50%', backgroundColor: theme.cardBg, border: `2px solid ${theme.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.gold }}>👤</div>
+                )}
+            </div>
+        </div>
+    );
+
+    const renderHome = () => (
+        <div style={{ padding: '0 20px 20px 20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', marginBottom: '20px' }}>
+                <div style={{ flex: 1, backgroundColor: theme.cardBg, borderRadius: '12px', padding: '15px 5px', textAlign: 'center', border: `1px solid ${theme.border}` }}>
+                    <h3 style={{ margin: 0, color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{balance}</h3>
+                    <p style={{ margin: '5px 0 0 0', color: theme.textDim, fontSize: '11px' }}>Số dư SWGT</p>
+                </div>
+                <div style={{ flex: 1, backgroundColor: theme.cardBg, borderRadius: '12px', padding: '15px 5px', textAlign: 'center', border: `1px solid ${theme.border}` }}>
+                    <h3 style={{ margin: 0, color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{referrals}</h3>
+                    <p style={{ margin: '5px 0 0 0', color: theme.textDim, fontSize: '11px' }}>Đã mời</p>
+                </div>
+                <div style={{ flex: 1, backgroundColor: theme.cardBg, borderRadius: '12px', padding: '15px 5px', textAlign: 'center', border: `1px solid ${theme.border}` }}>
+                    <h3 style={{ margin: 0, color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>Thường</h3>
+                    <p style={{ margin: '5px 0 0 0', color: theme.textDim, fontSize: '11px' }}>Hạng Tài khoản</p>
+                </div>
+            </div>
+
+            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '15px', textAlign: 'center', border: `1px solid ${theme.border}`, marginBottom: '20px' }}>
+                <h3 style={{ margin: '0 0 8px 0', color: '#fff', fontSize: '15px' }}>📅 Điểm Danh Hàng Ngày</h3>
+                <button 
+                    onClick={handleCheckIn} 
+                    disabled={isCheckedInToday}
+                    style={{ width: '100%', backgroundColor: isCheckedInToday ? '#333' : theme.green, color: isCheckedInToday ? theme.textDim : '#fff', padding: '12px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: isCheckedInToday ? 'not-allowed' : 'pointer' }}
+                >
+                    {isCheckedInToday ? "✅ ĐÃ ĐIỂM DANH HÔM NAY" : "✋ ĐIỂM DANH NHẬN +2 SWGT"}
+                </button>
+            </div>
+
+            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '15px', border: `1px solid ${theme.border}` }}>
+                <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '16px' }}>🎯 Cách Hoạt Động</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '13px', lineHeight: '1.5' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>📱 Bước 1: Tham gia Bot SWC</span><br/>Liên kết với @Dau_Tu_SWC_bot trên Telegram để bắt đầu.</p>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '13px', lineHeight: '1.5' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>👥 Bước 2: Mời bạn bè</span><br/>Chia sẻ link giới thiệu và mời bạn bè tham gia cộng đồng SWC.</p>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '13px', lineHeight: '1.5' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>💰 Bước 3: Nhận SWGT</span><br/>Mỗi người bạn mời sẽ giúp bạn kiếm SWGT thưởng.</p>
+                    
+                    <div style={{ backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, padding: '12px', borderRadius: '8px', marginTop: '5px', marginBottom: '5px' }}>
+                        <p style={{ margin: 0, color: theme.green, fontSize: '13px', lineHeight: '1.5' }}>
+                            <span style={{fontWeight:'bold'}}>💬 MẸO: Tương tác kiếm thêm điểm</span><br/>
+                            Mỗi tin nhắn bạn chat trong <b>Nhóm Thảo Luận</b> (từ 10 ký tự trở lên) sẽ được tự động cộng <b style={{color: theme.gold}}>+0.3 SWGT</b>. Chat càng nhiều, tiền càng nhiều!
+                        </p>
+                    </div>
+
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '13px', lineHeight: '1.5' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>🔓 Bước 4: Rút tiền</span><br/>Rút ngay khi đạt 500 SWGT & đợi 30 ngày.</p>
+                </div>
+            </div>
+
+            <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '15px'}}>🏆 BẢNG VÀNG GIỚI THIỆU</h3>
+            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '15px', border: `1px solid ${theme.border}`, marginBottom: '20px' }}>
+                {leaderboard.length === 0 ? <p style={{color: theme.textDim, textAlign: 'center', fontSize: '12px', margin: 0}}>Chưa có dữ liệu. Hãy là người đầu tiên bứt phá!</p> : null}
+                {leaderboard.slice(0, 10).map((user, index) => {
+                    let medal = "🏅";
+                    if (index === 0) medal = "🥇";
+                    else if (index === 1) medal = "🥈";
+                    else if (index === 2) medal = "🥉";
+                    return (
+                        <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: index < leaderboard.length - 1 ? `1px solid ${theme.border}` : 'none' }}>
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <span style={{ fontSize: '20px', marginRight: '10px' }}>{medal}</span>
+                                <span style={{ color: theme.textLight, fontWeight: 'bold', fontSize: '14px' }}>{user.firstName} {user.lastName}</span>
+                            </div>
+                            <div style={{ color: theme.gold, fontWeight: 'bold', fontSize: '14px' }}>
+                                {user.referralCount} <span style={{ fontSize: '10px', color: theme.textDim, fontWeight: 'normal' }}>người</span>
+                            </div>
+                        </div>
+                    )
+                })}
+            </div>
+        </div>
+    );
+
+    const renderRewards = () => {
+        let nextTarget = 10;
+        let nextReward = "+50 SWGT";
+        if (referrals >= 10 && referrals < 50) { nextTarget = 50; nextReward = "+300 SWGT"; }
+        else if (referrals >= 50) { nextTarget = 100; nextReward = "+1000 SWGT"; }
+        const progressPercent = Math.min((referrals / nextTarget) * 100, 100);
+
+        return (
+            <div style={{ padding: '0 20px 20px 20px', paddingBottom: '100px' }}>
+                <div style={{ textAlign: 'center', marginBottom: '25px' }}>
+                    <div style={{ fontSize: '40px', marginBottom: '5px' }}>🎁</div>
+                    <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '20px' }}>Trung Tâm Thu Nhập</h2>
+                    <p style={{ color: theme.textDim, fontSize: '13px', margin: 0 }}>Xây dựng hệ thống - Tạo thu nhập thụ động</p>
+                </div>
+
+                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '10px' }}>
+                        <div>
+                            <p style={{ margin: 0, color: theme.textDim, fontSize: '12px' }}>Đã giới thiệu</p>
+                            <h2 style={{ margin: 0, color: theme.textLight, fontSize: '24px' }}>{referrals} <span style={{fontSize:'14px', color: theme.textDim, fontWeight:'normal'}}>người</span></h2>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                            <p style={{ margin: 0, color: theme.gold, fontSize: '12px', fontWeight: 'bold' }}>Mục tiêu: {nextTarget} người</p>
+                            <p style={{ margin: 0, color: theme.green, fontSize: '13px', fontWeight: 'bold' }}>🎁 Thưởng nóng {nextReward}</p>
+                        </div>
+                    </div>
+                    <div style={{ width: '100%', height: '10px', backgroundColor: '#333', borderRadius: '5px', overflow: 'hidden' }}>
+                        <div style={{ width: `${progressPercent}%`, height: '100%', backgroundColor: theme.gold, transition: 'width 0.5s ease' }}></div>
+                    </div>
+                </div>
+
+                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
+                    <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '15px' }}>🔗 Công cụ lan tỏa</h3>
+                    <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '8px', color: theme.gold, fontSize: '14px', wordBreak: 'break-all', marginBottom: '15px', border: `1px dashed ${theme.border}` }}>
+                        https://t.me/Dau_Tu_SWC_bot?start={userId || 'ref'}
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button onClick={handleCopyLink} style={{ flex: 1, backgroundColor: theme.gold, color: '#000', padding: '12px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '13px', cursor: 'pointer' }}>
+                            📋 SAO CHÉP LINK
+                        </button>
+                        <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ flex: 1, backgroundColor: '#5E92F3', color: '#fff', padding: '12px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '13px', textAlign: 'center', textDecoration: 'none' }}>
+                            ✈️ GỬI BẠN BÈ
+                        </a>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    // --- TAB VÍ (ĐÃ CẬP NHẬT RÚT TIỀN THÔNG MINH) ---
+    const renderWallet = () => (
+        <div style={{ padding: '0 20px 20px 20px' }}>
+            
+            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '25px 20px', border: `1px solid ${theme.border}`, textAlign: 'center', marginBottom: '15px' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
+                    <p style={{ color: theme.textDim, fontSize: '14px', margin: 0 }}>Số dư hiện tại</p>
+                    <button onClick={() => fetchUserData(userId)} style={{ background: 'none', border: 'none', color: theme.gold, cursor: 'pointer', fontSize: '16px' }}>🔄</button>
+                </div>
+                <h1 style={{ color: theme.gold, margin: '15px 0', fontSize: '45px', fontWeight: '900' }}>
+                    {balance} <span style={{fontSize: '20px', fontWeight: 'normal'}}>SWGT</span>
+                </h1>
+                
+                {/* LOGIC NÚT RÚT TIỀN THÔNG MINH */}
+                {balance >= 50 ? (
+                    <button onClick={handleWithdraw} style={{ width: '100%', backgroundColor: theme.green, color: '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '15px', cursor: 'pointer', boxShadow: '0 4px 15px rgba(52, 199, 89, 0.3)' }}>
+                        💸 YÊU CẦU RÚT TIỀN NGAY
+                    </button>
+                ) : (
+                    <button style={{ width: '100%', backgroundColor: '#333', color: theme.textDim, padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '15px', cursor: 'not-allowed' }}>
+                        🔒 Chưa đủ điều kiện (Cần 50 SWGT)
+                    </button>
+                )}
+            </div>
+
+            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '15px', border: `1px solid ${theme.border}` }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', borderBottom: `1px solid ${theme.border}`, paddingBottom: '15px' }}>
+                    <span style={{ color: theme.textLight, fontSize: '14px' }}>Số người đã giới thiệu</span>
+                    <span style={{ color: theme.gold, fontSize: '16px', fontWeight: 'bold' }}>{referrals}</span>
+                </div>
+                
+                <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 10px 0' }}>• Thời gian → Đang mở khoá test <span style={{color: '#34C759'}}>✓</span></p>
+                <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 15px 0' }}>• Đạt 50 SWGT thưởng → Được rút <span style={{color: balance >= 50 ? '#34C759' : theme.textDim}}>{balance >= 50 ? '✓' : '✗'}</span></p>
+                
+                <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', textAlign: 'center', border: `1px solid ${theme.border}` }}>
+                    <p style={{ color: theme.textDim, fontSize: '12px', margin: '0 0 10px 0' }}>Thời gian mở khoá chính thức</p>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '10px' }}>
+                        <div style={{ padding: '8px 12px', backgroundColor: '#222', borderRadius: '6px', color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>{timeLeft.days} <span style={{fontSize:'10px', color: theme.textDim, fontWeight:'normal'}}>Ngày</span></div>
+                        <div style={{ padding: '8px 12px', backgroundColor: '#222', borderRadius: '6px', color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>{timeLeft.hours} <span style={{fontSize:'10px', color: theme.textDim, fontWeight:'normal'}}>Giờ</span></div>
+                        <div style={{ padding: '8px 12px', backgroundColor: '#222', borderRadius: '6px', color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>{timeLeft.mins} <span style={{fontSize:'10px', color: theme.textDim, fontWeight:'normal'}}>Phút</span></div>
+                    </div>
+                </div>
+            </div>
+
+            {/* LƯU ĐỊA CHỈ VÍ */}
+            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                    <span style={{ fontSize: '18px' }}>🛡️</span>
+                    <div>
+                        <h3 style={{ margin: 0, color: theme.textLight, fontSize: '14px' }}>Bảo mật cao</h3>
+                        <p style={{ margin: 0, color: theme.textDim, fontSize: '12px' }}>Liên kết ví Gate.io an toàn</p>
+                    </div>
+                </div>
+                <input 
+                    value={wallet}
+                    onChange={(e) => setWallet(e.target.value)}
+                    placeholder="Dán địa chỉ ví Gate.io (BEP20) tại đây"
+                    style={{ width: '100%', padding: '14px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.gold, boxSizing: 'border-box', marginBottom: '10px', fontSize: '13px' }}
+                />
+                <button onClick={handleSaveWallet} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '12px', borderRadius: '8px', fontWeight: 'bold', border: 'none', fontSize: '14px' }}>
+                    {wallet ? "CẬP NHẬT ĐỊA CHỈ VÍ" : "LƯU ĐỊA CHỈ VÍ"}
+                </button>
+            </div>
+
+            <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '15px'}}>💎 KHO ĐẶC QUYỀN VIP</h3>
+            
+            <div style={{ backgroundColor: theme.cardBg, padding: '15px', borderRadius: '10px', marginBottom: '15px', border: `1px solid ${theme.border}`}}>
+                <h4 style={{margin: '0 0 5px 0', color: '#5E92F3', fontSize: '14px'}}>☕ Cà Phê Chiến Lược (Bản Test)</h4>
+                <p style={{fontSize: '12px', color: theme.textDim, margin: '0 0 10px 0'}}>Thảo luận danh mục trực tiếp (đã hạ mốc test).</p>
+                <button onClick={() => redeemItem('Cà Phê Chiến Lược (Test)', 50)} style={{backgroundColor: '#5E92F3', color: '#fff', border: 'none', padding: '8px 15px', borderRadius: '5px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer'}}>Đổi lấy: 50 SWGT</button>
+            </div>
+
+            <div style={{ backgroundColor: theme.cardBg, padding: '15px', borderRadius: '10px', marginBottom: '25px', border: `1px solid ${theme.border}`}}>
+                <h4 style={{margin: '0 0 5px 0', color: '#34C759', fontSize: '14px'}}>🔓 Mở Khóa Group Private</h4>
+                <p style={{fontSize: '12px', color: theme.textDim, margin: '0 0 10px 0'}}>Nhận tín hiệu thị trường và Zoom kín hàng tuần.</p>
+                <button onClick={() => redeemItem('Group Private', 500)} style={{backgroundColor: '#34C759', color: '#fff', border: 'none', padding: '8px 15px', borderRadius: '5px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer'}}>Đổi lấy: 500 SWGT</button>
+            </div>
+        </div>
+    );
 
     return (
         <div style={{ backgroundColor: theme.bg, minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '80px', boxSizing: 'border-box' }}>
-            
-            {/* --- HEADER --- */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', backgroundColor: theme.bg }}>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <div style={{ width: '45px', height: '45px', borderRadius: '50%', border: `2px solid ${theme.gold}`, marginRight: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: theme.cardBg, color: theme.gold, fontWeight: 'bold' }}>SWC</div>
-                    <div>
-                        <h1 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: theme.textLight }}>CỘNG ĐỒNG</h1>
-                        <p style={{ margin: 0, fontSize: '12px', color: theme.gold }}>Đầu tư uST</p>
-                    </div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', textAlign: 'right' }}>
-                    <div style={{ marginRight: '10px' }}>
-                        <h2 style={{ margin: 0, fontSize: '15px', color: theme.textLight, fontWeight: 'bold' }}>{userProfile.name}</h2>
-                        <p style={{ margin: 0, fontSize: '12px', color: theme.textDim }}>{userProfile.username}</p>
-                    </div>
-                    {userProfile.photoUrl ? (
-                        <img src={userProfile.photoUrl} alt="avatar" style={{ width: '45px', height: '45px', borderRadius: '50%', border: `2px solid ${theme.border}` }} />
-                    ) : (
-                        <div style={{ width: '45px', height: '45px', borderRadius: '50%', backgroundColor: theme.cardBg, border: `2px solid ${theme.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.gold }}>👤</div>
-                    )}
-                </div>
-            </div>
-            
+            {renderHeader()}
             <div style={{ marginTop: '5px' }}>
-                
-                {/* --- TAB HOME --- */}
-                {activeTab === 'home' && (
-                    <div style={{ padding: '0 20px 20px 20px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', marginBottom: '20px' }}>
-                            <div style={{ flex: 1, backgroundColor: theme.cardBg, borderRadius: '12px', padding: '15px 5px', textAlign: 'center', border: `1px solid ${theme.border}` }}>
-                                <h3 style={{ margin: 0, color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{balance}</h3>
-                                <p style={{ margin: '5px 0 0 0', color: theme.textDim, fontSize: '11px' }}>Số dư SWGT</p>
-                            </div>
-                            <div style={{ flex: 1, backgroundColor: theme.cardBg, borderRadius: '12px', padding: '15px 5px', textAlign: 'center', border: `1px solid ${theme.border}` }}>
-                                <h3 style={{ margin: 0, color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{referrals}</h3>
-                                <p style={{ margin: '5px 0 0 0', color: theme.textDim, fontSize: '11px' }}>Đã mời</p>
-                            </div>
-                            <div style={{ flex: 1, backgroundColor: theme.cardBg, borderRadius: '12px', padding: '15px 5px', textAlign: 'center', border: `1px solid ${theme.border}` }}>
-                                <h3 style={{ margin: 0, color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>Thường</h3>
-                                <p style={{ margin: '5px 0 0 0', color: theme.textDim, fontSize: '11px' }}>Hạng Tài khoản</p>
-                            </div>
-                        </div>
-
-                        <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '15px', textAlign: 'center', border: `1px solid ${theme.border}`, marginBottom: '20px' }}>
-                            <h3 style={{ margin: '0 0 8px 0', color: '#fff', fontSize: '15px' }}>📅 Điểm Danh Hàng Ngày</h3>
-                            <button 
-                                onClick={handleCheckIn} 
-                                disabled={isCheckedInToday}
-                                style={{ width: '100%', backgroundColor: isCheckedInToday ? '#333' : theme.green, color: isCheckedInToday ? theme.textDim : '#fff', padding: '12px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: isCheckedInToday ? 'not-allowed' : 'pointer' }}
-                            >
-                                {isCheckedInToday ? "✅ ĐÃ ĐIỂM DANH HÔM NAY" : "✋ ĐIỂM DANH NHẬN +2 SWGT"}
-                            </button>
-                        </div>
-
-                        <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '15px', border: `1px solid ${theme.border}` }}>
-                            <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '16px' }}>🎯 Cách Hoạt Động</h2>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                <p style={{ margin: 0, color: theme.textDim, fontSize: '13px', lineHeight: '1.5' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>📱 Bước 1: Tham gia Bot SWC</span><br/>Liên kết với @Dau_Tu_SWC_bot</p>
-                                <p style={{ margin: 0, color: theme.textDim, fontSize: '13px', lineHeight: '1.5' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>👥 Bước 2: Mời bạn bè</span><br/>Chia sẻ link giới thiệu</p>
-                                <div style={{ backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, padding: '12px', borderRadius: '8px' }}>
-                                    <p style={{ margin: 0, color: theme.green, fontSize: '13px' }}>
-                                        Chat trong Nhóm Thảo Luận để nhận <b style={{color: theme.gold}}>+0.3 SWGT</b> mỗi tin nhắn!
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* --- TAB REWARDS --- */}
-                {activeTab === 'rewards' && (
-                    <div style={{ padding: '0 20px 20px 20px', paddingBottom: '100px' }}>
-                        <div style={{ textAlign: 'center', marginBottom: '25px' }}>
-                            <div style={{ fontSize: '40px', marginBottom: '5px' }}>🎁</div>
-                            <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '20px' }}>Trung Tâm Thu Nhập</h2>
-                        </div>
-                        <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                                <h2 style={{ margin: 0, color: theme.textLight, fontSize: '24px' }}>{referrals} <span style={{fontSize:'14px', color: theme.textDim}}>người</span></h2>
-                                <div style={{ textAlign: 'right' }}>
-                                    <p style={{ margin: 0, color: theme.gold, fontSize: '12px', fontWeight: 'bold' }}>Mục tiêu: {nextTarget}</p>
-                                    <p style={{ margin: 0, color: theme.green, fontSize: '13px', fontWeight: 'bold' }}>{nextReward}</p>
-                                </div>
-                            </div>
-                            <div style={{ width: '100%', height: '10px', backgroundColor: '#333', borderRadius: '5px', overflow: 'hidden' }}>
-                                <div style={{ width: `${progressPercent}%`, height: '100%', backgroundColor: theme.gold }}></div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* --- TAB WALLET --- */}
-                {activeTab === 'wallet' && (
-                    <div style={{ padding: '0 20px 20px 20px' }}>
-                        
-                        <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '25px 20px', border: `1px solid ${theme.border}`, textAlign: 'center', marginBottom: '15px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
-                                <p style={{ color: theme.textDim, fontSize: '14px', margin: 0 }}>Số dư hiện tại</p>
-                                <button onClick={() => fetchUserData(userId)} style={{ background: 'none', border: 'none', color: theme.gold, cursor: 'pointer', fontSize: '16px' }}>🔄</button>
-                            </div>
-                            <h1 style={{ color: theme.gold, margin: '15px 0', fontSize: '45px', fontWeight: '900' }}>
-                                {balance} <span style={{fontSize: '20px', fontWeight: 'normal'}}>SWGT</span>
-                            </h1>
-                            
-                            {balance >= 50 ? (
-                                <button onClick={handleWithdraw} style={{ width: '100%', backgroundColor: theme.green, color: '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '15px', cursor: 'pointer', boxShadow: '0 4px 15px rgba(52, 199, 89, 0.3)' }}>
-                                    💸 YÊU CẦU RÚT TIỀN NGAY
-                                </button>
-                            ) : (
-                                <button style={{ width: '100%', backgroundColor: '#333', color: theme.textDim, padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '15px', cursor: 'not-allowed' }}>
-                                    🔒 Chưa đủ điều kiện (Cần 50 SWGT)
-                                </button>
-                            )}
-                        </div>
-
-                        <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '15px', border: `1px solid ${theme.border}` }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', borderBottom: `1px solid ${theme.border}`, paddingBottom: '15px' }}>
-                                <span style={{ color: theme.textLight, fontSize: '14px' }}>Số người đã giới thiệu</span>
-                                <span style={{ color: theme.gold, fontSize: '16px', fontWeight: 'bold' }}>{referrals}</span>
-                            </div>
-                            
-                            <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 10px 0' }}>• Thời gian → Đang mở khoá test <span style={{color: '#34C759'}}>✓</span></p>
-                            <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 15px 0' }}>• Đạt 50 SWGT thưởng → Được rút <span style={{color: balance >= 50 ? '#34C759' : theme.textDim}}>{balance >= 50 ? '✓' : '✗'}</span></p>
-                            
-                            <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', textAlign: 'center', border: `1px solid ${theme.border}` }}>
-                                <p style={{ color: theme.textDim, fontSize: '12px', margin: '0 0 10px 0' }}>Thời gian mở khoá chính thức</p>
-                                
-                                <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '10px' }}>
-                                    <div style={{ padding: '8px 12px', backgroundColor: '#222', borderRadius: '6px', color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>{timeLeft.days} <span style={{fontSize:'10px', color: theme.textDim, fontWeight:'normal'}}>Ngày</span></div>
-                                    <div style={{ padding: '8px 12px', backgroundColor: '#222', borderRadius: '6px', color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>{timeLeft.hours} <span style={{fontSize:'10px', color: theme.textDim, fontWeight:'normal'}}>Giờ</span></div>
-                                    <div style={{ padding: '8px 12px', backgroundColor: '#222', borderRadius: '6px', color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>{timeLeft.mins} <span style={{fontSize:'10px', color: theme.textDim, fontWeight:'normal'}}>Phút</span></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                                <span style={{ fontSize: '18px' }}>🛡️</span>
-                                <div>
-                                    <h3 style={{ margin: 0, color: theme.textLight, fontSize: '14px' }}>Bảo mật cao</h3>
-                                    <p style={{ margin: 0, color: theme.textDim, fontSize: '12px' }}>Liên kết ví SWGT an toàn</p>
-                                </div>
-                            </div>
-                            <input 
-                                value={wallet}
-                                onChange={(e) => setWallet(e.target.value)}
-                                placeholder="Dán địa chỉ ví Gate.io (BEP20) tại đây"
-                                style={{ width: '100%', padding: '14px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.gold, boxSizing: 'border-box', marginBottom: '10px', fontSize: '13px' }}
-                            />
-                            <button onClick={handleSaveWallet} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '12px', borderRadius: '8px', fontWeight: 'bold', border: 'none', fontSize: '14px' }}>
-                                {wallet ? "CẬP NHẬT ĐỊA CHỈ VÍ" : "LƯU ĐỊA CHỈ VÍ"}
-                            </button>
-                        </div>
-
-                        <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '15px'}}>💎 KHO ĐẶC QUYỀN VIP</h3>
-                        
-                        <div style={{ backgroundColor: theme.cardBg, padding: '15px', borderRadius: '10px', marginBottom: '15px', border: `1px solid ${theme.border}`}}>
-                            <h4 style={{margin: '0 0 5px 0', color: '#5E92F3', fontSize: '14px'}}>☕ Cà Phê Chiến Lược (Bản Test)</h4>
-                            <p style={{fontSize: '12px', color: theme.textDim, margin: '0 0 10px 0'}}>Thảo luận danh mục đầu tư trực tiếp tại Ucity Coffee.</p>
-                            <button onClick={() => redeemItem('Cà Phê Chiến Lược (Test)', 50)} style={{backgroundColor: '#5E92F3', color: '#fff', border: 'none', padding: '8px 15px', borderRadius: '5px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer'}}>Đổi lấy: 50 SWGT</button>
-                        </div>
-
-                        <div style={{ backgroundColor: theme.cardBg, padding: '15px', borderRadius: '10px', marginBottom: '25px', border: `1px solid ${theme.border}`}}>
-                            <h4 style={{margin: '0 0 5px 0', color: '#34C759', fontSize: '14px'}}>🔓 Mở Khóa Group Private</h4>
-                            <p style={{fontSize: '12px', color: theme.textDim, margin: '0 0 10px 0'}}>Nhận tín hiệu thị trường và Zoom kín hàng tuần.</p>
-                            <button onClick={() => redeemItem('Group Private', 500)} style={{backgroundColor: '#34C759', color: '#fff', border: 'none', padding: '8px 15px', borderRadius: '5px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer'}}>Đổi lấy: 500 SWGT</button>
-                        </div>
-                    </div>
-                )}
+                {activeTab === 'home' && renderHome()}
+                {activeTab === 'rewards' && renderRewards()}
+                {activeTab === 'wallet' && renderWallet()}
             </div>
 
-            {/* --- BOTTOM NAVIGATION --- */}
             <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: theme.cardBg, borderTop: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-around', padding: '12px 0', paddingBottom: 'calc(12px + env(safe-area-inset-bottom))', zIndex: 100 }}>
                 <div onClick={() => setActiveTab('home')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'home' ? theme.gold : theme.textDim, width: '33%', cursor: 'pointer' }}>
                     <div style={{ fontSize: '22px', marginBottom: '4px' }}>🏠</div>
