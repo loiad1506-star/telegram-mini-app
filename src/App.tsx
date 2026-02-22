@@ -6,11 +6,12 @@ function App() {
     const [wallet, setWallet] = useState('');
     const [referrals, setReferrals] = useState(0); 
     
+    // --- STATE MỚI BỔ SUNG ---
     const [withdrawAmount, setWithdrawAmount] = useState(''); 
     const [milestone10, setMilestone10] = useState(false); 
     const [milestone50, setMilestone50] = useState(false); 
 
-    // --- STATE NHIỆM VỤ ---
+    // --- STATE NHIỆM VỤ TRÊN APP ---
     const [tasks, setTasks] = useState({
         readTaskDone: false,
         youtubeTaskDone: false,
@@ -18,7 +19,6 @@ function App() {
         shareTaskDone: false
     });
     
-    // --- STATE ĐẾM NGƯỢC ---
     const [taskTimers, setTaskTimers] = useState({
         read: 0, youtube: 0, facebook: 0, share: 0
     });
@@ -47,6 +47,7 @@ function App() {
         blue: '#5E92F3'
     };
 
+    // --- LOGIC ĐẾM NGƯỢC 30 NGÀY ---
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0 });
     useEffect(() => {
         const unlockDate = new Date("2026-03-25T00:00:00").getTime(); 
@@ -63,6 +64,7 @@ function App() {
         return () => clearInterval(interval);
     }, []);
 
+    // --- LẤY DỮ LIỆU TỪ BACKEND ---
     const fetchUserData = (uid: string) => {
         fetch(`${BACKEND_URL}/api/user?id=${uid}`)
             .then(res => res.json())
@@ -114,6 +116,9 @@ function App() {
 
     const isCheckedInToday = lastCheckIn ? new Date(lastCheckIn).toDateString() === new Date().toDateString() : false;
 
+    // ---------------------------------------------------------
+    // CÁC HÀM CHỨC NĂNG (ĐÃ KHAI BÁO ĐẦY ĐỦ ĐỂ FIX LỖI TS2304)
+    // ---------------------------------------------------------
     const handleCheckIn = () => {
         if (isCheckedInToday) return;
         fetch(`${BACKEND_URL}/api/checkin`, {
@@ -161,7 +166,6 @@ function App() {
         }
     };
 
-    // --- BỔ SUNG HÀM COPY LINK VÀ NHẬN MỐC BỊ THIẾU ---
     const handleCopyLink = () => {
         const link = `https://t.me/Dau_Tu_SWC_bot?start=${userId || 'ref'}`;
         navigator.clipboard.writeText(link)
@@ -239,6 +243,9 @@ function App() {
         });
     };
 
+    // ---------------------------------------------------------
+    // GIAO DIỆN CÁC TAB
+    // ---------------------------------------------------------
     const renderHeader = () => (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', backgroundColor: theme.bg }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -303,7 +310,8 @@ function App() {
                     </div>
                     {!tasks.readTaskDone && (
                         <div style={{ display: 'flex', gap: '10px' }}>
-                            <button onClick={() => startTask('read', 'https://hovanloi.net', 60)} style={{ flex: 1, backgroundColor: theme.blue, color: '#fff', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>ĐỌC NGAY</button>
+                            {/* ĐÃ THAY LINK hovanloi.net THÀNH swc.capital Ở ĐÂY */}
+                            <button onClick={() => startTask('read', 'https://swc.capital/', 60)} style={{ flex: 1, backgroundColor: theme.blue, color: '#fff', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>ĐỌC NGAY</button>
                             <button onClick={() => claimTaskApp('read')} style={{ flex: 1, backgroundColor: taskTimers.read > 0 ? '#333' : theme.gold, color: taskTimers.read > 0 ? theme.textDim : '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
                                 {taskTimers.read > 0 ? `ĐỢI ${taskTimers.read}s` : 'NHẬN QUÀ'}
                             </button>
@@ -494,7 +502,7 @@ function App() {
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>💎 KHO ĐẶC QUYỀN VIP</h3>
                 <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '15px', marginBottom: '15px', border: `1px solid ${theme.border}`}}>
                     <h4 style={{margin: '0 0 8px 0', color: '#5E92F3', fontSize: '16px'}}>☕ Cà Phê Chiến Lược</h4>
-                    <p style={{fontSize: '14px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Thảo luận danh mục trực tiếp cùng Admin Ucity.</p>
+                    <p style={{fontSize: '14px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Thảo luận danh mục trực tiếp cùng Admin.</p>
                     <button onClick={() => redeemItem('Cà Phê Chiến Lược', 300)} style={{backgroundColor: '#5E92F3', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer'}}>Đổi lấy: 300 SWGT</button>
                 </div>
 
@@ -526,7 +534,7 @@ function App() {
                     style={{ width: '100%', padding: '14px', borderRadius: '10px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '15px', fontSize: '15px', textAlign: 'center' }}
                 />
 
-                <button onClick={handleWithdraw} style={{ width: '100%', backgroundColor: balance >= 300 ? theme.green : '#333', color: balance >= 50 ? '#fff' : theme.textDim, padding: '16px', borderRadius: '12px', fontWeight: 'bold', border: 'none', fontSize: '16px', cursor: balance >= 300 ? 'pointer' : 'not-allowed', boxShadow: balance >= 300 ? '0 4px 15px rgba(52, 199, 89, 0.3)' : 'none' }}>
+                <button onClick={handleWithdraw} style={{ width: '100%', backgroundColor: balance >= 300 ? theme.green : '#333', color: balance >= 300 ? '#fff' : theme.textDim, padding: '16px', borderRadius: '12px', fontWeight: 'bold', border: 'none', fontSize: '16px', cursor: balance >= 300 ? 'pointer' : 'not-allowed', boxShadow: balance >= 300 ? '0 4px 15px rgba(52, 199, 89, 0.3)' : 'none' }}>
                     {balance >= 300 ? '💸 XÁC NHẬN RÚT TIỀN' : '🔒 CẦN TỐI THIỂU 300 SWGT'}
                 </button>
             </div>
@@ -546,7 +554,7 @@ function App() {
 
             <div style={{ backgroundColor: 'rgba(255, 59, 48, 0.1)', border: `1px dashed ${theme.red}`, padding: '15px', borderRadius: '10px', marginBottom: '20px' }}>
                 <p style={{ margin: '0 0 5px 0', color: theme.red, fontSize: '14px', fontWeight: 'bold' }}>⚠️ CHÚ Ý QUAN TRỌNG:</p>
-                <p style={{ margin: 0, color: theme.red, fontSize: '13px', lineHeight: '1.5' }}>Vui lòng chỉ sử dụng địa chỉ ví SWGT thuộc mạng lưới <b>Ethereum (ERC20)</b>. Nhập sai mạng lưới sẽ mất tài sản!</p>
+                <p style={{ margin: 0, color: theme.red, fontSize: '13px', lineHeight: '1.5' }}>Vui lòng chỉ sử dụng địa chỉ ví SWGT thuộc mạng lưới <b>Ethereum (ERC20)</b>. Việc nhập sai mạng lưới sẽ dẫn đến mất tài sản vĩnh viễn!</p>
             </div>
 
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
