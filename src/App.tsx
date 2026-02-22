@@ -47,7 +47,6 @@ function App() {
         blue: '#5E92F3'
     };
 
-    // --- LOGIC ĐẾM NGƯỢC 30 NGÀY ---
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0 });
     useEffect(() => {
         const unlockDate = new Date("2026-03-25T00:00:00").getTime(); 
@@ -64,7 +63,6 @@ function App() {
         return () => clearInterval(interval);
     }, []);
 
-    // --- LẤY DỮ LIỆU TỪ BACKEND ---
     const fetchUserData = (uid: string) => {
         fetch(`${BACKEND_URL}/api/user?id=${uid}`)
             .then(res => res.json())
@@ -116,9 +114,6 @@ function App() {
 
     const isCheckedInToday = lastCheckIn ? new Date(lastCheckIn).toDateString() === new Date().toDateString() : false;
 
-    // ---------------------------------------------------------
-    // CÁC HÀM CHỨC NĂNG (ĐÃ KHAI BÁO ĐẦY ĐỦ ĐỂ FIX LỖI TS2304)
-    // ---------------------------------------------------------
     const handleCheckIn = () => {
         if (isCheckedInToday) return;
         fetch(`${BACKEND_URL}/api/checkin`, {
@@ -243,9 +238,6 @@ function App() {
         });
     };
 
-    // ---------------------------------------------------------
-    // GIAO DIỆN CÁC TAB
-    // ---------------------------------------------------------
     const renderHeader = () => (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', backgroundColor: theme.bg }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -310,7 +302,6 @@ function App() {
                     </div>
                     {!tasks.readTaskDone && (
                         <div style={{ display: 'flex', gap: '10px' }}>
-                            {/* ĐÃ THAY LINK hovanloi.net THÀNH swc.capital Ở ĐÂY */}
                             <button onClick={() => startTask('read', 'https://swc.capital/', 60)} style={{ flex: 1, backgroundColor: theme.blue, color: '#fff', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>ĐỌC NGAY</button>
                             <button onClick={() => claimTaskApp('read')} style={{ flex: 1, backgroundColor: taskTimers.read > 0 ? '#333' : theme.gold, color: taskTimers.read > 0 ? theme.textDim : '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
                                 {taskTimers.read > 0 ? `ĐỢI ${taskTimers.read}s` : 'NHẬN QUÀ'}
@@ -374,22 +365,34 @@ function App() {
                 </div>
             </div>
             
+            {/* THÔNG TIN BỔ SUNG Ở TAB TRANG CHỦ */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '15px', border: `1px solid ${theme.border}` }}>
-                <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Cách Hoạt Động</h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>📱 Bước 1: Tham gia Bot SWC</span></p>
-                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>👥 Bước 2: Mời bạn bè</span></p>
-                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>💰 Bước 3: Nhận SWGT</span></p>
-                    <div style={{ backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, padding: '15px', borderRadius: '10px' }}>
-                        <p style={{ margin: 0, color: theme.green, fontSize: '14px', lineHeight: '1.6' }}>
-                            <span style={{fontWeight:'bold'}}>💬 MẸO: Tương tác kiếm thêm điểm</span><br/>Chat trong Nhóm Thảo Luận tự động cộng <b style={{color: theme.gold}}>+0.3 SWGT</b>.
-                        </p>
-                    </div>
+                <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '18px' }}>💎 Cơ Cấu Phần Thưởng SWGT</h2>
+                <p style={{ color: theme.textLight, fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>📌 Thành viên Thường:</p>
+                <div style={{ color: theme.textDim, fontSize: '14px', margin: '0 0 15px 0', lineHeight: '1.6' }}>
+                    <p style={{ margin: 0 }}>Tham gia Channel: <span style={{color: '#34C759'}}>+10 SWGT/người</span></p>
+                    <p style={{ margin: 0 }}>Tham gia Nhóm Chat: <span style={{color: '#34C759'}}>+10 SWGT/người</span></p>
+                </div>
+                <p style={{ color: theme.gold, fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>⭐ Thành Viên Premium (+5 SWGT):</p>
+                <div style={{ color: theme.textDim, fontSize: '14px', margin: '0 0 10px 0', lineHeight: '1.6' }}>
+                    <p style={{ margin: 0 }}>Tham gia Channel: <span style={{color: '#34C759'}}>+20 SWGT/người</span></p>
+                    <p style={{ margin: 0 }}>Tham gia Nhóm Chat: <span style={{color: '#34C759'}}>+20 SWGT/người</span></p>
+                </div>
+                <p style={{ color: '#5E92F3', fontSize: '14px', fontWeight: 'bold', margin: 0 }}>💫 Cộng ngay: +5 SWGT bonus!</p>
+            </div>
+
+            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
+                <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>⏱️ Điều Kiện Rút Tiền</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px' }}>✓ Tối thiểu: <span style={{color: theme.textLight, fontWeight: 'bold'}}>500 SWGT/Tài Khoản</span></p>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px' }}>✓ Thời gian: <span style={{color: theme.textLight, fontWeight: 'bold'}}>Mở khóa sau 30 ngày đếm ngược</span></p>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px' }}>✓ Rút linh hoạt: <span style={{color: theme.textLight, fontWeight: 'bold'}}>Bất cứ lúc nào khi đủ điều kiện</span></p>
                 </div>
             </div>
         </div>
     );
 
+    // --- TAB 2: PHẦN THƯỞNG ---
     const renderRewards = () => {
         let nextTarget = 10;
         let nextReward = "+50 SWGT";
@@ -430,6 +433,22 @@ function App() {
                         <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ flex: 1, backgroundColor: '#5E92F3', color: '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', textAlign: 'center', textDecoration: 'none' }}>
                             ✈️ GỬI BẠN BÈ
                         </a>
+                    </div>
+                </div>
+
+                {/* --- ĐÃ CHÈN "CÁCH HOẠT ĐỘNG" VÀO TAB PHẦN THƯỞNG TẠI ĐÂY --- */}
+                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
+                    <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Cách Hoạt Động</h2>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                        <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>📱 Bước 1: Tham gia Bot SWC</span><br/>Liên kết với @Dau_Tu_SWC_bot trên Telegram để bắt đầu.</p>
+                        <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>👥 Bước 2: Mời bạn bè</span><br/>Chia sẻ link giới thiệu và mời bạn bè tham gia cộng đồng SWC.</p>
+                        <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>💰 Bước 3: Nhận SWGT</span><br/>Mỗi người bạn mời sẽ giúp bạn kiếm SWGT thưởng.</p>
+                        <div style={{ backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, padding: '15px', borderRadius: '10px' }}>
+                            <p style={{ margin: 0, color: theme.green, fontSize: '14px', lineHeight: '1.6' }}>
+                                <span style={{fontWeight:'bold'}}>💬 MẸO: Tương tác kiếm thêm điểm</span><br/>Mỗi tin nhắn bạn chat trong Nhóm Thảo Luận (từ 10 ký tự trở lên) tự động cộng <b style={{color: theme.gold}}>+0.3 SWGT</b>. Chat càng nhiều, tiền càng nhiều!
+                            </p>
+                        </div>
+                        <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>🔓 Bước 4: Rút tiền</span><br/>Rút ngay khi đạt 500 SWGT & đợi 30 ngày.</p>
                     </div>
                 </div>
 
@@ -554,7 +573,7 @@ function App() {
 
             <div style={{ backgroundColor: 'rgba(255, 59, 48, 0.1)', border: `1px dashed ${theme.red}`, padding: '15px', borderRadius: '10px', marginBottom: '20px' }}>
                 <p style={{ margin: '0 0 5px 0', color: theme.red, fontSize: '14px', fontWeight: 'bold' }}>⚠️ CHÚ Ý QUAN TRỌNG:</p>
-                <p style={{ margin: 0, color: theme.red, fontSize: '13px', lineHeight: '1.5' }}>Vui lòng chỉ sử dụng địa chỉ ví SWGT thuộc mạng lưới <b>Ethereum (ERC20)</b>. Việc nhập sai mạng lưới sẽ dẫn đến mất tài sản vĩnh viễn!</p>
+                <p style={{ margin: 0, color: theme.red, fontSize: '13px', lineHeight: '1.5' }}>Vui lòng chỉ sử dụng địa chỉ ví SWGT thuộc mạng lưới <b>Ethereum (ERC20)</b>. Nhập sai mạng lưới sẽ mất tài sản!</p>
             </div>
 
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
