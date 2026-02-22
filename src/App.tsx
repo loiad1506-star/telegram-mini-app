@@ -208,7 +208,6 @@ function App() {
         }
     };
 
-    // --- LOGIC NHIỆM VỤ TRÊN APP ---
     const startTask = (taskType: string, url: string, duration: number) => {
         window.open(url, '_blank'); 
         setTaskTimers(prev => ({ ...prev, [taskType]: duration })); 
@@ -298,11 +297,9 @@ function App() {
                 </button>
             </div>
 
-            {/* --- KHU VỰC NHIỆM VỤ NẠP KIẾN THỨC TÍCH HỢP TRÊN APP --- */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🧠 Nạp Kiến Thức & Lan Tỏa</h2>
                 
-                {/* 1. Đọc bài */}
                 <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', marginBottom: '10px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                         <div>
@@ -321,7 +318,6 @@ function App() {
                     )}
                 </div>
 
-                {/* 2. Youtube */}
                 <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', marginBottom: '10px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                         <div>
@@ -340,7 +336,6 @@ function App() {
                     )}
                 </div>
 
-                {/* 3. Facebook */}
                 <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', marginBottom: '10px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                         <div>
@@ -359,7 +354,6 @@ function App() {
                     )}
                 </div>
 
-                {/* 4. Share */}
                 <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                         <div>
@@ -378,9 +372,35 @@ function App() {
                     )}
                 </div>
             </div>
+            
+            {/* THÔNG TIN KHÁC TẠI TRANG CHỦ */}
+            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '15px', border: `1px solid ${theme.border}` }}>
+                <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '18px' }}>💎 Cơ Cấu Phần Thưởng SWGT</h2>
+                <p style={{ color: theme.textLight, fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>📌 Thành viên Thường:</p>
+                <div style={{ color: theme.textDim, fontSize: '14px', margin: '0 0 15px 0', lineHeight: '1.6' }}>
+                    <p style={{ margin: 0 }}>Tham gia Channel: <span style={{color: '#34C759'}}>+10 SWGT/người</span></p>
+                    <p style={{ margin: 0 }}>Tham gia Nhóm Chat: <span style={{color: '#34C759'}}>+10 SWGT/người</span></p>
+                </div>
+                <p style={{ color: theme.gold, fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>⭐ Thành Viên Premium (+5 SWGT):</p>
+                <div style={{ color: theme.textDim, fontSize: '14px', margin: '0 0 10px 0', lineHeight: '1.6' }}>
+                    <p style={{ margin: 0 }}>Tham gia Channel: <span style={{color: '#34C759'}}>+20 SWGT/người</span></p>
+                    <p style={{ margin: 0 }}>Tham gia Nhóm Chat: <span style={{color: '#34C759'}}>+20 SWGT/người</span></p>
+                </div>
+                <p style={{ color: '#5E92F3', fontSize: '14px', fontWeight: 'bold', margin: 0 }}>💫 Cộng ngay: +5 SWGT bonus!</p>
+            </div>
+
+            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
+                <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>⏱️ Điều Kiện Rút Tiền</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px' }}>✓ Tối thiểu: <span style={{color: theme.textLight, fontWeight: 'bold'}}>500 SWGT/Tài Khoản</span></p>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px' }}>✓ Thời gian: <span style={{color: theme.textLight, fontWeight: 'bold'}}>Mở khóa sau 30 ngày đếm ngược</span></p>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px' }}>✓ Rút linh hoạt: <span style={{color: theme.textLight, fontWeight: 'bold'}}>Bất cứ lúc nào khi đủ điều kiện</span></p>
+                </div>
+            </div>
         </div>
     );
 
+    // --- TAB 2: PHẦN THƯỞNG ---
     const renderRewards = () => {
         let nextTarget = 10;
         let nextReward = "+50 SWGT";
@@ -424,7 +444,7 @@ function App() {
                     </div>
                 </div>
 
-                {/* --- CHÈN "CÁCH HOẠT ĐỘNG" VÀO TAB PHẦN THƯỞNG --- */}
+                {/* --- CHÈN HƯỚNG DẪN CÁCH HOẠT ĐỘNG VÀO TAB PHẦN THƯỞNG --- */}
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
                     <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Cách Hoạt Động</h2>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -509,7 +529,7 @@ function App() {
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>💎 KHO ĐẶC QUYỀN VIP</h3>
                 <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '15px', marginBottom: '15px', border: `1px solid ${theme.border}`}}>
                     <h4 style={{margin: '0 0 8px 0', color: '#5E92F3', fontSize: '16px'}}>☕ Cà Phê Chiến Lược</h4>
-                    <p style={{fontSize: '14px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Thảo luận danh mục trực tiếp cùng Admin Ucity.</p>
+                    <p style={{fontSize: '14px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Thảo luận danh mục trực tiếp cùng Admin.</p>
                     <button onClick={() => redeemItem('Cà Phê Chiến Lược', 300)} style={{backgroundColor: '#5E92F3', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer'}}>Đổi lấy: 300 SWGT</button>
                 </div>
 
