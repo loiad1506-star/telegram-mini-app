@@ -6,12 +6,10 @@ function App() {
     const [wallet, setWallet] = useState('');
     const [referrals, setReferrals] = useState(0); 
     
-    // --- STATE MỚI BỔ SUNG ---
     const [withdrawAmount, setWithdrawAmount] = useState(''); 
     const [milestone10, setMilestone10] = useState(false); 
     const [milestone50, setMilestone50] = useState(false); 
 
-    // --- STATE NHIỆM VỤ TRÊN APP ---
     const [tasks, setTasks] = useState({
         readTaskDone: false,
         youtubeTaskDone: false,
@@ -47,24 +45,31 @@ function App() {
         blue: '#5E92F3'
     };
 
-    // --- LOGIC ĐẾM NGƯỢC 30 NGÀY ---
+    // --- LOGIC ĐẾM NGƯỢC & KIỂM TRA MỞ KHÓA ---
+    const UNLOCK_DATE_MS = new Date("2026-03-25T00:00:00").getTime(); // Thay đổi ngày mở khóa ở đây
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0 });
+    const [isUnlocked, setIsUnlocked] = useState(false);
+
     useEffect(() => {
-        const unlockDate = new Date("2026-03-25T00:00:00").getTime(); 
         const interval = setInterval(() => {
-            const distance = unlockDate - new Date().getTime();
+            const now = new Date().getTime();
+            const distance = UNLOCK_DATE_MS - now;
+            
             if (distance > 0) {
+                setIsUnlocked(false);
                 setTimeLeft({
                     days: Math.floor(distance / (1000 * 60 * 60 * 24)),
                     hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
                     mins: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
                 });
+            } else {
+                setIsUnlocked(true);
+                setTimeLeft({ days: 0, hours: 0, mins: 0 });
             }
         }, 1000);
         return () => clearInterval(interval);
     }, []);
 
-    // --- LẤY DỮ LIỆU TỪ BACKEND ---
     const fetchUserData = (uid: string) => {
         fetch(`${BACKEND_URL}/api/user?id=${uid}`)
             .then(res => res.json())
@@ -140,8 +145,12 @@ function App() {
         }).then(() => alert('✅ Đã lưu/cập nhật ví thành công!'));
     };
 
-    // --- CẬP NHẬT LOGIC RÚT TIỀN THÔNG BÁO DUY TRÌ 30 NGÀY ---
+    // --- LOGIC RÚT TIỀN (ĐÃ CHẶN THỜI GIAN MỞ KHÓA) ---
     const handleWithdraw = () => {
+        if (!isUnlocked) {
+            return alert("⏳ Bạn chưa hết thời gian mở khóa. Vui lòng chờ đến khi đếm ngược kết thúc để rút Token!");
+        }
+
         const amount = Number(withdrawAmount);
         if (!wallet) return alert("⚠️ Vui lòng lưu địa chỉ ví ERC20 bên dưới trước khi rút!");
         if (!amount || amount < 300) return alert("⚠️ Bạn cần rút tối thiểu 300 SWGT!");
@@ -158,8 +167,7 @@ function App() {
                 if(data.success) {
                     setBalance(data.balance);
                     setWithdrawAmount(''); 
-                    // THÔNG BÁO DUY TRÌ 30 NGÀY TẠI ĐÂY
-                    alert(`✅ Yêu cầu rút ${amount} SWGT đã được ghi nhận!\n\nHãy duy trì đăng nhập và nhận SWGT đều đặn trong 30 ngày, hệ thống sẽ tự động gửi Token về ví của bạn khi hết thời gian đếm ngược!`);
+                    alert(`✅ Yêu cầu rút ${amount} SWGT đã được gửi thành công!\nCổng rút Token SWGT đã mở, Admin sẽ xử lý và chuyển Token cho bạn sớm nhất.`);
                 } else { alert(data.message || "❌ Lỗi xử lý!"); }
             });
         }
@@ -438,7 +446,6 @@ function App() {
                     </div>
                 </div>
 
-                {/* --- CHÈN HƯỚNG DẪN CÁCH HOẠT ĐỘNG VÀO TAB PHẦN THƯỞNG --- */}
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
                     <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Cách Hoạt Động</h2>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -536,7 +543,6 @@ function App() {
         );
     };
 
-    // --- TAB 3: VÍ ---
     const renderWallet = () => (
         <div style={{ padding: '0 20px 20px 20px' }}>
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '30px 20px', border: `1px solid ${theme.border}`, textAlign: 'center', marginBottom: '20px' }}>
@@ -563,18 +569,24 @@ function App() {
 
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⏳ Đếm ngược mở khóa (30 Ngày)</h3>
-                <div style={{ backgroundColor: '#000', padding: '20px', borderRadius: '10px', textAlign: 'center', border: `1px solid ${theme.border}` }}>
-                    <p style={{ color: theme.textDim, fontSize: '14px', margin: '0 0 15px 0' }}>Thời gian còn lại để mở khóa rút tiền:</p>
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '10px' }}>
-                        <span style={{ color: theme.textLight, fontSize: '18px', fontWeight: 'bold' }}>Còn</span>
-                        <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.days} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Ngày</span></div>
-                        <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.hours} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Giờ</span></div>
-                        <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.mins} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Phút</span></div>
+                
+                {isUnlocked ? (
+                    <div style={{ padding: '15px', backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, borderRadius: '10px', color: theme.green, fontWeight: 'bold', fontSize: '16px', textAlign: 'center' }}>
+                        🎉 CỔNG RÚT SWGT ĐÃ MỞ!
                     </div>
-                </div>
+                ) : (
+                    <div style={{ backgroundColor: '#000', padding: '20px', borderRadius: '10px', textAlign: 'center', border: `1px solid ${theme.border}` }}>
+                        <p style={{ color: theme.textDim, fontSize: '14px', margin: '0 0 15px 0' }}>Thời gian còn lại để mở khóa rút tiền:</p>
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '10px' }}>
+                            <span style={{ color: theme.textLight, fontSize: '18px', fontWeight: 'bold' }}>Còn</span>
+                            <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.days} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Ngày</span></div>
+                            <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.hours} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Giờ</span></div>
+                            <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.mins} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Phút</span></div>
+                        </div>
+                    </div>
+                )}
             </div>
 
-            {/* --- NÚT HƯỚNG DẪN ĐĂNG KÝ VÍ GATE.IO --- */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
                 <h3 style={{ margin: '0 0 10px 0', color: theme.textLight, fontSize: '16px' }}>Chưa có ví Gate.io?</h3>
                 <p style={{ margin: '0 0 15px 0', color: theme.textDim, fontSize: '13px' }}>Đăng ký ngay để nhận Token SWGT an toàn.</p>
