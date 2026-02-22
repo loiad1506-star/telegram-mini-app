@@ -5,12 +5,13 @@ function App() {
     const [balance, setBalance] = useState(0);
     
     // --- STATE CHO VÍ VÀ THÔNG TIN THANH TOÁN ---
-    const [withdrawMethod, setWithdrawMethod] = useState('gate'); // 'gate' hoặc 'erc20'
-    const [wallet, setWallet] = useState(''); // Ví ERC20
-    const [gatecode, setGatecode] = useState(''); // Gatecode / UID
+    const [withdrawMethod, setWithdrawMethod] = useState('gate'); 
+    const [wallet, setWallet] = useState(''); 
+    const [gatecode, setGatecode] = useState(''); 
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
+    const [qrImage, setQrImage] = useState(''); // State lưu ảnh QR
 
     const [referrals, setReferrals] = useState(0); 
     const [withdrawAmount, setWithdrawAmount] = useState(''); 
@@ -52,6 +53,7 @@ function App() {
         blue: '#5E92F3'
     };
 
+    // --- LOGIC ĐẾM NGƯỢC 30 NGÀY ---
     const UNLOCK_DATE_MS = new Date("2026-03-25T00:00:00").getTime(); 
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0 });
     const [isUnlocked, setIsUnlocked] = useState(false);
@@ -76,6 +78,7 @@ function App() {
         return () => clearInterval(interval);
     }, []);
 
+    // --- LẤY DỮ LIỆU TỪ BACKEND ---
     const fetchUserData = (uid: string) => {
         fetch(`${BACKEND_URL}/api/user?id=${uid}`)
             .then(res => res.json())
@@ -86,6 +89,7 @@ function App() {
                 if (data.fullName) setFullName(data.fullName);
                 if (data.email) setEmail(data.email);
                 if (data.phone) setPhone(data.phone);
+                if (data.qrImage) setQrImage(data.qrImage);
 
                 setReferrals(data.referralCount || 0); 
                 if (data.lastCheckInDate) setLastCheckIn(data.lastCheckInDate);
@@ -132,6 +136,7 @@ function App() {
 
     const isCheckedInToday = lastCheckIn ? new Date(lastCheckIn).toDateString() === new Date().toDateString() : false;
 
+    // --- CÁC HÀM XỬ LÝ ---
     const handleCheckIn = () => {
         if (isCheckedInToday) return;
         fetch(`${BACKEND_URL}/api/checkin`, {
@@ -147,15 +152,26 @@ function App() {
         });
     };
 
-    // --- LƯU THÔNG TIN THANH TOÁN MỚI ---
+    // Hàm xử lý khi chọn file ảnh QR
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setQrImage(reader.result as string); // Chuyển ảnh thành chuỗi base64
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const handleSaveWallet = () => {
-        if (withdrawMethod === 'gate' && !gatecode) return alert("⚠️ Vui lòng nhập Gatecode hoặc UID Gate.io!");
+        if (withdrawMethod === 'gate' && !gatecode && !qrImage) return alert("⚠️ Vui lòng nhập Gatecode/UID hoặc tải ảnh QR lên!");
         if (withdrawMethod === 'erc20' && !wallet) return alert("⚠️ Vui lòng nhập địa chỉ ví ERC20!");
 
         fetch(`${BACKEND_URL}/api/save-wallet`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, wallet, gatecode, fullName, email, phone })
+            body: JSON.stringify({ userId, wallet, gatecode, fullName, email, phone, qrImage })
         }).then(() => alert('✅ Đã lưu thông tin thanh toán thành công!'));
     };
 
@@ -168,7 +184,7 @@ function App() {
         if (!amount || amount < 300) return alert("⚠️ Bạn cần rút tối thiểu 300 SWGT!");
         if (amount > balance) return alert("⚠️ Số dư của bạn không đủ để rút mức này!");
         
-        if (withdrawMethod === 'gate' && !gatecode) return alert("⚠️ Bạn chọn rút qua Gate.io nhưng chưa nhập Gatecode/UID ở bên dưới!");
+        if (withdrawMethod === 'gate' && !gatecode && !qrImage) return alert("⚠️ Bạn chọn rút qua Gate.io nhưng chưa nhập Gatecode/UID hoặc tải QR ở bên dưới!");
         if (withdrawMethod === 'erc20' && !wallet) return alert("⚠️ Bạn chọn rút qua ERC20 nhưng chưa nhập ví ở bên dưới!");
 
         let confirmMsg = `Xác nhận rút ${amount} SWGT qua mạng Gate.io (Miễn phí)?`;
@@ -187,7 +203,7 @@ function App() {
                 if(data.success) {
                     setBalance(data.balance);
                     setWithdrawAmount(''); 
-                    alert(`✅ Yêu cầu rút tiền đã được ghi nhận!\n\nHãy duy trì đăng nhập và nhận SWGT đều đặn trong 30 ngày, hệ thống sẽ tự động gửi Token về ví của bạn khi hết thời gian đếm ngược!`);
+                    alert(`✅ Yêu cầu rút tiền đã được ghi nhận!\n\nHãy duy trì đăng nhập và nhận SWGT đều đặn, hệ thống sẽ tự động gửi Token về ví của bạn khi hết thời gian đếm ngược!`);
                 } else { alert(data.message || "❌ Lỗi xử lý!"); }
             });
         }
@@ -270,6 +286,9 @@ function App() {
         });
     };
 
+    // ---------------------------------------------------------
+    // RENDER HEADER
+    // ---------------------------------------------------------
     const renderHeader = () => (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', backgroundColor: theme.bg }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -293,9 +312,11 @@ function App() {
         </div>
     );
 
+    // ---------------------------------------------------------
+    // RENDER TAB 1: TRANG CHỦ
+    // ---------------------------------------------------------
     const renderHome = () => (
         <div style={{ padding: '0 20px 20px 20px' }}>
-            {/* THỐNG KÊ */}
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', marginBottom: '20px' }}>
                 <div style={{ flex: 1, backgroundColor: theme.cardBg, borderRadius: '12px', padding: '15px 5px', textAlign: 'center', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: 0, color: theme.gold, fontSize: '22px', fontWeight: 'bold' }}>{balance}</h3>
@@ -325,6 +346,7 @@ function App() {
             {/* NHIỆM VỤ */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🧠 Nạp Kiến Thức & Lan Tỏa</h2>
+                
                 <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', marginBottom: '10px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                         <div>
@@ -342,7 +364,7 @@ function App() {
                         </div>
                     )}
                 </div>
-                {/* Youtube */}
+
                 <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', marginBottom: '10px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                         <div>
@@ -360,7 +382,7 @@ function App() {
                         </div>
                     )}
                 </div>
-                {/* Facebook */}
+
                 <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', marginBottom: '10px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                         <div>
@@ -378,7 +400,7 @@ function App() {
                         </div>
                     )}
                 </div>
-                {/* Share */}
+
                 <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                         <div>
@@ -397,9 +419,52 @@ function App() {
                     )}
                 </div>
             </div>
+
+            {/* HƯỚNG DẪN HOẠT ĐỘNG (GIỮ NGUYÊN Ở TRANG CHỦ) */}
+            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
+                <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Cách Hoạt Động</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>📱 Bước 1: Tham gia Bot SWC</span><br/>Liên kết với @Dau_Tu_SWC_bot trên Telegram để bắt đầu.</p>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>👥 Bước 2: Mời bạn bè</span><br/>Chia sẻ link giới thiệu và mời bạn bè tham gia cộng đồng SWC.</p>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>💰 Bước 3: Nhận SWGT</span><br/>Mỗi người bạn mời sẽ giúp bạn kiếm SWGT thưởng.</p>
+                    <div style={{ backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, padding: '15px', borderRadius: '10px' }}>
+                        <p style={{ margin: 0, color: theme.green, fontSize: '14px', lineHeight: '1.6' }}>
+                            <span style={{fontWeight:'bold'}}>💬 MẸO: Tương tác kiếm thêm điểm</span><br/>Mỗi tin nhắn bạn chat trong Nhóm Thảo Luận (từ 10 ký tự trở lên) tự động cộng <b style={{color: theme.gold}}>+0.3 SWGT</b>. Chat càng nhiều, tiền càng nhiều!
+                        </p>
+                    </div>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>🔓 Bước 4: Rút tiền</span><br/>Rút ngay khi đạt 500 SWGT & đợi 30 ngày.</p>
+                </div>
+            </div>
+            
+            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '15px', border: `1px solid ${theme.border}` }}>
+                <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '18px' }}>💎 Cơ Cấu Phần Thưởng SWGT</h2>
+                <p style={{ color: theme.textLight, fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>📌 Thành viên Thường:</p>
+                <div style={{ color: theme.textDim, fontSize: '14px', margin: '0 0 15px 0', lineHeight: '1.6' }}>
+                    <p style={{ margin: 0 }}>Tham gia Channel: <span style={{color: '#34C759'}}>+10 SWGT/người</span></p>
+                    <p style={{ margin: 0 }}>Tham gia Nhóm Chat: <span style={{color: '#34C759'}}>+10 SWGT/người</span></p>
+                </div>
+                <p style={{ color: theme.gold, fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>⭐ Thành Viên Premium (+5 SWGT):</p>
+                <div style={{ color: theme.textDim, fontSize: '14px', margin: '0 0 10px 0', lineHeight: '1.6' }}>
+                    <p style={{ margin: 0 }}>Tham gia Channel: <span style={{color: '#34C759'}}>+20 SWGT/người</span></p>
+                    <p style={{ margin: 0 }}>Tham gia Nhóm Chat: <span style={{color: '#34C759'}}>+20 SWGT/người</span></p>
+                </div>
+                <p style={{ color: '#5E92F3', fontSize: '14px', fontWeight: 'bold', margin: 0 }}>💫 Cộng ngay: +5 SWGT bonus!</p>
+            </div>
+
+            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
+                <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>⏱️ Điều Kiện Rút Tiền</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px' }}>✓ Tối thiểu: <span style={{color: theme.textLight, fontWeight: 'bold'}}>500 SWGT/Tài Khoản</span></p>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px' }}>✓ Thời gian: <span style={{color: theme.textLight, fontWeight: 'bold'}}>M mở khóa sau 30 ngày đếm ngược</span></p>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px' }}>✓ Rút linh hoạt: <span style={{color: theme.textLight, fontWeight: 'bold'}}>Bất cứ lúc nào khi đủ điều kiện</span></p>
+                </div>
+            </div>
         </div>
     );
 
+    // ---------------------------------------------------------
+    // RENDER TAB 2: PHẦN THƯỞNG
+    // ---------------------------------------------------------
     const renderRewards = () => {
         let nextTarget = 10;
         let nextReward = "+50 SWGT";
@@ -440,21 +505,6 @@ function App() {
                         <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ flex: 1, backgroundColor: '#5E92F3', color: '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', textAlign: 'center', textDecoration: 'none' }}>
                             ✈️ GỬI BẠN BÈ
                         </a>
-                    </div>
-                </div>
-
-                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
-                    <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Cách Hoạt Động</h2>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                        <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>📱 Bước 1: Tham gia Bot SWC</span><br/>Liên kết với @Dau_Tu_SWC_bot trên Telegram để bắt đầu.</p>
-                        <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>👥 Bước 2: Mời bạn bè</span><br/>Chia sẻ link giới thiệu và mời bạn bè tham gia cộng đồng SWC.</p>
-                        <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>💰 Bước 3: Nhận SWGT</span><br/>Mỗi người bạn mời sẽ giúp bạn kiếm SWGT thưởng.</p>
-                        <div style={{ backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, padding: '15px', borderRadius: '10px' }}>
-                            <p style={{ margin: 0, color: theme.green, fontSize: '14px', lineHeight: '1.6' }}>
-                                <span style={{fontWeight:'bold'}}>💬 MẸO: Tương tác kiếm thêm điểm</span><br/>Mỗi tin nhắn bạn chat trong Nhóm Thảo Luận (từ 10 ký tự trở lên) tự động cộng <b style={{color: theme.gold}}>+0.3 SWGT</b>. Chat càng nhiều, tiền càng nhiều!
-                            </p>
-                        </div>
-                        <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>🔓 Bước 4: Rút tiền</span><br/>Rút ngay khi đạt 500 SWGT & đợi 30 ngày.</p>
                     </div>
                 </div>
 
@@ -540,7 +590,9 @@ function App() {
         );
     };
 
-    // --- TAB 3: VÍ ---
+    // ---------------------------------------------------------
+    // RENDER TAB 3: VÍ & RÚT TIỀN (THÊM UPLOAD QR GATE)
+    // ---------------------------------------------------------
     const renderWallet = () => (
         <div style={{ padding: '0 20px 20px 20px' }}>
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '30px 20px', border: `1px solid ${theme.border}`, textAlign: 'center', marginBottom: '20px' }}>
@@ -585,7 +637,7 @@ function App() {
                 )}
             </div>
 
-            {/* PHẦN LƯU VÍ ĐƯỢC THIẾT KẾ DẠNG 2 TAB CON BÊN TRONG */}
+            {/* --- PHẦN LƯU VÍ & TẢI ẢNH QR GATE --- */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
                 <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⚙️ Thiết lập thanh toán</h3>
                 
@@ -617,6 +669,27 @@ function App() {
                             </div>
                         </div>
 
+                        {/* TẢI ẢNH QR LÊN */}
+                        <p style={{ color: theme.textLight, fontSize: '14px', fontWeight: 'bold', margin: '0 0 10px 0' }}>Tải ảnh QR nhận tiền (Quan trọng):</p>
+                        <div style={{ border: `1px dashed ${theme.green}`, borderRadius: '8px', padding: '15px', textAlign: 'center', marginBottom: '15px' }}>
+                            <input 
+                                type="file" 
+                                accept="image/*" 
+                                onChange={handleImageUpload} 
+                                style={{ display: 'none' }} 
+                                id="qr-upload"
+                            />
+                            <label htmlFor="qr-upload" style={{ backgroundColor: theme.green, color: '#fff', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', display: 'inline-block', fontWeight: 'bold', fontSize: '13px' }}>
+                                📸 CHỌN ẢNH QR
+                            </label>
+                            {qrImage && (
+                                <div style={{ marginTop: '15px' }}>
+                                    <p style={{ color: theme.textDim, fontSize: '12px', margin: '0 0 5px 0' }}>Ảnh QR hiện tại của bạn:</p>
+                                    <img src={qrImage} alt="QR Preview" style={{ maxWidth: '150px', maxHeight: '150px', borderRadius: '8px', border: `1px solid ${theme.border}` }} />
+                                </div>
+                            )}
+                        </div>
+
                         <p style={{ color: theme.textLight, fontSize: '14px', fontWeight: 'bold', margin: '0 0 10px 0' }}>Bổ sung thông tin (Tùy chọn):</p>
                         <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="1. Họ tên" style={{ width: '100%', padding: '14px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '10px', fontSize: '14px' }} />
                         <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="2. Gmail" style={{ width: '100%', padding: '14px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '10px', fontSize: '14px' }} />
@@ -640,7 +713,7 @@ function App() {
                 )}
 
                 <button onClick={handleSaveWallet} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '15px', cursor: 'pointer' }}>
-                    {wallet || gatecode ? "CẬP NHẬT THÔNG TIN THANH TOÁN" : "LƯU THÔNG TIN THANH TOÁN"}
+                    {(withdrawMethod === 'erc20' && wallet) || (withdrawMethod === 'gate' && gatecode) ? "CẬP NHẬT THÔNG TIN THANH TOÁN" : "LƯU THÔNG TIN THANH TOÁN"}
                 </button>
             </div>
         </div>
