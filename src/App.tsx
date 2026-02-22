@@ -24,7 +24,7 @@ function App() {
         shareTaskDone: false
     });
     
-    // --- STATE MỚI: BẮT BUỘC PHẢI BẤM LINK MỚI ĐƯỢC NHẬN ---
+    // --- STATE BẮT BUỘC BẤM LINK TRƯỚC KHI NHẬN THƯỞNG ---
     const [taskStarted, setTaskStarted] = useState({
         read: false, youtube: false, facebook: false, share: false
     });
@@ -113,13 +113,13 @@ function App() {
                 const joinMs = data.joinDate ? new Date(data.joinDate).getTime() : new Date("2026-02-22T00:00:00Z").getTime();
                 setUnlockDateMs(joinMs + (daysLimit * 24 * 60 * 60 * 1000));
 
-                const now = new Date().getTime();
-                const lastDaily = data.lastDailyTask ? new Date(data.lastDailyTask).getTime() : 0;
-                const lastShare = data.lastShareTask ? new Date(data.lastShareTask).getTime() : 0;
+                const todayStr = new Date().toDateString();
+                const lastDaily = data.lastDailyTask ? new Date(data.lastDailyTask).toDateString() : '';
+                const lastShare = data.lastShareTask ? new Date(data.lastShareTask).toDateString() : '';
                 
                 setTasks({
-                    readTaskDone: (now - lastDaily) < 86400000, 
-                    shareTaskDone: (now - lastShare) < 86400000,
+                    readTaskDone: lastDaily === todayStr, 
+                    shareTaskDone: lastShare === todayStr,
                     youtubeTaskDone: data.youtubeTaskDone || false,
                     facebookTaskDone: data.facebookTaskDone || false
                 });
@@ -153,7 +153,6 @@ function App() {
 
     const isCheckedInToday = lastCheckIn ? new Date(lastCheckIn).toDateString() === new Date().toDateString() : false;
 
-    // --- FIX LỖI ĐIỂM DANH ---
     const handleCheckIn = () => {
         if (isCheckedInToday) return;
         fetch(`${BACKEND_URL}/api/checkin`, {
@@ -258,11 +257,10 @@ function App() {
         }
     };
 
-    // --- FIX LỖI NHIỆM VỤ: BẮT BUỘC BẤM MỚI CHẠY ĐỒNG HỒ ---
     const startTask = (taskType: string, url: string, duration: number) => {
         window.open(url, '_blank'); 
-        setTaskStarted(prev => ({ ...prev, [taskType]: true })); // Đánh dấu đã bấm link
-        setTaskTimers(prev => ({ ...prev, [taskType]: duration })); // Bắt đầu đếm ngược
+        setTaskStarted(prev => ({ ...prev, [taskType]: true }));
+        setTaskTimers(prev => ({ ...prev, [taskType]: duration })); 
         
         const interval = setInterval(() => {
             setTaskTimers(prev => {
@@ -342,16 +340,15 @@ function App() {
                 <button 
                     onClick={handleCheckIn} 
                     disabled={isCheckedInToday}
-                    style={{ width: '100%', backgroundColor: isCheckedInToday ? '#333' : theme.green, color: isCheckedInToday ? theme.textDim : '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: isCheckedInToday ? 'not-allowed' : 'pointer', fontSize: '15px' }}
+                    style={{ width: '100%', backgroundColor: isCheckedInToday ? '#444' : theme.green, color: isCheckedInToday ? '#aaa' : '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: isCheckedInToday ? 'not-allowed' : 'pointer', fontSize: '15px' }}
                 >
-                    {isCheckedInToday ? "✅ ĐÃ ĐIỂM DANH HÔM NAY" : "✋ BẤM ĐIỂM DANH NHẬN +2 SWGT"}
+                    {isCheckedInToday ? "✅ Bạn đã nhận SWGT hôm nay" : "✋ BẤM ĐIỂM DANH NHẬN +2 SWGT"}
                 </button>
             </div>
 
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🧠 Nạp Kiến Thức & Lan Tỏa</h2>
                 
-                {/* 1. Đọc bài */}
                 <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', marginBottom: '10px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                         <div>
@@ -373,7 +370,6 @@ function App() {
                     )}
                 </div>
 
-                {/* 2. Youtube */}
                 <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', marginBottom: '10px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                         <div>
@@ -395,7 +391,6 @@ function App() {
                     )}
                 </div>
 
-                {/* 3. Facebook */}
                 <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', marginBottom: '10px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                         <div>
@@ -417,7 +412,6 @@ function App() {
                     )}
                 </div>
 
-                {/* 4. Share */}
                 <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                         <div>
@@ -451,7 +445,7 @@ function App() {
                             <span style={{fontWeight:'bold'}}>💬 MẸO: Tương tác kiếm thêm điểm</span><br/>Mỗi tin nhắn bạn chat trong Nhóm Thảo Luận (từ 10 ký tự trở lên) tự động cộng <b style={{color: theme.gold}}>+0.3 SWGT</b>. Chat càng nhiều, tiền càng nhiều!
                         </p>
                     </div>
-                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>🔓 Bước 4: Rút tiền</span><br/>Rút ngay khi đạt 500 SWGT & đợi hết thời gian đếm ngược.</p>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>🔓 Bước 4: Rút tiền</span><br/>Rút ngay khi đạt 300 SWGT & đợi hết thời gian đếm ngược.</p>
                 </div>
             </div>
             
@@ -472,8 +466,8 @@ function App() {
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>⏱️ Điều Kiện Rút Tiền</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px' }}>✓ Tối thiểu: <span style={{color: theme.textLight, fontWeight: 'bold'}}>500 SWGT/Tài Khoản</span></p>
-                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px' }}>✓ Thời gian: <span style={{color: theme.textLight, fontWeight: 'bold'}}>Mở khóa sau {lockDaysLimit} ngày tham gia</span></p>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px' }}>✓ Tối thiểu: <span style={{color: theme.textLight, fontWeight: 'bold'}}>300 SWGT/Tài Khoản</span></p>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}>✓ Thời gian: <span style={{color: theme.textLight, fontWeight: 'bold'}}>Mở khóa sau 7 ngày vs tài khoản Premium và 15 ngày vs tài khoản thường tính từ ngày tham gia</span></p>
                     <p style={{ margin: 0, color: theme.textDim, fontSize: '14px' }}>✓ Rút linh hoạt: <span style={{color: theme.textLight, fontWeight: 'bold'}}>Bất cứ lúc nào khi đủ điều kiện</span></p>
                 </div>
             </div>
@@ -488,14 +482,21 @@ function App() {
         const progressPercent = Math.min((referrals / nextTarget) * 100, 100);
 
         let displayBoard = [...leaderboard];
+        // UPDATE: Bổ sung Dummy Data thành 10 người cho đẹp
         const dummyUsers = [
             { firstName: 'Trần', lastName: 'Thành', referralCount: 24 },
             { firstName: 'Lê', lastName: 'Minh', referralCount: 18 },
             { firstName: 'Phạm', lastName: 'Hương', referralCount: 12 },
-            { firstName: 'Hoàng', lastName: 'Nam', referralCount: 7 }
+            { firstName: 'Hoàng', lastName: 'Nam', referralCount: 9 },
+            { firstName: 'Vũ', lastName: 'Hoàng', referralCount: 7 },
+            { firstName: 'Đặng', lastName: 'Khôi', referralCount: 5 },
+            { firstName: 'Bùi', lastName: 'Linh', referralCount: 4 },
+            { firstName: 'Ngô', lastName: 'Bảo', referralCount: 3 },
+            { firstName: 'Đỗ', lastName: 'Anh', referralCount: 2 },
+            { firstName: 'Lý', lastName: 'Quân', referralCount: 1 }
         ];
-        if (displayBoard.length < 5) {
-            const needed = 5 - displayBoard.length;
+        if (displayBoard.length < 10) {
+            const needed = 10 - displayBoard.length;
             displayBoard = [...displayBoard, ...dummyUsers.slice(0, needed)];
             displayBoard.sort((a, b) => b.referralCount - a.referralCount);
         }
@@ -520,22 +521,6 @@ function App() {
                         <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ flex: 1, backgroundColor: '#5E92F3', color: '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', textAlign: 'center', textDecoration: 'none' }}>
                             ✈️ GỬI BẠN BÈ
                         </a>
-                    </div>
-                </div>
-
-                {/* --- CHÈN HƯỚNG DẪN CÁCH HOẠT ĐỘNG VÀO TAB PHẦN THƯỞNG --- */}
-                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
-                    <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Cách Hoạt Động</h2>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                        <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>📱 Bước 1: Tham gia Bot SWC</span><br/>Liên kết với @Dau_Tu_SWC_bot trên Telegram để bắt đầu.</p>
-                        <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>👥 Bước 2: Mời bạn bè</span><br/>Chia sẻ link giới thiệu và mời bạn bè tham gia cộng đồng SWC.</p>
-                        <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>💰 Bước 3: Nhận SWGT</span><br/>Mỗi người bạn mời sẽ giúp bạn kiếm SWGT thưởng.</p>
-                        <div style={{ backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, padding: '15px', borderRadius: '10px' }}>
-                            <p style={{ margin: 0, color: theme.green, fontSize: '14px', lineHeight: '1.6' }}>
-                                <span style={{fontWeight:'bold'}}>💬 MẸO: Tương tác kiếm thêm điểm</span><br/>Mỗi tin nhắn bạn chat trong Nhóm Thảo Luận (từ 10 ký tự trở lên) tự động cộng <b style={{color: theme.gold}}>+0.3 SWGT</b>. Chat càng nhiều, tiền càng nhiều!
-                            </p>
-                        </div>
-                        <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>🔓 Bước 4: Rút tiền</span><br/>Rút ngay khi đạt 500 SWGT & đợi hết thời gian đếm ngược.</p>
                     </div>
                 </div>
 
@@ -583,7 +568,7 @@ function App() {
 
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🏆 BẢNG VÀNG ĐUA TOP</h3>
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '15px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
-                    {displayBoard.slice(0, 5).map((user, index) => {
+                    {displayBoard.slice(0, 10).map((user, index) => {
                         let medal = "🏅";
                         if (index === 0) medal = "🥇";
                         else if (index === 1) medal = "🥈";
@@ -601,7 +586,10 @@ function App() {
                         )
                     })}
                     <div style={{ textAlign: 'center', paddingTop: '15px', borderTop: `1px dashed ${theme.gold}`, marginTop: '5px' }}>
-                        <p style={{ color: theme.gold, fontSize: '14px', fontWeight: 'bold', margin: 0, fontStyle: 'italic' }}>👉 Người tiếp theo trên Bảng Vàng sẽ là BẠN!</p>
+                        <p style={{ color: theme.gold, fontSize: '14px', fontWeight: 'bold', margin: '0 0 10px 0', fontStyle: 'italic' }}>👉 Người tiếp theo trên Bảng Vàng sẽ là BẠN!</p>
+                        <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ display: 'inline-block', width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '12px', borderRadius: '8px', fontWeight: 'bold', border: 'none', fontSize: '14px', textDecoration: 'none' }}>
+                            ✈️ CHIA SẺ LINK ĐỂ ĐUA TOP NGAY
+                        </a>
                     </div>
                 </div>
 
