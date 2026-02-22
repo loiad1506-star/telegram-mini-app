@@ -122,7 +122,7 @@ function App() {
     const handleWithdraw = () => {
         const amount = Number(withdrawAmount);
         if (!wallet) return alert("⚠️ Vui lòng lưu địa chỉ ví ERC20 bên dưới trước khi rút!");
-        if (!amount || amount < 50) return alert("⚠️ Bạn cần rút tối thiểu 50 SWGT!");
+        if (!amount || amount < 300) return alert("⚠️ Bạn cần rút tối thiểu 300 SWGT!");
         if (amount > balance) return alert("⚠️ Số dư của bạn không đủ để rút mức này!");
         
         if (window.confirm(`Xác nhận yêu cầu rút ${amount} SWGT về ví?`)) {
@@ -423,8 +423,8 @@ function App() {
                     style={{ width: '100%', padding: '14px', borderRadius: '10px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '15px', fontSize: '15px', textAlign: 'center' }}
                 />
 
-                <button onClick={handleWithdraw} style={{ width: '100%', backgroundColor: balance >= 50 ? theme.green : '#333', color: balance >= 50 ? '#fff' : theme.textDim, padding: '16px', borderRadius: '12px', fontWeight: 'bold', border: 'none', fontSize: '16px', cursor: balance >= 50 ? 'pointer' : 'not-allowed', boxShadow: balance >= 50 ? '0 4px 15px rgba(52, 199, 89, 0.3)' : 'none' }}>
-                    {balance >= 50 ? '💸 XÁC NHẬN RÚT TIỀN' : '🔒 CẦN TỐI THIỂU 50 SWGT'}
+                <button onClick={handleWithdraw} style={{ width: '100%', backgroundColor: balance >= 300 ? theme.green : '#333', color: balance >= 50 ? '#fff' : theme.textDim, padding: '16px', borderRadius: '12px', fontWeight: 'bold', border: 'none', fontSize: '16px', cursor: balance >= 300 ? 'pointer' : 'not-allowed', boxShadow: balance >= 300 ? '0 4px 15px rgba(52, 199, 89, 0.3)' : 'none' }}>
+                    {balance >= 300 ? '💸 XÁC NHẬN RÚT TIỀN' : '🔒 CẦN TỐI THIỂU 300 SWGT'}
                 </button>
             </div>
 
