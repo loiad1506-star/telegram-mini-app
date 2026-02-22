@@ -10,7 +10,7 @@ function App() {
     const [milestone10, setMilestone10] = useState(false); 
     const [milestone50, setMilestone50] = useState(false); 
 
-    // --- STATE NHIỆM VỤ (ĐỒNG BỘ TỪ BACKEND) ---
+    // --- STATE NHIỆM VỤ ---
     const [tasks, setTasks] = useState({
         readTaskDone: false,
         youtubeTaskDone: false,
@@ -18,7 +18,7 @@ function App() {
         shareTaskDone: false
     });
     
-    // --- STATE ĐẾM NGƯỢC THỜI GIAN LÀM NHIỆM VỤ TẠI APP ---
+    // --- STATE ĐẾM NGƯỢC ---
     const [taskTimers, setTaskTimers] = useState({
         read: 0, youtube: 0, facebook: 0, share: 0
     });
@@ -47,7 +47,6 @@ function App() {
         blue: '#5E92F3'
     };
 
-    // --- LOGIC ĐẾM NGƯỢC MỞ KHÓA VÍ 30 NGÀY ---
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0 });
     useEffect(() => {
         const unlockDate = new Date("2026-03-25T00:00:00").getTime(); 
@@ -64,7 +63,6 @@ function App() {
         return () => clearInterval(interval);
     }, []);
 
-    // --- LẤY DỮ LIỆU TỪ BACKEND ---
     const fetchUserData = (uid: string) => {
         fetch(`${BACKEND_URL}/api/user?id=${uid}`)
             .then(res => res.json())
@@ -76,13 +74,12 @@ function App() {
                 setMilestone10(data.milestone10 || false);
                 setMilestone50(data.milestone50 || false);
                 
-                // Đồng bộ trạng thái nhiệm vụ
                 const now = new Date().getTime();
                 const lastDaily = data.lastDailyTask ? new Date(data.lastDailyTask).getTime() : 0;
                 const lastShare = data.lastShareTask ? new Date(data.lastShareTask).getTime() : 0;
                 
                 setTasks({
-                    readTaskDone: (now - lastDaily) < 86400000, // Đã làm trong vòng 24h chưa
+                    readTaskDone: (now - lastDaily) < 86400000, 
                     shareTaskDone: (now - lastShare) < 86400000,
                     youtubeTaskDone: data.youtubeTaskDone || false,
                     facebookTaskDone: data.facebookTaskDone || false
@@ -117,7 +114,6 @@ function App() {
 
     const isCheckedInToday = lastCheckIn ? new Date(lastCheckIn).toDateString() === new Date().toDateString() : false;
 
-    // --- CÁC HÀM XỬ LÝ CƠ BẢN ---
     const handleCheckIn = () => {
         if (isCheckedInToday) return;
         fetch(`${BACKEND_URL}/api/checkin`, {
@@ -165,10 +161,52 @@ function App() {
         }
     };
 
-    // --- LOGIC NHIỆM VỤ TRÊN APP ---
+    // --- BỔ SUNG HÀM COPY LINK VÀ NHẬN MỐC BỊ THIẾU ---
+    const handleCopyLink = () => {
+        const link = `https://t.me/Dau_Tu_SWC_bot?start=${userId || 'ref'}`;
+        navigator.clipboard.writeText(link)
+            .then(() => alert('✅ Đã sao chép link giới thiệu thành công!'))
+            .catch(() => alert('❌ Lỗi sao chép!'));
+    };
+
+    const handleClaimMilestone = (milestone: number) => {
+        fetch(`${BACKEND_URL}/api/claim-milestone`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, milestone })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                setBalance(data.balance);
+                if (milestone === 10) setMilestone10(true);
+                if (milestone === 50) setMilestone50(true);
+                alert(`🎉 Chúc mừng! Bạn đã nhận thành công thưởng mốc ${milestone} người!`);
+            } else { alert(data.message || "❌ Chưa đủ điều kiện nhận!"); }
+        });
+    };
+
+    const redeemItem = (itemName: string, cost: number) => {
+        if (balance < cost) return alert(`⚠️ Bạn cần thêm ${cost - balance} SWGT nữa để đổi quyền lợi này!`);
+        if (window.confirm(`Xác nhận dùng ${cost} SWGT để đổi ${itemName}?`)) {
+            fetch(`${BACKEND_URL}/api/redeem`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, itemName, cost })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    setBalance(data.balance);
+                    alert("🎉 Yêu cầu đổi quà đã được gửi! Admin sẽ xử lý sớm.");
+                }
+            });
+        }
+    };
+
     const startTask = (taskType: string, url: string, duration: number) => {
-        window.open(url, '_blank'); // Mở link
-        setTaskTimers(prev => ({ ...prev, [taskType]: duration })); // Gắn thời gian đếm ngược
+        window.open(url, '_blank'); 
+        setTaskTimers(prev => ({ ...prev, [taskType]: duration })); 
         
         const interval = setInterval(() => {
             setTaskTimers(prev => {
@@ -201,7 +239,6 @@ function App() {
         });
     };
 
-    // --- RENDER HEADER ---
     const renderHeader = () => (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', backgroundColor: theme.bg }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -225,7 +262,6 @@ function App() {
         </div>
     );
 
-    // --- TAB 1: TRANG CHỦ (ĐÃ TÍCH HỢP NHIỆM VỤ NẠP KIẾN THỨC) ---
     const renderHome = () => (
         <div style={{ padding: '0 20px 20px 20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', marginBottom: '20px' }}>
@@ -254,11 +290,9 @@ function App() {
                 </button>
             </div>
 
-            {/* KHU VỰC NHIỆM VỤ NẠP KIẾN THỨC TÍCH HỢP TRÊN APP */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🧠 Nạp Kiến Thức & Lan Tỏa</h2>
                 
-                {/* 1. Đọc bài */}
                 <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', marginBottom: '10px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                         <div>
@@ -277,7 +311,6 @@ function App() {
                     )}
                 </div>
 
-                {/* 2. Youtube */}
                 <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', marginBottom: '10px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                         <div>
@@ -296,7 +329,6 @@ function App() {
                     )}
                 </div>
 
-                {/* 3. Facebook */}
                 <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', marginBottom: '10px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                         <div>
@@ -315,7 +347,6 @@ function App() {
                     )}
                 </div>
 
-                {/* 4. Share */}
                 <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                         <div>
@@ -335,7 +366,6 @@ function App() {
                 </div>
             </div>
             
-            {/* THÔNG TIN KHÁC */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '15px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Cách Hoạt Động</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -352,7 +382,6 @@ function App() {
         </div>
     );
 
-    // --- TAB 2: PHẦN THƯỞNG ---
     const renderRewards = () => {
         let nextTarget = 10;
         let nextReward = "+50 SWGT";
@@ -437,11 +466,47 @@ function App() {
                         </div>
                     </div>
                 </div>
+
+                <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🏆 BẢNG VÀNG ĐUA TOP</h3>
+                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '15px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
+                    {displayBoard.slice(0, 5).map((user, index) => {
+                        let medal = "🏅";
+                        if (index === 0) medal = "🥇";
+                        else if (index === 1) medal = "🥈";
+                        else if (index === 2) medal = "🥉";
+                        return (
+                            <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: index < displayBoard.length - 1 ? `1px solid ${theme.border}` : 'none' }}>
+                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '22px', marginRight: '12px' }}>{medal}</span>
+                                    <span style={{ color: theme.textLight, fontWeight: 'bold', fontSize: '15px' }}>{user.firstName} {user.lastName}</span>
+                                </div>
+                                <div style={{ color: theme.gold, fontWeight: 'bold', fontSize: '16px' }}>
+                                    {user.referralCount} <span style={{ fontSize: '12px', color: theme.textDim, fontWeight: 'normal' }}>người</span>
+                                </div>
+                            </div>
+                        )
+                    })}
+                    <div style={{ textAlign: 'center', paddingTop: '15px', borderTop: `1px dashed ${theme.gold}`, marginTop: '5px' }}>
+                        <p style={{ color: theme.gold, fontSize: '14px', fontWeight: 'bold', margin: 0, fontStyle: 'italic' }}>👉 Người tiếp theo trên Bảng Vàng sẽ là BẠN!</p>
+                    </div>
+                </div>
+
+                <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>💎 KHO ĐẶC QUYỀN VIP</h3>
+                <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '15px', marginBottom: '15px', border: `1px solid ${theme.border}`}}>
+                    <h4 style={{margin: '0 0 8px 0', color: '#5E92F3', fontSize: '16px'}}>☕ Cà Phê Chiến Lược</h4>
+                    <p style={{fontSize: '14px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Thảo luận danh mục trực tiếp cùng Admin Ucity.</p>
+                    <button onClick={() => redeemItem('Cà Phê Chiến Lược', 300)} style={{backgroundColor: '#5E92F3', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer'}}>Đổi lấy: 300 SWGT</button>
+                </div>
+
+                <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '15px', marginBottom: '15px', border: `1px solid ${theme.border}`}}>
+                    <h4 style={{margin: '0 0 8px 0', color: '#34C759', fontSize: '16px'}}>🔓 Mở Khóa Group Private</h4>
+                    <p style={{fontSize: '14px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Nhận tín hiệu thị trường và họp Zoom kín hàng tuần.</p>
+                    <button onClick={() => redeemItem('Group Private', 500)} style={{backgroundColor: '#34C759', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer'}}>Đổi lấy: 500 SWGT</button>
+                </div>
             </div>
         );
     };
 
-    // --- TAB 3: VÍ ---
     const renderWallet = () => (
         <div style={{ padding: '0 20px 20px 20px' }}>
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '30px 20px', border: `1px solid ${theme.border}`, textAlign: 'center', marginBottom: '20px' }}>
@@ -469,6 +534,7 @@ function App() {
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⏳ Đếm ngược mở khóa (30 Ngày)</h3>
                 <div style={{ backgroundColor: '#000', padding: '20px', borderRadius: '10px', textAlign: 'center', border: `1px solid ${theme.border}` }}>
+                    <p style={{ color: theme.textDim, fontSize: '14px', margin: '0 0 15px 0' }}>Thời gian còn lại để mở khóa rút tiền:</p>
                     <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '10px' }}>
                         <span style={{ color: theme.textLight, fontSize: '18px', fontWeight: 'bold' }}>Còn</span>
                         <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.days} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Ngày</span></div>
@@ -484,6 +550,13 @@ function App() {
             </div>
 
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '15px' }}>
+                    <span style={{ fontSize: '22px' }}>🛡️</span>
+                    <div>
+                        <h3 style={{ margin: 0, color: theme.textLight, fontSize: '16px' }}>Liên kết ví (Mạng ERC20)</h3>
+                        <p style={{ margin: 0, color: theme.textDim, fontSize: '13px' }}>Đảm bảo đúng địa chỉ để nhận Token</p>
+                    </div>
+                </div>
                 <input 
                     value={wallet}
                     onChange={(e) => setWallet(e.target.value)}
