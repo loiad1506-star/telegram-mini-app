@@ -14,8 +14,10 @@ function App() {
 
     const [referrals, setReferrals] = useState(0); 
     const [withdrawAmount, setWithdrawAmount] = useState(''); 
-    const [milestone10, setMilestone10] = useState(false); 
-    const [milestone50, setMilestone50] = useState(false); 
+    
+    // --- STATE CHUỖI ĐIỂM DANH & MỐC THƯỞNG ---
+    const [checkInStreak, setCheckInStreak] = useState(0);
+    const [milestones, setMilestones] = useState<any>({});
 
     const [tasks, setTasks] = useState({
         readTaskDone: false,
@@ -24,7 +26,6 @@ function App() {
         shareTaskDone: false
     });
     
-    // --- STATE BẮT BUỘC BẤM LINK TRƯỚC KHI NHẬN THƯỞNG ---
     const [taskStarted, setTaskStarted] = useState({
         read: false, youtube: false, facebook: false, share: false
     });
@@ -43,7 +44,6 @@ function App() {
     const [lastCheckIn, setLastCheckIn] = useState<string | null>(null);
     const [leaderboard, setLeaderboard] = useState<any[]>([]);
 
-    // --- STATE PREMIUM & MỞ KHÓA ---
     const [isPremiumUser, setIsPremiumUser] = useState(false);
     const [unlockDateMs, setUnlockDateMs] = useState(0);
     const [lockDaysLimit, setLockDaysLimit] = useState(15);
@@ -65,14 +65,22 @@ function App() {
         premium: '#E0B0FF' 
     };
 
-    // --- LOGIC ĐẾM NGƯỢC ---
+    // --- DANH SÁCH 7 MỐC THƯỞNG ---
+    const MILESTONE_LIST = [
+        { req: 3, reward: 10, key: 'milestone3' },
+        { req: 10, reward: 50, key: 'milestone10' },
+        { req: 20, reward: 100, key: 'milestone20' },
+        { req: 50, reward: 300, key: 'milestone50' },
+        { req: 100, reward: 1000, key: 'milestone100' },
+        { req: 250, reward: 3000, key: 'milestone250' },
+        { req: 500, reward: 10000, key: 'milestone500' }
+    ];
+
     useEffect(() => {
         if (!unlockDateMs) return;
-
         const interval = setInterval(() => {
             const now = new Date().getTime();
             const distance = unlockDateMs - now;
-            
             if (distance > 0) {
                 setIsUnlocked(false);
                 setTimeLeft({
@@ -88,7 +96,6 @@ function App() {
         return () => clearInterval(interval);
     }, [unlockDateMs]);
 
-    // --- LẤY DỮ LIỆU TỪ BACKEND ---
     const fetchUserData = (uid: string) => {
         fetch(`${BACKEND_URL}/api/user?id=${uid}`)
             .then(res => res.json())
@@ -102,8 +109,14 @@ function App() {
 
                 setReferrals(data.referralCount || 0); 
                 if (data.lastCheckInDate) setLastCheckIn(data.lastCheckInDate);
-                setMilestone10(data.milestone10 || false);
-                setMilestone50(data.milestone50 || false);
+                setCheckInStreak(data.checkInStreak || 0);
+                
+                // Lấy dữ liệu 7 mốc
+                setMilestones({
+                    milestone3: data.milestone3, milestone10: data.milestone10, 
+                    milestone20: data.milestone20, milestone50: data.milestone50,
+                    milestone100: data.milestone100, milestone250: data.milestone250, milestone500: data.milestone500
+                });
                 
                 const premium = data.isPremium || false;
                 setIsPremiumUser(premium);
@@ -153,6 +166,13 @@ function App() {
 
     const isCheckedInToday = lastCheckIn ? new Date(lastCheckIn).toDateString() === new Date().toDateString() : false;
 
+    // TÍNH TOÁN DANH HIỆU VIP DỰA VÀO SỐ REF
+    let userTitle = "Tân Binh 🥉";
+    let titleColor = theme.textDim;
+    if (referrals >= 100) { userTitle = "Đối Tác VIP 💎"; titleColor = theme.gold; }
+    else if (referrals >= 50) { userTitle = "Đại Sứ 🥈"; titleColor = theme.blue; }
+    else if (referrals >= 10) { userTitle = "Sứ Giả 🥉"; titleColor = '#CD7F32'; }
+
     const handleCheckIn = () => {
         if (isCheckedInToday) return;
         fetch(`${BACKEND_URL}/api/checkin`, {
@@ -163,17 +183,15 @@ function App() {
             if (data.success) {
                 setBalance(data.balance);
                 setLastCheckIn(data.lastCheckInDate);
-                alert("🎉 Tuyệt vời! Bạn nhận được +2 SWGT cho hôm nay.");
-            } else {
-                alert(data.message || "❌ Hôm nay bạn đã điểm danh rồi!");
-            }
+                setCheckInStreak(data.streak);
+                alert(`🔥 Điểm danh thành công (Chuỗi ${data.streak} ngày)!\nBạn nhận được +${data.reward} SWGT.`);
+            } else { alert(data.message || "❌ Hôm nay bạn đã điểm danh rồi!"); }
         }).catch(() => alert("⚠️ Mạng chậm, vui lòng thử lại sau giây lát!"));
     };
 
     const handleSaveWallet = () => {
         if (withdrawMethod === 'gate' && !gatecode) return alert("⚠️ Vui lòng nhập Gatecode/UID của bạn!");
         if (withdrawMethod === 'erc20' && !wallet) return alert("⚠️ Vui lòng nhập địa chỉ ví ERC20!");
-
         fetch(`${BACKEND_URL}/api/save-wallet`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -182,21 +200,15 @@ function App() {
     };
 
     const handleWithdraw = () => {
-        if (!isUnlocked) {
-            return alert(`⏳ Bạn chưa hết thời gian mở khóa (${lockDaysLimit} ngày). Vui lòng chờ đến khi đếm ngược kết thúc để rút Token!`);
-        }
-
+        if (!isUnlocked) { return alert(`⏳ Bạn chưa hết thời gian mở khóa (${lockDaysLimit} ngày). Vui lòng chờ đến khi đếm ngược kết thúc để rút Token!`); }
         const amount = Number(withdrawAmount);
         if (!amount || amount < 300) return alert("⚠️ Bạn cần rút tối thiểu 300 SWGT!");
         if (amount > balance) return alert("⚠️ Số dư của bạn không đủ để rút mức này!");
-        
         if (withdrawMethod === 'gate' && !gatecode) return alert("⚠️ Bạn chọn rút qua Gate.io nhưng chưa nhập Gatecode/UID ở bên dưới!");
         if (withdrawMethod === 'erc20' && !wallet) return alert("⚠️ Bạn chọn rút qua ERC20 nhưng chưa nhập ví ở bên dưới!");
 
         let confirmMsg = `Xác nhận rút ${amount} SWGT qua mạng Gate.io (Miễn phí)?`;
-        if (withdrawMethod === 'erc20') {
-            confirmMsg = `Xác nhận rút ${amount} SWGT qua ví ERC20?\n\n⚠️ LƯU Ý: Phí rút mạng ERC20 là 70 SWGT. Bạn sẽ bị trừ phí từ số tiền rút. Bạn có chắc chắn không?`;
-        }
+        if (withdrawMethod === 'erc20') confirmMsg = `Xác nhận rút ${amount} SWGT qua ví ERC20?\n\n⚠️ LƯU Ý: Phí rút mạng ERC20 là 70 SWGT. Bạn sẽ bị trừ phí từ số tiền rút. Bạn có chắc chắn không?`;
 
         if (window.confirm(confirmMsg)) {
             fetch(`${BACKEND_URL}/api/withdraw`, {
@@ -207,8 +219,7 @@ function App() {
             .then(res => res.json())
             .then(data => {
                 if(data.success) {
-                    setBalance(data.balance);
-                    setWithdrawAmount(''); 
+                    setBalance(data.balance); setWithdrawAmount(''); 
                     alert(`✅ Yêu cầu rút tiền đã được gửi thành công!\nCổng rút Token SWGT đã mở, Admin sẽ xử lý và chuyển Token cho bạn sớm nhất.`);
                 } else { alert(data.message || "❌ Lỗi xử lý!"); }
             });
@@ -217,25 +228,22 @@ function App() {
 
     const handleCopyLink = () => {
         const link = `https://t.me/Dau_Tu_SWC_bot?start=${userId || 'ref'}`;
-        navigator.clipboard.writeText(link)
-            .then(() => alert('✅ Đã sao chép link giới thiệu thành công!'))
-            .catch(() => alert('❌ Lỗi sao chép!'));
+        navigator.clipboard.writeText(link).then(() => alert('✅ Đã sao chép link giới thiệu thành công!')).catch(() => alert('❌ Lỗi sao chép!'));
     };
 
-    const handleClaimMilestone = (milestone: number) => {
+    const handleClaimMilestone = (milestoneReq: number) => {
         fetch(`${BACKEND_URL}/api/claim-milestone`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, milestone })
+            body: JSON.stringify({ userId, milestone: milestoneReq })
         })
         .then(res => res.json())
         .then(data => {
             if(data.success) {
                 setBalance(data.balance);
-                if (milestone === 10) setMilestone10(true);
-                if (milestone === 50) setMilestone50(true);
-                alert(`🎉 Chúc mừng! Bạn đã nhận thành công thưởng mốc ${milestone} người!`);
-            } else { alert(data.message || "❌ Chưa đủ điều kiện nhận!"); }
+                setMilestones((prev: any) => ({ ...prev, [`milestone${milestoneReq}`]: true }));
+                alert(`🎉 Chúc mừng! Bạn đã nhận thành công thưởng mốc ${milestoneReq} người!`);
+            } else { alert(data.message || "❌ Chưa đủ điều kiện nhận hoặc đã nhận rồi!"); }
         });
     };
 
@@ -246,13 +254,8 @@ function App() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId, itemName, cost })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.success) {
-                    setBalance(data.balance);
-                    alert("🎉 Yêu cầu đổi quà đã được gửi! Admin sẽ xử lý sớm.");
-                }
+            }).then(res => res.json()).then(data => {
+                if(data.success) { setBalance(data.balance); alert("🎉 Yêu cầu đổi quà đã được gửi! Admin sẽ xử lý sớm."); }
             });
         }
     };
@@ -261,30 +264,21 @@ function App() {
         window.open(url, '_blank'); 
         setTaskStarted(prev => ({ ...prev, [taskType]: true }));
         setTaskTimers(prev => ({ ...prev, [taskType]: duration })); 
-        
         const interval = setInterval(() => {
             setTaskTimers(prev => {
-                if (prev[taskType as keyof typeof prev] <= 1) {
-                    clearInterval(interval);
-                    return { ...prev, [taskType]: 0 };
-                }
+                if (prev[taskType as keyof typeof prev] <= 1) { clearInterval(interval); return { ...prev, [taskType]: 0 }; }
                 return { ...prev, [taskType]: prev[taskType as keyof typeof prev] - 1 };
             });
         }, 1000);
     };
 
     const claimTaskApp = (taskType: string) => {
-        if (taskTimers[taskType as keyof typeof taskTimers] > 0) {
-            return alert(`⏳ Vui lòng đợi ${taskTimers[taskType as keyof typeof taskTimers]} giây nữa để nhận thưởng!`);
-        }
-        
+        if (taskTimers[taskType as keyof typeof taskTimers] > 0) return alert(`⏳ Vui lòng đợi ${taskTimers[taskType as keyof typeof taskTimers]} giây nữa để nhận thưởng!`);
         fetch(`${BACKEND_URL}/api/claim-app-task`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId, taskType })
-        })
-        .then(res => res.json())
-        .then(data => {
+        }).then(res => res.json()).then(data => {
             if(data.success) {
                 setBalance(data.balance);
                 setTasks(prev => ({ ...prev, [`${taskType}TaskDone`]: true }));
@@ -305,10 +299,10 @@ function App() {
             <div style={{ display: 'flex', alignItems: 'center', textAlign: 'right' }}>
                 <div style={{ marginRight: '10px' }}>
                     <h2 style={{ margin: 0, fontSize: '16px', color: theme.textLight, fontWeight: 'bold' }}>{userProfile.name}</h2>
-                    <p style={{ margin: 0, fontSize: '13px', color: theme.textDim }}>{userProfile.username}</p>
+                    <p style={{ margin: 0, fontSize: '13px', color: titleColor, fontWeight: 'bold' }}>{userTitle}</p>
                 </div>
                 {userProfile.photoUrl ? (
-                    <img src={userProfile.photoUrl} alt="avatar" style={{ width: '50px', height: '50px', borderRadius: '50%', border: `2px solid ${theme.border}` }} />
+                    <img src={userProfile.photoUrl} alt="avatar" style={{ width: '50px', height: '50px', borderRadius: '50%', border: `2px solid ${titleColor}` }} />
                 ) : (
                     <div style={{ width: '50px', height: '50px', borderRadius: '50%', backgroundColor: theme.cardBg, border: `2px solid ${theme.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.gold, fontSize: '20px' }}>👤</div>
                 )}
@@ -331,18 +325,21 @@ function App() {
                     <h3 style={{ margin: 0, color: isPremiumUser ? theme.premium : theme.gold, fontSize: '18px', fontWeight: 'bold' }}>
                         {isPremiumUser ? 'Premium⭐' : 'Thường'}
                     </h3>
-                    <p style={{ margin: '5px 0 0 0', color: theme.textDim, fontSize: '13px' }}>Hạng TK</p>
+                    <p style={{ margin: '5px 0 0 0', color: theme.textDim, fontSize: '13px' }}>Loại TK</p>
                 </div>
             </div>
 
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '18px', textAlign: 'center', border: `1px solid ${theme.border}`, marginBottom: '20px' }}>
-                <h3 style={{ margin: '0 0 10px 0', color: '#fff', fontSize: '16px' }}>📅 Điểm Danh Hàng Ngày</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <h3 style={{ margin: 0, color: '#fff', fontSize: '16px' }}>📅 Điểm Danh Hàng Ngày</h3>
+                    <span style={{ color: theme.gold, fontSize: '13px', fontWeight: 'bold' }}>🔥 Chuỗi: {checkInStreak}/7</span>
+                </div>
                 <button 
                     onClick={handleCheckIn} 
                     disabled={isCheckedInToday}
-                    style={{ width: '100%', backgroundColor: isCheckedInToday ? '#444' : theme.green, color: isCheckedInToday ? '#aaa' : '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: isCheckedInToday ? 'not-allowed' : 'pointer', fontSize: '15px' }}
+                    style={{ width: '100%', backgroundColor: isCheckedInToday ? '#333' : theme.green, color: isCheckedInToday ? theme.textDim : '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: isCheckedInToday ? 'not-allowed' : 'pointer', fontSize: '15px' }}
                 >
-                    {isCheckedInToday ? "✅ Bạn đã nhận SWGT hôm nay" : "✋ BẤM ĐIỂM DANH NHẬN +2 SWGT"}
+                    {isCheckedInToday ? "✅ BẠN ĐÃ NHẬN SWGT HÔM NAY" : "✋ BẤM ĐIỂM DANH NHẬN THƯỞNG"}
                 </button>
             </div>
 
@@ -475,25 +472,31 @@ function App() {
     );
 
     const renderRewards = () => {
-        let nextTarget = 10;
-        let nextReward = "+50 SWGT";
-        if (referrals >= 10 && referrals < 50) { nextTarget = 50; nextReward = "+300 SWGT"; }
-        else if (referrals >= 50) { nextTarget = 100; nextReward = "+1000 SWGT"; }
-        const progressPercent = Math.min((referrals / nextTarget) * 100, 100);
+        let nextTarget = 3;
+        let nextReward = "+10 SWGT";
+        for (let m of MILESTONE_LIST) {
+            if (referrals < m.req) {
+                nextTarget = m.req;
+                nextReward = `+${m.reward} SWGT`;
+                break;
+            }
+        }
+        
+        let progressPercent = Math.min((referrals / nextTarget) * 100, 100);
+        if (referrals >= 500) progressPercent = 100;
 
         let displayBoard = [...leaderboard];
-        // UPDATE: Bổ sung Dummy Data thành 10 người cho đẹp
         const dummyUsers = [
-            { firstName: 'Trần', lastName: 'Thành', referralCount: 24 },
-            { firstName: 'Lê', lastName: 'Minh', referralCount: 18 },
-            { firstName: 'Phạm', lastName: 'Hương', referralCount: 12 },
-            { firstName: 'Hoàng', lastName: 'Nam', referralCount: 9 },
-            { firstName: 'Vũ', lastName: 'Hoàng', referralCount: 7 },
-            { firstName: 'Đặng', lastName: 'Khôi', referralCount: 5 },
-            { firstName: 'Bùi', lastName: 'Linh', referralCount: 4 },
-            { firstName: 'Ngô', lastName: 'Bảo', referralCount: 3 },
-            { firstName: 'Đỗ', lastName: 'Anh', referralCount: 2 },
-            { firstName: 'Lý', lastName: 'Quân', referralCount: 1 }
+            { firstName: 'Trần', lastName: 'Thành', referralCount: 124 },
+            { firstName: 'Lê', lastName: 'Minh', referralCount: 98 },
+            { firstName: 'Phạm', lastName: 'Hương', referralCount: 82 },
+            { firstName: 'Hoàng', lastName: 'Nam', referralCount: 67 },
+            { firstName: 'Vũ', lastName: 'Hoàng', referralCount: 45 },
+            { firstName: 'Đặng', lastName: 'Khôi', referralCount: 31 },
+            { firstName: 'Bùi', lastName: 'Linh', referralCount: 24 },
+            { firstName: 'Ngô', lastName: 'Bảo', referralCount: 19 },
+            { firstName: 'Đỗ', lastName: 'Anh', referralCount: 15 },
+            { firstName: 'Lý', lastName: 'Quân', referralCount: 11 }
         ];
         if (displayBoard.length < 10) {
             const needed = 10 - displayBoard.length;
@@ -524,7 +527,7 @@ function App() {
                     </div>
                 </div>
 
-                <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🚀 CỘT MỐC THƯỞNG NÓNG</h3>
+                <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🚀 7 CỘT MỐC THƯỞNG NÓNG</h3>
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '10px' }}>
                         <div>
@@ -532,7 +535,7 @@ function App() {
                             <h2 style={{ margin: 0, color: theme.textLight, fontSize: '28px' }}>{referrals} <span style={{fontSize:'14px', color: theme.textDim, fontWeight:'normal'}}>người</span></h2>
                         </div>
                         <div style={{ textAlign: 'right' }}>
-                            <p style={{ margin: 0, color: theme.gold, fontSize: '13px', fontWeight: 'bold' }}>Mục tiêu: {nextTarget} người</p>
+                            <p style={{ margin: 0, color: theme.gold, fontSize: '13px', fontWeight: 'bold' }}>Mục tiêu tiếp: {nextTarget} người</p>
                             <p style={{ margin: 0, color: theme.green, fontSize: '14px', fontWeight: 'bold' }}>🎁 Thưởng {nextReward}</p>
                         </div>
                     </div>
@@ -540,29 +543,29 @@ function App() {
                         <div style={{ width: `${progressPercent}%`, height: '100%', backgroundColor: theme.gold, transition: 'width 0.5s ease' }}></div>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
-                        <div style={{ flex: 1, backgroundColor: '#000', borderRadius: '10px', padding: '15px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
-                            <div style={{ fontSize: '28px', marginBottom: '8px' }}>{referrals >= 10 ? '🌟' : '🔒'}</div>
-                            <p style={{ color: theme.textLight, fontSize: '14px', fontWeight: 'bold', margin: '0 0 5px 0' }}>Mốc 10 Người</p>
-                            <p style={{ color: theme.gold, fontSize: '13px', margin: '0 0 10px 0' }}>+50 SWGT</p>
-                            <button 
-                                onClick={() => handleClaimMilestone(10)} 
-                                disabled={referrals < 10 || milestone10}
-                                style={{ width: '100%', backgroundColor: milestone10 ? '#333' : (referrals >= 10 ? theme.green : '#333'), color: milestone10 ? theme.textDim : (referrals >= 10 ? '#fff' : theme.textDim), border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold', fontSize: '13px', cursor: (referrals >= 10 && !milestone10) ? 'pointer' : 'not-allowed' }}>
-                                {milestone10 ? 'ĐÃ NHẬN' : 'BẤM NHẬN'}
-                            </button>
-                        </div>
-                        <div style={{ flex: 1, backgroundColor: '#000', borderRadius: '10px', padding: '15px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
-                            <div style={{ fontSize: '28px', marginBottom: '8px' }}>{referrals >= 50 ? '👑' : '🔒'}</div>
-                            <p style={{ color: theme.textLight, fontSize: '14px', fontWeight: 'bold', margin: '0 0 5px 0' }}>Mốc 50 Người</p>
-                            <p style={{ color: theme.gold, fontSize: '13px', margin: '0 0 10px 0' }}>+300 SWGT</p>
-                            <button 
-                                onClick={() => handleClaimMilestone(50)} 
-                                disabled={referrals < 50 || milestone50}
-                                style={{ width: '100%', backgroundColor: milestone50 ? '#333' : (referrals >= 50 ? theme.green : '#333'), color: milestone50 ? theme.textDim : (referrals >= 50 ? '#fff' : theme.textDim), border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 'bold', fontSize: '13px', cursor: (referrals >= 50 && !milestone50) ? 'pointer' : 'not-allowed' }}>
-                                {milestone50 ? 'ĐÃ NHẬN' : 'BẤM NHẬN'}
-                            </button>
-                        </div>
+                    {/* VÒNG LẶP 7 MỐC THƯỞNG SCROLL NGANG */}
+                    <div style={{ display: 'flex', overflowX: 'auto', gap: '10px', paddingBottom: '10px' }}>
+                        {MILESTONE_LIST.map((m) => {
+                            const isClaimed = milestones[m.key];
+                            const canClaim = referrals >= m.req && !isClaimed;
+                            let icon = '🔒';
+                            if (isClaimed) icon = '✅';
+                            else if (canClaim) icon = '🎁';
+                            
+                            return (
+                                <div key={m.req} style={{ minWidth: '110px', backgroundColor: '#000', borderRadius: '10px', padding: '15px 10px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
+                                    <div style={{ fontSize: '24px', marginBottom: '8px' }}>{icon}</div>
+                                    <p style={{ color: theme.textLight, fontSize: '13px', fontWeight: 'bold', margin: '0 0 5px 0' }}>Mốc {m.req}</p>
+                                    <p style={{ color: theme.gold, fontSize: '12px', margin: '0 0 10px 0' }}>+{m.reward}</p>
+                                    <button 
+                                        onClick={() => handleClaimMilestone(m.req)} 
+                                        disabled={!canClaim}
+                                        style={{ width: '100%', backgroundColor: isClaimed ? '#333' : (canClaim ? theme.green : '#333'), color: isClaimed ? theme.textDim : (canClaim ? '#fff' : theme.textDim), border: 'none', padding: '8px 0', borderRadius: '6px', fontWeight: 'bold', fontSize: '12px', cursor: canClaim ? 'pointer' : 'not-allowed' }}>
+                                        {isClaimed ? 'ĐÃ NHẬN' : 'NHẬN'}
+                                    </button>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
 
@@ -585,9 +588,9 @@ function App() {
                             </div>
                         )
                     })}
-                    <div style={{ textAlign: 'center', paddingTop: '15px', borderTop: `1px dashed ${theme.gold}`, marginTop: '5px' }}>
-                        <p style={{ color: theme.gold, fontSize: '14px', fontWeight: 'bold', margin: '0 0 10px 0', fontStyle: 'italic' }}>👉 Người tiếp theo trên Bảng Vàng sẽ là BẠN!</p>
-                        <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ display: 'inline-block', width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '12px', borderRadius: '8px', fontWeight: 'bold', border: 'none', fontSize: '14px', textDecoration: 'none' }}>
+                    <div style={{ textAlign: 'center', paddingTop: '15px', borderTop: `1px dashed ${theme.gold}`, marginTop: '10px' }}>
+                        <p style={{ color: theme.gold, fontSize: '14px', fontWeight: 'bold', margin: '0 0 12px 0', fontStyle: 'italic' }}>👉 Người tiếp theo trên Bảng Vàng sẽ là BẠN!</p>
+                        <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ display: 'block', width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', textDecoration: 'none' }}>
                             ✈️ CHIA SẺ LINK ĐỂ ĐUA TOP NGAY
                         </a>
                     </div>
