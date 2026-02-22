@@ -116,9 +116,6 @@ function App() {
 
     const isCheckedInToday = lastCheckIn ? new Date(lastCheckIn).toDateString() === new Date().toDateString() : false;
 
-    // ---------------------------------------------------------
-    // CÁC HÀM CHỨC NĂNG 
-    // ---------------------------------------------------------
     const handleCheckIn = () => {
         if (isCheckedInToday) return;
         fetch(`${BACKEND_URL}/api/checkin`, {
@@ -143,6 +140,7 @@ function App() {
         }).then(() => alert('✅ Đã lưu/cập nhật ví thành công!'));
     };
 
+    // --- CẬP NHẬT LOGIC RÚT TIỀN THÔNG BÁO DUY TRÌ 30 NGÀY ---
     const handleWithdraw = () => {
         const amount = Number(withdrawAmount);
         if (!wallet) return alert("⚠️ Vui lòng lưu địa chỉ ví ERC20 bên dưới trước khi rút!");
@@ -160,7 +158,8 @@ function App() {
                 if(data.success) {
                     setBalance(data.balance);
                     setWithdrawAmount(''); 
-                    alert(`💸 Yêu cầu rút ${amount} SWGT đã được gửi! Vui lòng kiểm tra tin nhắn Bot.`);
+                    // THÔNG BÁO DUY TRÌ 30 NGÀY TẠI ĐÂY
+                    alert(`✅ Yêu cầu rút ${amount} SWGT đã được ghi nhận!\n\nHãy duy trì đăng nhập và nhận SWGT đều đặn trong 30 ngày, hệ thống sẽ tự động gửi Token về ví của bạn khi hết thời gian đếm ngược!`);
                 } else { alert(data.message || "❌ Lỗi xử lý!"); }
             });
         }
@@ -243,9 +242,6 @@ function App() {
         });
     };
 
-    // ---------------------------------------------------------
-    // GIAO DIỆN CÁC TAB
-    // ---------------------------------------------------------
     const renderHeader = () => (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', backgroundColor: theme.bg }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -373,7 +369,6 @@ function App() {
                 </div>
             </div>
             
-            {/* THÔNG TIN KHÁC TẠI TRANG CHỦ */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '15px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '18px' }}>💎 Cơ Cấu Phần Thưởng SWGT</h2>
                 <p style={{ color: theme.textLight, fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>📌 Thành viên Thường:</p>
@@ -400,7 +395,6 @@ function App() {
         </div>
     );
 
-    // --- TAB 2: PHẦN THƯỞNG ---
     const renderRewards = () => {
         let nextTarget = 10;
         let nextReward = "+50 SWGT";
@@ -529,7 +523,7 @@ function App() {
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>💎 KHO ĐẶC QUYỀN VIP</h3>
                 <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '15px', marginBottom: '15px', border: `1px solid ${theme.border}`}}>
                     <h4 style={{margin: '0 0 8px 0', color: '#5E92F3', fontSize: '16px'}}>☕ Cà Phê Chiến Lược</h4>
-                    <p style={{fontSize: '14px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Thảo luận danh mục trực tiếp cùng Admin.</p>
+                    <p style={{fontSize: '14px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Thảo luận danh mục trực tiếp cùng Admin Ucity.</p>
                     <button onClick={() => redeemItem('Cà Phê Chiến Lược', 300)} style={{backgroundColor: '#5E92F3', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer'}}>Đổi lấy: 300 SWGT</button>
                 </div>
 
@@ -542,6 +536,7 @@ function App() {
         );
     };
 
+    // --- TAB 3: VÍ ---
     const renderWallet = () => (
         <div style={{ padding: '0 20px 20px 20px' }}>
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '30px 20px', border: `1px solid ${theme.border}`, textAlign: 'center', marginBottom: '20px' }}>
@@ -577,6 +572,15 @@ function App() {
                         <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.mins} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Phút</span></div>
                     </div>
                 </div>
+            </div>
+
+            {/* --- NÚT HƯỚNG DẪN ĐĂNG KÝ VÍ GATE.IO --- */}
+            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
+                <h3 style={{ margin: '0 0 10px 0', color: theme.textLight, fontSize: '16px' }}>Chưa có ví Gate.io?</h3>
+                <p style={{ margin: '0 0 15px 0', color: theme.textDim, fontSize: '13px' }}>Đăng ký ngay để nhận Token SWGT an toàn.</p>
+                <button onClick={() => window.open('https://telegra.ph/H%C6%B0%E1%BB%9Bng-d%E1%BA%ABn-%C4%91%C4%83ng-k%C3%BD--t%E1%BA%A1o-m%E1%BB%9Bi-t%C3%A0i-kho%E1%BA%A3n-Gateio-to%C3%A0n-t%E1%BA%ADp-02-22', '_blank')} style={{ width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', cursor: 'pointer' }}>
+                    📖 XEM HƯỚNG DẪN ĐĂNG KÝ
+                </button>
             </div>
 
             <div style={{ backgroundColor: 'rgba(255, 59, 48, 0.1)', border: `1px dashed ${theme.red}`, padding: '15px', borderRadius: '10px', marginBottom: '20px' }}>
