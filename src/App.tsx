@@ -196,7 +196,6 @@ function App() {
     let wealthBoard = displayBoard.slice(0, 10).map((user, index) => {
         let estimatedTotal = (user.referralCount * 25) + 300 + (10 - index) * 50; 
         if (user.referralCount === referrals && user.firstName === userProfile.name.split(' ')[0]) {
-            // Cộng cả số dư + điểm danh + nhiệm vụ ước tính để ra Tổng
             estimatedTotal = balance + (referrals * 25) + (checkInStreak * 5) + 50; 
         }
         return { ...user, totalEarned: Math.round(estimatedTotal * 10) / 10 };
@@ -204,20 +203,31 @@ function App() {
     wealthBoard.sort((a, b) => b.totalEarned - a.totalEarned);
 
     // ==================================================
-    // CƠ CHẾ RANK AVATAR ĐỘNG DỰA TRÊN LEADERBOARD
+    // CƠ CHẾ RANK AVATAR ĐỘNG & CẤP BẬC QUÂN ĐỘI MỚI NHẤT
     // ==================================================
     let myRank = 0;
     if (referrals > 0) {
-        // Tính hạng thực tế: Số người có lượt mời lớn hơn mình + 1
         const strictlyBetter = displayBoard.filter(u => u.referralCount > referrals).length;
         myRank = strictlyBetter + 1;
     }
 
+    // 1. TÍNH CẤP BẬC QUÂN ĐỘI TỪ CAO XUỐNG THẤP
+    let militaryRank = "Tân Binh 🔰";
+    if (referrals >= 500) militaryRank = "Đại Tướng 🌟🌟🌟🌟";
+    else if (referrals >= 350) militaryRank = "Thượng Tướng 🌟🌟🌟";
+    else if (referrals >= 200) militaryRank = "Trung Tướng 🌟🌟";
+    else if (referrals >= 120) militaryRank = "Thiếu Tướng 🌟";
+    else if (referrals >= 80) militaryRank = "Đại Tá 🎖️";
+    else if (referrals >= 50) militaryRank = "Thượng Tá 🎖️";
+    else if (referrals >= 20) militaryRank = "Trung Tá 🎖️";
+    else if (referrals >= 10) militaryRank = "Thiếu Tá 🎖️";
+    else if (referrals >= 3) militaryRank = "Đại Úy 🎖️";
+
+    // 2. TÍNH DANH HIỆU DƯỚI AVATAR VÀ MÀU SẮC VÒNG NGUYỆT QUẾ
     let vipLevel = "Tân Binh 🥉";
     let wreathColor = "#8E8E93"; // Xám nhạt
     let glow = "none";
 
-    // CHUẨN HÓA DANH HIỆU THEO RANK & LƯỢT MỜI
     if (myRank === 1 && referrals >= 5) { 
         vipLevel = "🏆 TOP 1 SERVER"; wreathColor = "#F4D03F"; glow = `0 0 15px #F4D03F`; 
     }
@@ -230,7 +240,6 @@ function App() {
     else if (myRank > 0 && myRank <= 10 && referrals >= 5) { 
         vipLevel = `🌟 TOP ${myRank} SERVER`; wreathColor = theme.blue; glow = `0 0 10px ${theme.blue}`; 
     }
-    // NẾU KHÔNG LỌT TOP 10, PHÂN BẬC THEO MỐC CỐ ĐỊNH
     else if (referrals >= 100) { 
         vipLevel = "Huyền Thoại 👑"; wreathColor = "#E0B0FF"; glow = `0 0 15px #E0B0FF`; 
     }
@@ -381,7 +390,7 @@ function App() {
     };
 
     // ==================================================
-    // KHỐI RENDER: HEADER (CÓ AVATAR)
+    // KHỐI RENDER: HEADER (CÓ AVATAR & QUÂN HÀM)
     // ==================================================
     const renderHeader = () => (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 20px', backgroundColor: theme.bg }}>
@@ -396,35 +405,25 @@ function App() {
             <div style={{ display: 'flex', alignItems: 'center', textAlign: 'right' }}>
                 <div style={{ marginRight: '15px' }}>
                     <h2 style={{ margin: 0, fontSize: '15px', color: theme.textLight, fontWeight: 'bold' }}>{userProfile.name}</h2>
-                    <p style={{ margin: 0, fontSize: '12px', color: theme.textDim, fontWeight: 'normal' }}>Thành viên</p>
+                    {/* HIỂN THỊ CẤP BẬC TƯỚNG TÁ Ở ĐÂY */}
+                    <p style={{ margin: 0, fontSize: '12px', color: theme.textDim, fontWeight: 'bold' }}>{militaryRank}</p>
                 </div>
                 
-                {/* --- KHUNG AVATAR KÈM VÒNG NGUYỆT QUẾ ĐƯỢC CHUẨN HÓA --- */}
                 <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
-                    
-                    {/* SVG Vòng nguyệt quế */}
                     <svg viewBox="0 0 100 100" style={{ position: 'absolute', width: '150%', height: '150%', top: '-25%', left: '-25%', zIndex: 1, pointerEvents: 'none' }}>
-                        {/* Cành cây */}
                         <path d="M 50 90 C 15 90, 5 50, 20 20" fill="none" stroke={wreathColor} strokeWidth="1.5" />
                         <path d="M 50 90 C 85 90, 95 50, 80 20" fill="none" stroke={wreathColor} strokeWidth="1.5" />
-                        {/* Lá bên trái */}
                         <path d="M 20 20 Q 30 15 25 30 Q 15 25 20 20" fill={wreathColor} />
                         <path d="M 12 40 Q 25 35 20 50 Q 5 45 12 40" fill={wreathColor} />
                         <path d="M 15 65 Q 30 55 25 70 Q 10 70 15 65" fill={wreathColor} />
                         <path d="M 28 82 Q 40 75 35 88 Q 20 85 28 82" fill={wreathColor} />
-                        {/* Lá bên phải */}
                         <path d="M 80 20 Q 70 15 75 30 Q 85 25 80 20" fill={wreathColor} />
                         <path d="M 88 40 Q 75 35 80 50 Q 95 45 88 40" fill={wreathColor} />
                         <path d="M 85 65 Q 70 55 75 70 Q 90 70 85 65" fill={wreathColor} />
                         <path d="M 72 82 Q 60 75 65 88 Q 80 85 72 82" fill={wreathColor} />
                     </svg>
 
-                    {/* Lõi Avatar */}
-                    <div style={{ 
-                        width: '52px', height: '52px', borderRadius: '50%', 
-                        padding: '2px', backgroundColor: theme.bg,
-                        boxShadow: glow, zIndex: 2
-                    }}>
+                    <div style={{ width: '52px', height: '52px', borderRadius: '50%', padding: '2px', backgroundColor: theme.bg, boxShadow: glow, zIndex: 2 }}>
                         {userProfile.photoUrl ? (
                             <img src={userProfile.photoUrl} alt="avatar" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${wreathColor}` }} />
                         ) : (
@@ -432,14 +431,12 @@ function App() {
                         )}
                     </div>
                     
-                    {/* Bảng Danh hiệu VIP đính kèm dưới chân Avatar */}
                     <div style={{ position: 'absolute', bottom: '-10px', zIndex: 3, display: 'flex', alignItems: 'center', backgroundColor: '#000', padding: '2px 8px', borderRadius: '12px', border: `1px solid ${wreathColor}`, boxShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
                         <span style={{ color: wreathColor, fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                             {vipLevel}
                         </span>
                     </div>
 
-                    {/* Dấu chấm Online (Xanh lá) */}
                     <div style={{ position: 'absolute', top: '0px', right: '0px', width: '12px', height: '12px', backgroundColor: theme.green, borderRadius: '50%', border: `2px solid ${theme.bg}`, zIndex: 4 }}></div>
                 </div>
             </div>
@@ -447,7 +444,7 @@ function App() {
     );
 
     // ==================================================
-    // KHỐI RENDER: BẢNG TỔNG TÀI SẢN (DÙNG CHUNG CẢ 2 TAB)
+    // KHỐI RENDER: BẢNG TỔNG TÀI SẢN (CÓ STT 1-10)
     // ==================================================
     const renderWealthBoard = () => (
         <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
@@ -455,7 +452,6 @@ function App() {
                 💎 TOP 10 ĐẠI GIA SWGT
             </h3>
             
-            {/* Ghi chú cực kỳ rõ ràng để xóa tan thắc mắc của người dùng */}
             <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '20px', border: `1px dashed ${theme.gold}` }}>
                 <p style={{fontSize: '13px', color: theme.gold, margin: 0, lineHeight: '1.5', textAlign: 'justify'}}>
                     <span style={{fontWeight: 'bold'}}>📌 LƯU Ý QUAN TRỌNG:</span><br/> 
@@ -474,7 +470,8 @@ function App() {
                 return (
                     <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: index < wealthBoard.length - 1 ? `1px solid ${theme.border}` : 'none', backgroundColor: isMe ? 'rgba(244, 208, 63, 0.1)' : 'transparent', borderRadius: '8px', paddingLeft: isMe ? '10px' : '0', paddingRight: isMe ? '10px' : '0' }}>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <span style={{ fontSize: '22px', marginRight: '12px' }}>{icon}</span>
+                            <span style={{ color: theme.textDim, fontWeight: 'bold', fontSize: '14px', minWidth: '24px', marginRight: '5px' }}>{index + 1}.</span>
+                            <span style={{ fontSize: '22px', marginRight: '10px' }}>{icon}</span>
                             <span style={{ color: isMe ? theme.gold : theme.textLight, fontWeight: 'bold', fontSize: '15px' }}>
                                 {user.firstName} {user.lastName} {isMe && '(Bạn)'}
                             </span>
@@ -548,14 +545,12 @@ function App() {
                 </p>
             </div>
 
-            {/* BANNER 1500 SWGT - HOME */}
             <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.1)', border: `1px dashed ${theme.gold}`, padding: '15px', borderRadius: '10px', marginBottom: '20px' }}>
                 <p style={{ margin: 0, color: theme.gold, fontSize: '14px', lineHeight: '1.6', textAlign: 'center' }}>
                     <span style={{fontWeight:'bold'}}>⚡ ĐẶC QUYỀN MỞ KHÓA TỐC ĐỘ:</span><br/>Cày đạt mốc <b>1500 SWGT</b> sẽ được <b style={{color: '#fff'}}>RÚT TIỀN VỀ VÍ NGAY LẬP TỨC</b>, bỏ qua hoàn toàn thời gian đếm ngược!
                 </p>
             </div>
 
-            {/* ĐƯA TOP 10 ĐẠI GIA RA TRANG CHỦ THEO YÊU CẦU */}
             {renderWealthBoard()}
 
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
@@ -785,7 +780,8 @@ function App() {
                         return (
                             <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: index < displayBoard.length - 1 ? `1px solid ${theme.border}` : 'none' }}>
                                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                                    <span style={{ fontSize: '22px', marginRight: '12px' }}>{medal}</span>
+                                    <span style={{ color: theme.textDim, fontWeight: 'bold', fontSize: '14px', minWidth: '24px', marginRight: '5px' }}>{index + 1}.</span>
+                                    <span style={{ fontSize: '22px', marginRight: '10px' }}>{medal}</span>
                                     <span style={{ color: theme.textLight, fontWeight: 'bold', fontSize: '15px' }}>{user.firstName} {user.lastName}</span>
                                 </div>
                                 <div style={{ color: theme.gold, fontWeight: 'bold', fontSize: '16px' }}>
