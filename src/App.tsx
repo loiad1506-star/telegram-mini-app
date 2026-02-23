@@ -401,8 +401,8 @@ function App() {
                     <p style={{ margin: 0, fontSize: '12px', color: theme.textDim, fontWeight: 'bold' }}>{militaryRank}</p>
                 </div>
                 
+                {/* --- KHUNG AVATAR ĐÃ ĐƯỢC CHỈNH Z-INDEX ĐỂ NỔI LÊN TRÊN --- */}
                 <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
-                    {/* SVG ĐÃ CĂN CHỈNH LẠI VIEWBOX ĐỂ KHỚP VÒNG NGUYỆT QUẾ */}
                     <svg viewBox="-5 -5 110 110" style={{ position: 'absolute', width: '140%', height: '140%', top: '-20%', left: '-20%', zIndex: 3, pointerEvents: 'none' }}>
                         <path d="M 50 90 C 15 90, 5 50, 20 20" fill="none" stroke={wreathColor} strokeWidth="2" />
                         <path d="M 50 90 C 85 90, 95 50, 80 20" fill="none" stroke={wreathColor} strokeWidth="2" />
@@ -434,6 +434,9 @@ function App() {
         </div>
     );
 
+    // ==================================================
+    // KHỐI RENDER: BẢNG TỔNG TÀI SẢN (DÙNG CHUNG)
+    // ==================================================
     const renderWealthBoard = () => (
         <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
             <h3 style={{color: '#F4D03F', borderBottom: `1px solid ${theme.gold}`, paddingBottom: '10px', margin: '0 0 15px 0', fontSize: '16px'}}>
@@ -514,7 +517,7 @@ function App() {
 
                         return (
                             <div key={day} style={{ minWidth: '40px', backgroundColor: bgColor, borderRadius: '8px', padding: '8px 5px', border: `1px solid ${borderColor}`, position: 'relative' }}>
-                                {/* TÍCH XANH NẾU ĐÃ ĐIỂM DANH */}
+                                {/* DẤU TÍCH XANH NỔI BẬT NẾU ĐÃ ĐIỂM DANH */}
                                 {isClaimed && <div style={{position:'absolute', top:'-6px', right:'-6px', background:'#0F0F0F', borderRadius:'50%', fontSize:'14px'}}>✅</div>}
                                 <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: textColor }}>Ngày {day}</p>
                                 <p style={{ margin: 0, fontSize: '12px', fontWeight: 'bold', color: textColor }}>
@@ -528,7 +531,7 @@ function App() {
                 <button 
                     onClick={handleCheckIn} 
                     disabled={isCheckedInToday}
-                    // THAY ĐỔI MÀU NÚT KHI ĐÃ ĐIỂM DANH
+                    // THAY ĐỔI MÀU NÚT KHI ĐÃ ĐIỂM DANH ĐỂ KHÔNG BẤM ĐƯỢC
                     style={{ width: '100%', backgroundColor: isCheckedInToday ? '#333' : theme.green, color: isCheckedInToday ? theme.textDim : '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: isCheckedInToday ? 'not-allowed' : 'pointer', fontSize: '15px' }}
                 >
                     {isCheckedInToday ? "✅ BẠN ĐÃ NHẬN SWGT HÔM NAY" : "✋ BẤM ĐIỂM DANH NGAY"}
@@ -668,6 +671,13 @@ function App() {
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🚀 9 CỘT MỐC THƯỞNG NÓNG</h3>
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                     <div style={{ width: '100%', height: '12px', backgroundColor: '#333', borderRadius: '6px', overflow: 'hidden', marginBottom: '15px' }}> <div style={{ width: `${Math.min((referrals / 3)*100, 100)}%`, height: '100%', backgroundColor: theme.gold, transition: 'width 0.5s ease' }}></div> </div>
+                    
+                    {/* SỬ DỤNG nextReward VÀ nextTarget TRONG TAB PHẦN THƯỞNG */}
+                    <div style={{ textAlign: 'right', marginBottom:'15px' }}>
+                         <p style={{ margin: 0, color: theme.gold, fontSize: '13px', fontWeight: 'bold' }}>Mục tiêu: {nextTarget} người</p>
+                         <p style={{ margin: 0, color: theme.green, fontSize: '14px', fontWeight: 'bold' }}>🎁 Thưởng {nextReward}</p>
+                    </div>
+
                     <div style={{ display: 'flex', overflowX: 'auto', gap: '10px', paddingBottom: '10px' }}>
                         {MILESTONE_LIST.map((m) => {
                             const isClaimed = milestones[m.key]; const canClaim = referrals >= m.req && !isClaimed;
@@ -695,10 +705,11 @@ function App() {
                             <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: index < displayBoard.length - 1 ? `1px solid ${theme.border}` : 'none' }}>
                                 <div style={{ display: 'flex', alignItems: 'center' }}>
                                     <span style={{ color: theme.textDim, fontWeight: 'bold', fontSize: '14px', minWidth: '24px', marginRight: '5px' }}>{index + 1}.</span>
+                                    {/* GIỮ NGUYÊN HUY HIỆU Ở ĐẦU */}
                                     <span style={{ fontSize: '22px', marginRight: '10px' }}>{medal}</span>
                                     <div style={{display:'flex', flexDirection:'column'}}>
                                         <span style={{ color: theme.textLight, fontWeight: 'bold', fontSize: '15px' }}>{user.firstName} {user.lastName}</span>
-                                        {/* CẤP BẬC QUÂN ĐỘI NGAY DƯỚI TÊN */}
+                                        {/* THÊM CẤP BẬC QUÂN ĐỘI DƯỚI TÊN */}
                                         <span style={{ color: theme.blue, fontSize: '11px', fontWeight: 'bold' }}>{getMilitaryRank(user.referralCount)}</span>
                                     </div>
                                 </div>
