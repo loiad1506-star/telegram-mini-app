@@ -382,9 +382,6 @@ function App() {
         });
     };
 
-    // ==================================================
-    // KHỐI RENDER: HEADER (AVATAR NỔI BẬT & QUÂN HÀM)
-    // ==================================================
     const renderHeader = () => (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 20px', backgroundColor: theme.bg }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -434,9 +431,6 @@ function App() {
         </div>
     );
 
-    // ==================================================
-    // KHỐI RENDER: BẢNG TỔNG TÀI SẢN (DÙNG CHUNG)
-    // ==================================================
     const renderWealthBoard = () => (
         <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
             <h3 style={{color: '#F4D03F', borderBottom: `1px solid ${theme.gold}`, paddingBottom: '10px', margin: '0 0 15px 0', fontSize: '16px'}}>
@@ -517,7 +511,7 @@ function App() {
 
                         return (
                             <div key={day} style={{ minWidth: '40px', backgroundColor: bgColor, borderRadius: '8px', padding: '8px 5px', border: `1px solid ${borderColor}`, position: 'relative' }}>
-                                {/* DẤU TÍCH XANH NỔI BẬT NẾU ĐÃ ĐIỂM DANH */}
+                                {/* TÍCH XANH NẾU ĐÃ ĐIỂM DANH */}
                                 {isClaimed && <div style={{position:'absolute', top:'-6px', right:'-6px', background:'#0F0F0F', borderRadius:'50%', fontSize:'14px'}}>✅</div>}
                                 <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: textColor }}>Ngày {day}</p>
                                 <p style={{ margin: 0, fontSize: '12px', fontWeight: 'bold', color: textColor }}>
@@ -670,7 +664,7 @@ function App() {
 
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🚀 9 CỘT MỐC THƯỞNG NÓNG</h3>
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
-                    <div style={{ width: '100%', height: '12px', backgroundColor: '#333', borderRadius: '6px', overflow: 'hidden', marginBottom: '15px' }}> <div style={{ width: `${Math.min((referrals / 3)*100, 100)}%`, height: '100%', backgroundColor: theme.gold, transition: 'width 0.5s ease' }}></div> </div>
+                    <div style={{ width: '100%', height: '12px', backgroundColor: '#333', borderRadius: '6px', overflow: 'hidden', marginBottom: '15px' }}> <div style={{ width: `${progressPercent}%`, height: '100%', backgroundColor: theme.gold, transition: 'width 0.5s ease' }}></div> </div>
                     
                     {/* SỬ DỤNG nextReward VÀ nextTarget TRONG TAB PHẦN THƯỞNG */}
                     <div style={{ textAlign: 'right', marginBottom:'15px' }}>
