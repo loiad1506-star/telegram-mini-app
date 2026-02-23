@@ -16,6 +16,9 @@ function App() {
     
     const [checkInStreak, setCheckInStreak] = useState(0);
     const [milestones, setMilestones] = useState<any>({});
+    
+    // --- STATE CHO GIFTCODE ---
+    const [giftCodeInput, setGiftCodeInput] = useState('');
 
     const [tasks, setTasks] = useState({
         readTaskDone: false,
@@ -63,7 +66,6 @@ function App() {
         premium: '#E0B0FF' 
     };
 
-    // --- DANH SÁCH 9 MỐC THƯỞNG MỚI ---
     const MILESTONE_LIST = [
         { req: 3, reward: 10, key: 'milestone3' },
         { req: 10, reward: 25, key: 'milestone10' },
@@ -76,7 +78,6 @@ function App() {
         { req: 500, reward: 1200, key: 'milestone500' }
     ];
 
-    // --- CẬP NHẬT MỐC ĐIỂM DANH ---
     const STREAK_REWARDS = [0.5, 1.5, 3, 3.5, 5, 7, 9];
 
     useEffect(() => {
@@ -189,6 +190,24 @@ function App() {
                 alert(`🔥 Điểm danh thành công (Chuỗi ${data.streak} ngày)!\nBạn nhận được +${data.reward} SWGT.`);
             } else { alert(data.message || "❌ Hôm nay bạn đã điểm danh rồi!"); }
         }).catch(() => alert("⚠️ Mạng chậm, vui lòng thử lại sau giây lát!"));
+    };
+
+    // --- HÀM GỬI YÊU CẦU NHẬP MÃ QUÀ TẶNG ---
+    const handleClaimGiftCode = () => {
+        if (!giftCodeInput.trim()) return alert("⚠️ Vui lòng nhập mã Giftcode!");
+        fetch(`${BACKEND_URL}/api/claim-giftcode`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, code: giftCodeInput })
+        }).then(res => res.json()).then(data => {
+            if (data.success) {
+                setBalance(data.balance);
+                setGiftCodeInput('');
+                alert(`🎉 Chúc mừng! Bạn nhận được +${data.reward} SWGT từ mã quà tặng!`);
+            } else {
+                alert(data.message);
+            }
+        }).catch(() => alert("⚠️ Lỗi kết nối máy chủ!"));
     };
 
     const handleSaveWallet = () => {
@@ -541,6 +560,22 @@ function App() {
                     <div style={{ fontSize: '45px', marginBottom: '5px' }}>🎁</div>
                     <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '22px', fontWeight: '900' }}>Trung Tâm Thu Nhập</h2>
                     <p style={{ color: theme.textDim, fontSize: '14px', margin: 0 }}>Xây dựng hệ thống - Tạo thu nhập thụ động</p>
+                </div>
+
+                {/* --- NHẬP MÃ GIFTCODE --- */}
+                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
+                    <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>🎟️ Nhập Mã Quà Tặng (Giftcode)</h3>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <input 
+                            value={giftCodeInput} 
+                            onChange={(e) => setGiftCodeInput(e.target.value)} 
+                            placeholder="Nhập mã săn được từ Group..." 
+                            style={{ flex: 1, padding: '14px', borderRadius: '10px', border: `1px solid ${theme.green}`, backgroundColor: '#000', color: theme.gold, boxSizing: 'border-box', fontSize: '14px', textTransform: 'uppercase' }} 
+                        />
+                        <button onClick={handleClaimGiftCode} style={{ backgroundColor: theme.green, color: '#fff', padding: '0 20px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', cursor: 'pointer' }}>
+                            NHẬN
+                        </button>
+                    </div>
                 </div>
 
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
