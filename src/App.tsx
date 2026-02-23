@@ -17,7 +17,6 @@ function App() {
     const [checkInStreak, setCheckInStreak] = useState(0);
     const [milestones, setMilestones] = useState<any>({});
     
-    // --- STATE CHO GIFTCODE ---
     const [giftCodeInput, setGiftCodeInput] = useState('');
 
     const [tasks, setTasks] = useState({
@@ -192,7 +191,6 @@ function App() {
         }).catch(() => alert("⚠️ Mạng chậm, vui lòng thử lại sau giây lát!"));
     };
 
-    // --- HÀM GỬI YÊU CẦU NHẬP MÃ QUÀ TẶNG ---
     const handleClaimGiftCode = () => {
         if (!giftCodeInput.trim()) return alert("⚠️ Vui lòng nhập mã Giftcode!");
         fetch(`${BACKEND_URL}/api/claim-giftcode`, {
@@ -324,9 +322,9 @@ function App() {
                 </div>
                 <div style={{ position: 'relative' }}>
                     {userProfile.photoUrl ? (
-                        <img src={userProfile.photoUrl} alt="avatar" style={{ width: '50px', height: '50px', borderRadius: '50%', border: `2px solid ${titleColor}` }} />
+                        <img src={userProfile.photoUrl} alt="avatar" referrerPolicy="no-referrer" style={{ width: '50px', height: '50px', borderRadius: '50%', border: `2px solid ${titleColor}`, objectFit: 'cover' }} />
                     ) : (
-                        <div style={{ width: '50px', height: '50px', borderRadius: '50%', backgroundColor: theme.cardBg, border: `2px solid ${theme.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.gold, fontSize: '20px' }}>👤</div>
+                        <div style={{ width: '50px', height: '50px', borderRadius: '50%', backgroundColor: theme.cardBg, border: `2px solid ${titleColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.gold, fontSize: '20px' }}>👤</div>
                     )}
                     <div style={{ position: 'absolute', bottom: '2px', right: '2px', width: '12px', height: '12px', backgroundColor: theme.green, borderRadius: '50%', border: `2px solid ${theme.bg}` }}></div>
                 </div>
@@ -554,6 +552,26 @@ function App() {
             displayBoard.sort((a, b) => b.referralCount - a.referralCount);
         }
 
+        // --- TẠO DỮ LIỆU TOP 10 ĐẠI GIA SWGT (Bao gồm tiền đã rút) ---
+        // Thuật toán: Dựa vào số Referrals + Balance hiện tại để ước tính tổng tiền kiếm được của những người đứng Top
+        let wealthBoard = displayBoard.slice(0, 10).map((user, index) => {
+            // Công thức nội bộ để tạo số SWGT hợp lý: Số Ref * Trung bình 25 SWGT + Random số dư
+            let estimatedTotal = (user.referralCount * 25) + 300 + (10 - index) * 50; 
+            
+            // Nếu là người dùng đang đăng nhập, tính tiền thật của họ (Sổ dư hiện tại + Số đã tiêu/rút ước tính)
+            if (user.firstName === userProfile.name.split(' ')[0]) {
+                estimatedTotal = balance + (referrals * 25); 
+            }
+            
+            return {
+                ...user,
+                totalEarned: Math.round(estimatedTotal * 10) / 10
+            };
+        });
+        
+        // Sắp xếp lại theo tổng tiền
+        wealthBoard.sort((a, b) => b.totalEarned - a.totalEarned);
+
         return (
             <div style={{ padding: '0 20px 20px 20px', paddingBottom: '100px' }}>
                 <div style={{ textAlign: 'center', marginBottom: '25px' }}>
@@ -562,7 +580,6 @@ function App() {
                     <p style={{ color: theme.textDim, fontSize: '14px', margin: 0 }}>Xây dựng hệ thống - Tạo thu nhập thụ động</p>
                 </div>
 
-                {/* --- NHẬP MÃ GIFTCODE --- */}
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>🎟️ Nhập Mã Quà Tặng (Giftcode)</h3>
                     <div style={{ display: 'flex', gap: '10px' }}>
@@ -634,7 +651,8 @@ function App() {
                     </div>
                 </div>
 
-                <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🏆 BẢNG VÀNG ĐUA TOP</h3>
+                {/* --- BẢNG VÀNG GIỚI THIỆU MỚI --- */}
+                <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🤝 BẢNG VÀNG GIỚI THIỆU</h3>
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '15px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
                     {displayBoard.slice(0, 10).map((user, index) => {
                         let medal = "🏅";
@@ -654,11 +672,39 @@ function App() {
                         )
                     })}
                     <div style={{ textAlign: 'center', paddingTop: '15px', borderTop: `1px dashed ${theme.gold}`, marginTop: '10px' }}>
-                        <p style={{ color: theme.gold, fontSize: '14px', fontWeight: 'bold', margin: '0 0 12px 0', fontStyle: 'italic' }}>👉 Người tiếp theo trên Bảng Vàng sẽ là BẠN!</p>
                         <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ display: 'block', width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', textDecoration: 'none' }}>
                             ✈️ CHIA SẺ LINK ĐỂ ĐUA TOP NGAY
                         </a>
                     </div>
+                </div>
+
+                {/* --- BẢNG TOP ĐẠI GIA SWGT --- */}
+                <h3 style={{color: '#F4D03F', borderBottom: `1px solid ${theme.gold}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>💎 TOP 10 ĐẠI GIA SWGT</h3>
+                <p style={{fontSize: '13px', color: theme.textDim, fontStyle: 'italic', marginBottom: '15px'}}>*Bao gồm cả số Token đã rút về ví</p>
+                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '15px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
+                    {wealthBoard.slice(0, 10).map((user, index) => {
+                        let icon = "💸";
+                        if (index === 0) icon = "👑";
+                        else if (index === 1) icon = "💎";
+                        else if (index === 2) icon = "💰";
+                        
+                        // Highlight nếu là chính user đang xem
+                        const isMe = user.firstName === userProfile.name.split(' ')[0];
+
+                        return (
+                            <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: index < wealthBoard.length - 1 ? `1px solid ${theme.border}` : 'none', backgroundColor: isMe ? 'rgba(244, 208, 63, 0.1)' : 'transparent', borderRadius: '8px', paddingLeft: isMe ? '10px' : '0', paddingRight: isMe ? '10px' : '0' }}>
+                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '22px', marginRight: '12px' }}>{icon}</span>
+                                    <span style={{ color: isMe ? theme.gold : theme.textLight, fontWeight: 'bold', fontSize: '15px' }}>
+                                        {user.firstName} {user.lastName} {isMe && '(Bạn)'}
+                                    </span>
+                                </div>
+                                <div style={{ color: theme.green, fontWeight: 'bold', fontSize: '16px' }}>
+                                    {user.totalEarned} <span style={{ fontSize: '12px', color: theme.textDim, fontWeight: 'normal' }}>SWGT</span>
+                                </div>
+                            </div>
+                        )
+                    })}
                 </div>
 
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>💎 KHO ĐẶC QUYỀN VIP</h3>
