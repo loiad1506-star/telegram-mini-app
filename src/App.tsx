@@ -170,7 +170,20 @@ function App() {
 
     const isCheckedInToday = lastCheckIn ? new Date(lastCheckIn).toDateString() === new Date().toDateString() : false;
 
-    // --- LOGIC CẤP BẬC QUÂN ĐỘI ---
+    // --- HELPER: TÍNH CẤP BẬC QUÂN ĐỘI ---
+    const getMilitaryRank = (count: number) => {
+        if (count >= 500) return "Đại Tướng 🌟🌟🌟🌟";
+        if (count >= 350) return "Thượng Tướng 🌟🌟🌟";
+        if (count >= 200) return "Trung Tướng 🌟🌟";
+        if (count >= 120) return "Thiếu Tướng 🌟";
+        if (count >= 80) return "Đại Tá 🎖️";
+        if (count >= 50) return "Thượng Tá 🎖️";
+        if (count >= 20) return "Trung Tá 🎖️";
+        if (count >= 10) return "Thiếu Tá 🎖️";
+        if (count >= 3) return "Đại Úy 🎖️";
+        return "Tân Binh 🔰";
+    };
+
     let displayBoard = [...leaderboard];
     const dummyUsers = [
         { firstName: 'Vũ', lastName: 'Dũng', referralCount: 65 },
@@ -200,26 +213,13 @@ function App() {
     });
     wealthBoard.sort((a, b) => b.totalEarned - a.totalEarned);
 
-    const getMilitaryRank = (count: number) => {
-        if (count >= 500) return "Đại Tướng 🌟🌟🌟🌟";
-        if (count >= 350) return "Thượng Tướng 🌟🌟🌟";
-        if (count >= 200) return "Trung Tướng 🌟🌟";
-        if (count >= 120) return "Thiếu Tướng 🌟";
-        if (count >= 80) return "Đại Tá 🎖️";
-        if (count >= 50) return "Thượng Tá 🎖️";
-        if (count >= 20) return "Trung Tá 🎖️";
-        if (count >= 10) return "Thiếu Tá 🎖️";
-        if (count >= 3) return "Đại Úy 🎖️";
-        return "Tân Binh 🔰";
-    };
-
-    let militaryRank = getMilitaryRank(referrals);
-    
     let myRank = 0;
     if (referrals > 0) {
         const strictlyBetter = displayBoard.filter(u => u.referralCount > referrals).length;
         myRank = strictlyBetter + 1;
     }
+
+    let militaryRank = getMilitaryRank(referrals);
 
     let vipLevel = "Tân Binh 🥉";
     let wreathColor = "#8E8E93"; 
@@ -343,6 +343,7 @@ function App() {
         });
     };
 
+    // --- HÀM ĐỔI QUÀ (VIP) ---
     const redeemItem = (itemName: string) => {
         if (window.confirm(`Xác nhận gửi yêu cầu: ${itemName}?\n(Admin sẽ liên hệ bạn để xác nhận)`)) {
             fetch(`${BACKEND_URL}/api/redeem`, {
@@ -399,8 +400,8 @@ function App() {
                 </div>
                 
                 <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
-                    {/* SVG ĐÃ ĐƯỢC CHỈNH SỬA VIEWBOX ĐỂ VÒNG NGUYỆT QUẾ ÔM KHÍT */}
-                    <svg viewBox="-10 -10 120 120" style={{ position: 'absolute', width: '130%', height: '130%', top: '-15%', left: '-15%', zIndex: 1, pointerEvents: 'none' }}>
+                    {/* SVG ĐÃ CĂN CHỈNH LẠI VIEWBOX ĐỂ KHỚP VÒNG NGUYỆT QUẾ */}
+                    <svg viewBox="-5 -5 110 110" style={{ position: 'absolute', width: '140%', height: '140%', top: '-20%', left: '-20%', zIndex: 1, pointerEvents: 'none' }}>
                         <path d="M 50 90 C 15 90, 5 50, 20 20" fill="none" stroke={wreathColor} strokeWidth="2" />
                         <path d="M 50 90 C 85 90, 95 50, 80 20" fill="none" stroke={wreathColor} strokeWidth="2" />
                         <path d="M 20 20 Q 30 15 25 30 Q 15 25 20 20" fill={wreathColor} /> 
@@ -511,7 +512,7 @@ function App() {
 
                         return (
                             <div key={day} style={{ minWidth: '40px', backgroundColor: bgColor, borderRadius: '8px', padding: '8px 5px', border: `1px solid ${borderColor}`, position: 'relative' }}>
-                                {/* DẤU TÍCH XANH NỔI BẬT CHO NGÀY ĐÃ ĐIỂM DANH */}
+                                {/* DẤU TÍCH XANH NỔI BẬT NẾU ĐÃ ĐIỂM DANH */}
                                 {isClaimed && <div style={{position:'absolute', top:'-6px', right:'-6px', background:'#0F0F0F', borderRadius:'50%', fontSize:'14px'}}>✅</div>}
                                 <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: textColor }}>Ngày {day}</p>
                                 <p style={{ margin: 0, fontSize: '12px', fontWeight: 'bold', color: textColor }}>
@@ -663,7 +664,16 @@ function App() {
 
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🚀 9 CỘT MỐC THƯỞNG NÓNG</h3>
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
-                    <div style={{ width: '100%', height: '12px', backgroundColor: '#333', borderRadius: '6px', overflow: 'hidden', marginBottom: '15px' }}> <div style={{ width: `${Math.min((referrals / 3)*100, 100)}%`, height: '100%', backgroundColor: theme.gold, transition: 'width 0.5s ease' }}></div> </div>
+                    {/* CÓ SỬ DỤNG progressPercent ở đây */}
+                    <div style={{ width: '100%', height: '12px', backgroundColor: '#333', borderRadius: '6px', overflow: 'hidden', marginBottom: '15px' }}> 
+                        <div style={{ width: `${progressPercent}%`, height: '100%', backgroundColor: theme.gold, transition: 'width 0.5s ease' }}></div> 
+                    </div>
+                    {/* CÓ SỬ DỤNG nextReward, nextTarget ở đây */}
+                    <div style={{ textAlign: 'right', marginBottom:'15px' }}>
+                         <p style={{ margin: 0, color: theme.gold, fontSize: '13px', fontWeight: 'bold' }}>Mục tiêu: {nextTarget} người</p>
+                         <p style={{ margin: 0, color: theme.green, fontSize: '14px', fontWeight: 'bold' }}>🎁 Thưởng {nextReward}</p>
+                    </div>
+
                     <div style={{ display: 'flex', overflowX: 'auto', gap: '10px', paddingBottom: '10px' }}>
                         {MILESTONE_LIST.map((m) => {
                             const isClaimed = milestones[m.key]; const canClaim = referrals >= m.req && !isClaimed;
@@ -680,6 +690,7 @@ function App() {
                     </div>
                 </div>
 
+                {/* BẢNG VÀNG CÓ CẤP BẬC */}
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🤝 BẢNG VÀNG GIỚI THIỆU</h3>
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '15px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
                     {displayBoard.slice(0, 10).map((user, index) => (
@@ -697,6 +708,7 @@ function App() {
                     ))}
                 </div>
 
+                {/* KHO VIP MỚI */}
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>💎 KHO ĐẶC QUYỀN VIP</h3>
                 <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '15px', marginBottom: '15px', border: `1px solid ${theme.border}`}}>
                     <h4 style={{margin: '0 0 8px 0', color: '#5E92F3', fontSize: '16px'}}>☕ Cà Phê Chiến Lược</h4>
