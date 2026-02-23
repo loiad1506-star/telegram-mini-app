@@ -168,20 +168,21 @@ function App() {
             .catch(() => {});
     }, []);
 
+    // XÁC ĐỊNH ĐIỂM DANH HÔM NAY
     const isCheckedInToday = lastCheckIn ? new Date(lastCheckIn).toDateString() === new Date().toDateString() : false;
 
     // --- HELPER: TÍNH CẤP BẬC QUÂN ĐỘI ---
     const getMilitaryRank = (count: number) => {
-        if (count >= 500) return "Đại Tướng 🌟🌟🌟🌟";
-        if (count >= 350) return "Thượng Tướng 🌟🌟🌟";
-        if (count >= 200) return "Trung Tướng 🌟🌟";
-        if (count >= 120) return "Thiếu Tướng 🌟";
-        if (count >= 80) return "Đại Tá 🎖️";
-        if (count >= 50) return "Thượng Tá 🎖️";
-        if (count >= 20) return "Trung Tá 🎖️";
-        if (count >= 10) return "Thiếu Tá 🎖️";
-        if (count >= 3) return "Đại Úy 🎖️";
-        return "Tân Binh 🔰";
+        if (count >= 500) return "Đại Tướng";
+        if (count >= 350) return "Thượng Tướng";
+        if (count >= 200) return "Trung Tướng";
+        if (count >= 120) return "Thiếu Tướng";
+        if (count >= 80) return "Đại Tá";
+        if (count >= 50) return "Thượng Tá";
+        if (count >= 20) return "Trung Tá";
+        if (count >= 10) return "Thiếu Tá";
+        if (count >= 3) return "Đại Úy";
+        return "Tân Binh";
     };
 
     let displayBoard = [...leaderboard];
@@ -259,7 +260,7 @@ function App() {
         }).then(res => res.json()).then(data => {
             if (data.success) {
                 setBalance(data.balance);
-                setLastCheckIn(data.lastCheckInDate);
+                setLastCheckIn(data.lastCheckInDate); // Cập nhật ngày để khóa nút
                 setCheckInStreak(data.streak);
                 alert(`🔥 Điểm danh thành công (Chuỗi ${data.streak} ngày)!\nBạn nhận được +${data.reward} SWGT.`);
             } else { alert(data.message || "❌ Hôm nay bạn đã điểm danh rồi!"); }
@@ -399,8 +400,10 @@ function App() {
                     <p style={{ margin: 0, fontSize: '12px', color: theme.textDim, fontWeight: 'bold' }}>{militaryRank}</p>
                 </div>
                 
+                {/* SỬA LỖI VIỀN AVATAR: Nâng zIndex của SVG lên 10, đưa thẻ bọc Avatar về zIndex 1 */}
                 <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
-                    <svg viewBox="-5 -5 110 110" style={{ position: 'absolute', width: '140%', height: '140%', top: '-20%', left: '-20%', zIndex: 3, pointerEvents: 'none' }}>
+                    
+                    <svg viewBox="-5 -5 110 110" style={{ position: 'absolute', width: '140%', height: '140%', top: '-20%', left: '-20%', zIndex: 10, pointerEvents: 'none' }}>
                         <path d="M 50 90 C 15 90, 5 50, 20 20" fill="none" stroke={wreathColor} strokeWidth="2" />
                         <path d="M 50 90 C 85 90, 95 50, 80 20" fill="none" stroke={wreathColor} strokeWidth="2" />
                         <path d="M 20 20 Q 30 15 25 30 Q 15 25 20 20" fill={wreathColor} /> 
@@ -411,21 +414,21 @@ function App() {
                         <path d="M 85 65 Q 70 55 75 70 Q 90 70 85 65" fill={wreathColor} />
                     </svg>
 
-                    <div style={{ width: '52px', height: '52px', borderRadius: '50%', padding: '2px', backgroundColor: theme.bg, boxShadow: glow, zIndex: 2 }}>
+                    <div style={{ position: 'relative', width: '52px', height: '52px', borderRadius: '50%', padding: '2px', backgroundColor: theme.bg, boxShadow: glow, zIndex: 1 }}>
                         {userProfile.photoUrl ? (
-                            <img src={userProfile.photoUrl} alt="avatar" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${wreathColor}` }} />
+                            <img src={userProfile.photoUrl} alt="avatar" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
                         ) : (
-                            <div style={{ width: '100%', height: '100%', borderRadius: '50%', backgroundColor: theme.cardBg, border: `2px solid ${wreathColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.gold, fontSize: '20px' }}>👤</div>
+                            <div style={{ width: '100%', height: '100%', borderRadius: '50%', backgroundColor: theme.cardBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.gold, fontSize: '20px' }}>👤</div>
                         )}
                     </div>
                     
-                    <div style={{ position: 'absolute', bottom: '-10px', zIndex: 4, display: 'flex', alignItems: 'center', backgroundColor: '#000', padding: '2px 8px', borderRadius: '12px', border: `1px solid ${wreathColor}`, boxShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                    <div style={{ position: 'absolute', bottom: '-10px', zIndex: 11, display: 'flex', alignItems: 'center', backgroundColor: '#000', padding: '2px 8px', borderRadius: '12px', border: `1px solid ${wreathColor}`, boxShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
                         <span style={{ color: wreathColor, fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                             {vipLevel}
                         </span>
                     </div>
 
-                    <div style={{ position: 'absolute', top: '0px', right: '0px', width: '12px', height: '12px', backgroundColor: theme.green, borderRadius: '50%', border: `2px solid ${theme.bg}`, zIndex: 5 }}></div>
+                    <div style={{ position: 'absolute', top: '0px', right: '0px', width: '12px', height: '12px', backgroundColor: theme.green, borderRadius: '50%', border: `2px solid ${theme.bg}`, zIndex: 12 }}></div>
                 </div>
             </div>
         </div>
@@ -509,8 +512,8 @@ function App() {
 
                         return (
                             <div key={day} style={{ minWidth: '40px', backgroundColor: bgColor, borderRadius: '8px', padding: '8px 5px', border: `1px solid ${borderColor}`, position: 'relative' }}>
-                                {/* DẤU TÍCH XANH NẾU ĐÃ ĐIỂM DANH */}
-                                {isClaimed && <div style={{position:'absolute', top:'-6px', right:'-6px', background:'#0F0F0F', borderRadius:'50%', fontSize:'14px'}}>✅</div>}
+                                {/* CẬP NHẬT: Hiện tích xanh rõ ràng cho ngày đã điểm danh */}
+                                {isClaimed && <div style={{position:'absolute', top:'-6px', right:'-6px', background:'#0F0F0F', borderRadius:'50%', fontSize:'14px', zIndex: 5}}>✅</div>}
                                 <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: textColor }}>Ngày {day}</p>
                                 <p style={{ margin: 0, fontSize: '12px', fontWeight: 'bold', color: textColor }}>
                                     {isClaimed ? 'Đã nhận' : `+${STREAK_REWARDS[idx]}`}
@@ -523,10 +526,10 @@ function App() {
                 <button 
                     onClick={handleCheckIn} 
                     disabled={isCheckedInToday}
-                    // ĐỔI MÀU NÚT KHI ĐÃ ĐIỂM DANH
-                    style={{ width: '100%', backgroundColor: isCheckedInToday ? '#333' : theme.green, color: isCheckedInToday ? theme.textDim : '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: isCheckedInToday ? 'not-allowed' : 'pointer', fontSize: '15px' }}
+                    // CẬP NHẬT: Đổi màu xám và hiện ✅ khi đã nhận
+                    style={{ width: '100%', backgroundColor: isCheckedInToday ? '#333' : theme.green, color: isCheckedInToday ? theme.textDim : '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: isCheckedInToday ? 'not-allowed' : 'pointer', fontSize: '15px', transition: 'all 0.3s' }}
                 >
-                    {isCheckedInToday ? "✅ BẠN ĐÃ NHẬN SWGT HÔM NAY" : "✋ BẤM ĐIỂM DANH NGAY"}
+                    {isCheckedInToday ? "✅ ĐÃ NHẬN HÔM NAY" : "✋ BẤM ĐIỂM DANH NGAY"}
                 </button>
             </div>
 
@@ -638,11 +641,13 @@ function App() {
                 </div>
 
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
-                    <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>🎟️ Nhập Mã Quà Tặng</h3>
+                    <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>🎟️ Nhập Mã Quà Tặng (Giftcode)</h3>
+                    {/* CẬP NHẬT: Placeholder cho mã Giftcode */}
                     <div style={{ display: 'flex', gap: '10px' }}>
-                        <input value={giftCodeInput} onChange={(e) => setGiftCodeInput(e.target.value)} placeholder="Nhập mã..." style={{ flex: 1, padding: '14px', borderRadius: '10px', border: `1px solid ${theme.green}`, backgroundColor: '#000', color: theme.gold, boxSizing: 'border-box', fontSize: '14px', textTransform: 'uppercase' }} />
+                        <input value={giftCodeInput} onChange={(e) => setGiftCodeInput(e.target.value)} placeholder="Nhập mã săn được từ Group..." style={{ flex: 1, padding: '14px', borderRadius: '10px', border: `1px solid ${theme.green}`, backgroundColor: '#000', color: theme.gold, boxSizing: 'border-box', fontSize: '14px', textTransform: 'uppercase' }} />
                         <button onClick={handleClaimGiftCode} style={{ backgroundColor: theme.green, color: '#fff', padding: '0 20px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', cursor: 'pointer' }}>NHẬN</button>
                     </div>
+                    <p style={{color: theme.gold, fontSize: '12px', marginTop: '10px', marginBottom: 0}}>⚠️ Vui lòng nhập mã Giftcode!</p>
                 </div>
 
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
@@ -656,12 +661,7 @@ function App() {
 
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🚀 9 CỘT MỐC THƯỞNG NÓNG</h3>
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
-                    {/* CÓ SỬ DỤNG progressPercent ở đây - KHẮC PHỤC LỖI */}
-                    <div style={{ width: '100%', height: '12px', backgroundColor: '#333', borderRadius: '6px', overflow: 'hidden', marginBottom: '15px' }}> 
-                        <div style={{ width: `${progressPercent}%`, height: '100%', backgroundColor: theme.gold, transition: 'width 0.5s ease' }}></div> 
-                    </div>
-                    
-                    {/* CÓ SỬ DỤNG nextReward và nextTarget ở đây - KHẮC PHỤC LỖI */}
+                    <div style={{ width: '100%', height: '12px', backgroundColor: '#333', borderRadius: '6px', overflow: 'hidden', marginBottom: '15px' }}> <div style={{ width: `${progressPercent}%`, height: '100%', backgroundColor: theme.gold, transition: 'width 0.5s ease' }}></div> </div>
                     <div style={{ textAlign: 'right', marginBottom:'15px' }}>
                          <p style={{ margin: 0, color: theme.gold, fontSize: '13px', fontWeight: 'bold' }}>Mục tiêu: {nextTarget} người</p>
                          <p style={{ margin: 0, color: theme.green, fontSize: '14px', fontWeight: 'bold' }}>🎁 Thưởng {nextReward}</p>
@@ -695,7 +695,8 @@ function App() {
                                 <div style={{ display: 'flex', alignItems: 'center' }}>
                                     <span style={{ color: theme.textDim, fontWeight: 'bold', fontSize: '14px', minWidth: '24px', marginRight: '5px' }}>{index + 1}.</span>
                                     <span style={{ fontSize: '22px', marginRight: '10px' }}>{medal}</span>
-                                    <div style={{display:'flex', flexDirection:'column'}}>
+                                    {/* CẬP NHẬT: Hiển thị cấp bậc quân đội dưới tên người dùng */}
+                                    <div style={{display:'flex', flexDirection:'column', gap: '3px'}}>
                                         <span style={{ color: theme.textLight, fontWeight: 'bold', fontSize: '15px' }}>{user.firstName} {user.lastName}</span>
                                         <span style={{ color: theme.blue, fontSize: '11px', fontWeight: 'bold' }}>{getMilitaryRank(user.referralCount)}</span>
                                     </div>
@@ -706,19 +707,21 @@ function App() {
                     })}
                 </div>
 
+                {/* CẬP NHẬT: Kho đặc quyền VIP theo đúng giá bạn yêu cầu */}
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>💎 KHO ĐẶC QUYỀN VIP</h3>
+                <p style={{ color: theme.textDim, fontSize: '14px', marginBottom: '15px' }}>Hãy để lại số lượng Token</p>
                 <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '15px', marginBottom: '15px', border: `1px solid ${theme.border}`}}>
-                    <h4 style={{margin: '0 0 8px 0', color: '#5E92F3', fontSize: '16px'}}>☕ Cà Phê Chiến Lược</h4>
+                    <h4 style={{margin: '0 0 8px 0', color: '#5E92F3', fontSize: '16px'}}>☕ Cà Phê Chiến Lược : 6000</h4>
                     <p style={{fontSize: '14px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Thảo luận danh mục trực tiếp cùng Admin Ucity.</p>
                     <button onClick={() => redeemItem('Cà Phê Chiến Lược', 6000)} style={{backgroundColor: '#5E92F3', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer'}}>LIÊN HỆ ADMIN</button>
                 </div>
                 <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '15px', marginBottom: '15px', border: `1px solid ${theme.border}`}}>
-                    <h4 style={{margin: '0 0 8px 0', color: '#34C759', fontSize: '16px'}}>🔓 Mở Khóa Group Private</h4>
+                    <h4 style={{margin: '0 0 8px 0', color: '#34C759', fontSize: '16px'}}>🔓 Mở Khóa Group Private : 8000</h4>
                     <p style={{fontSize: '14px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Nhận tín hiệu thị trường và họp Zoom kín hàng tuần.</p>
                     <button onClick={() => redeemItem('Group Private', 8000)} style={{backgroundColor: '#34C759', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer'}}>LIÊN HỆ ADMIN</button>
                 </div>
                 <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '15px', marginBottom: '15px', border: `1px solid ${theme.border}`}}>
-                    <h4 style={{margin: '0 0 8px 0', color: theme.gold, fontSize: '16px'}}>🎟️ Phiếu Đầu Tư Ưu Đãi Đặc Biệt</h4>
+                    <h4 style={{margin: '0 0 8px 0', color: theme.gold, fontSize: '16px'}}>🎟️ Phiếu Đầu Tư Ưu Đãi Đặc Biệt : 9000</h4>
                     <p style={{fontSize: '14px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Nhận Voucher chiết khấu đặc biệt khi vào gói đầu tư lớn.</p>
                     <button onClick={() => redeemItem('Phiếu Đầu Tư', 9000)} style={{backgroundColor: theme.gold, color: '#000', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer'}}>LIÊN HỆ ADMIN</button>
                 </div>
