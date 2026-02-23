@@ -79,7 +79,6 @@ function App() {
 
     const STREAK_REWARDS = [0.5, 1.5, 3, 3.5, 5, 7, 9];
 
-    // CẬP NHẬT LOGIC ĐẾM NGƯỢC THÔNG MINH (Bypass nếu có >= 1500 SWGT)
     useEffect(() => {
         if (!unlockDateMs) return;
         const interval = setInterval(() => {
@@ -171,13 +170,33 @@ function App() {
 
     const isCheckedInToday = lastCheckIn ? new Date(lastCheckIn).toDateString() === new Date().toDateString() : false;
 
-    // --- CẬP NHẬT VIP LEVEL BẰNG KHUNG NGUYỆT QUẾ ---
+    // ==================================================
+    // CƠ CHẾ PHÂN BẬC TÂM LÝ & THIẾT KẾ VÒNG NGUYỆT QUẾ
+    // ==================================================
     let vipLevel = "Tân Binh";
-    let wreathColor = theme.border; 
+    let wreathColor = "#8E8E93"; // Xám nhạt
     let glow = "none";
-    if (referrals >= 100) { vipLevel = "VIP 3"; wreathColor = theme.gold; glow = `0 0 12px ${theme.gold}80`; }
-    else if (referrals >= 50) { vipLevel = "VIP 2"; wreathColor = '#C0C0C0'; glow = `0 0 10px #C0C0C080`; } // Bạc
-    else if (referrals >= 10) { vipLevel = "VIP 1"; wreathColor = '#CD7F32'; glow = `0 0 8px #CD7F3280`; } // Đồng
+
+    if (referrals >= 500) { 
+        vipLevel = "Huyền Thoại 👑"; 
+        wreathColor = "#E0B0FF"; // Premium Purple
+        glow = `0 0 15px #E0B0FF`; 
+    }
+    else if (referrals >= 100) { 
+        vipLevel = "Đối Tác VIP 💎"; 
+        wreathColor = theme.gold; // Vàng
+        glow = `0 0 12px ${theme.gold}`; 
+    }
+    else if (referrals >= 50) { 
+        vipLevel = "Đại Sứ 🥇"; 
+        wreathColor = "#C0C0C0"; // Bạc
+        glow = `0 0 10px #C0C0C0`; 
+    }
+    else if (referrals >= 10) { 
+        vipLevel = "Sứ Giả 🥈"; 
+        wreathColor = "#CD7F32"; // Đồng
+        glow = `0 0 8px #CD7F32`; 
+    }
 
     const handleCheckIn = () => {
         if (isCheckedInToday) return;
@@ -313,39 +332,63 @@ function App() {
     };
 
     const renderHeader = () => (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', backgroundColor: theme.bg }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 20px', backgroundColor: theme.bg }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
-                <img src="/logo.png" alt="SWC Logo" style={{ width: '50px', height: '50px', borderRadius: '50%', border: `2px solid ${theme.gold}`, marginRight: '12px', objectFit: 'cover' }} />
+                <img src="/logo.png" alt="SWC Logo" style={{ width: '45px', height: '45px', borderRadius: '50%', border: `2px solid ${theme.gold}`, marginRight: '12px', objectFit: 'cover' }} />
                 <div>
                     <h1 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: theme.textLight }}>CỘNG ĐỒNG</h1>
-                    <p style={{ margin: 0, fontSize: '14px', color: theme.gold, fontWeight: 'bold' }}>Đầu tư uST</p>
+                    <p style={{ margin: 0, fontSize: '13px', color: theme.gold, fontWeight: 'bold' }}>Đầu tư uST</p>
                 </div>
             </div>
             
             <div style={{ display: 'flex', alignItems: 'center', textAlign: 'right' }}>
-                <div style={{ marginRight: '10px' }}>
-                    <h2 style={{ margin: 0, fontSize: '16px', color: theme.textLight, fontWeight: 'bold' }}>{userProfile.name}</h2>
-                    <p style={{ margin: 0, fontSize: '13px', color: theme.textDim, fontWeight: 'normal' }}>Thành viên</p>
+                <div style={{ marginRight: '15px' }}>
+                    <h2 style={{ margin: 0, fontSize: '15px', color: theme.textLight, fontWeight: 'bold' }}>{userProfile.name}</h2>
+                    <p style={{ margin: 0, fontSize: '12px', color: theme.textDim, fontWeight: 'normal' }}>Thành viên</p>
                 </div>
-                {/* --- KHUNG AVATAR ĐƯỢC THIẾT KẾ LẠI --- */}
-                <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                
+                {/* --- KHUNG AVATAR KÈM VÒNG NGUYỆT QUẾ CỰC CHẤT --- */}
+                <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
+                    
+                    {/* SVG Vòng nguyệt quế */}
+                    <svg viewBox="0 0 100 100" style={{ position: 'absolute', width: '150%', height: '150%', top: '-25%', left: '-25%', zIndex: 1, pointerEvents: 'none' }}>
+                        {/* Cành cây */}
+                        <path d="M 50 90 C 15 90, 5 50, 20 20" fill="none" stroke={wreathColor} strokeWidth="1.5" />
+                        <path d="M 50 90 C 85 90, 95 50, 80 20" fill="none" stroke={wreathColor} strokeWidth="1.5" />
+                        {/* Lá bên trái */}
+                        <path d="M 20 20 Q 30 15 25 30 Q 15 25 20 20" fill={wreathColor} />
+                        <path d="M 12 40 Q 25 35 20 50 Q 5 45 12 40" fill={wreathColor} />
+                        <path d="M 15 65 Q 30 55 25 70 Q 10 70 15 65" fill={wreathColor} />
+                        <path d="M 28 82 Q 40 75 35 88 Q 20 85 28 82" fill={wreathColor} />
+                        {/* Lá bên phải */}
+                        <path d="M 80 20 Q 70 15 75 30 Q 85 25 80 20" fill={wreathColor} />
+                        <path d="M 88 40 Q 75 35 80 50 Q 95 45 88 40" fill={wreathColor} />
+                        <path d="M 85 65 Q 70 55 75 70 Q 90 70 85 65" fill={wreathColor} />
+                        <path d="M 72 82 Q 60 75 65 88 Q 80 85 72 82" fill={wreathColor} />
+                    </svg>
+
+                    {/* Lõi Avatar */}
                     <div style={{ 
-                        width: '56px', height: '56px', borderRadius: '50%', 
-                        padding: '3px', background: `linear-gradient(45deg, ${wreathColor}, ${theme.cardBg}, ${wreathColor})`, 
-                        boxShadow: glow 
+                        width: '52px', height: '52px', borderRadius: '50%', 
+                        padding: '2px', backgroundColor: theme.bg,
+                        boxShadow: glow, zIndex: 2
                     }}>
                         {userProfile.photoUrl ? (
-                            <img src={userProfile.photoUrl} alt="avatar" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${theme.bg}` }} />
+                            <img src={userProfile.photoUrl} alt="avatar" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${wreathColor}` }} />
                         ) : (
-                            <div style={{ width: '100%', height: '100%', borderRadius: '50%', backgroundColor: theme.cardBg, border: `2px solid ${theme.bg}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.gold, fontSize: '20px' }}>👤</div>
+                            <div style={{ width: '100%', height: '100%', borderRadius: '50%', backgroundColor: theme.cardBg, border: `2px solid ${wreathColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.gold, fontSize: '20px' }}>👤</div>
                         )}
                     </div>
-                    {/* HUY HIỆU VIP DƯỚI CHÂN AVATAR */}
-                    <div style={{ position: 'absolute', bottom: '-8px', backgroundColor: wreathColor, color: '#000', fontSize: '10px', fontWeight: 'bold', padding: '2px 8px', borderRadius: '10px', border: `1px solid ${theme.bg}`, whiteSpace: 'nowrap' }}>
-                        {vipLevel}
+                    
+                    {/* Bảng Danh hiệu VIP đính kèm dưới chân Avatar */}
+                    <div style={{ position: 'absolute', bottom: '-10px', zIndex: 3, display: 'flex', alignItems: 'center', backgroundColor: '#000', padding: '2px 8px', borderRadius: '12px', border: `1px solid ${wreathColor}`, boxShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                        <span style={{ color: wreathColor, fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                            {vipLevel}
+                        </span>
                     </div>
-                    {/* CHẤM ONLINE */}
-                    <div style={{ position: 'absolute', top: '2px', right: '2px', width: '12px', height: '12px', backgroundColor: theme.green, borderRadius: '50%', border: `2px solid ${theme.bg}` }}></div>
+
+                    {/* Dấu chấm Online (Xanh lá) */}
+                    <div style={{ position: 'absolute', top: '0px', right: '0px', width: '12px', height: '12px', backgroundColor: theme.green, borderRadius: '50%', border: `2px solid ${theme.bg}`, zIndex: 4 }}></div>
                 </div>
             </div>
         </div>
@@ -622,7 +665,7 @@ function App() {
                     <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '8px', color: theme.gold, fontSize: '15px', wordBreak: 'break-all', marginBottom: '15px', border: `1px dashed ${theme.border}` }}>
                         https://t.me/Dau_Tu_SWC_bot?start={userId || 'ref'}
                     </div>
-                    {/* ĐÃ FIX: CĂN GIỮA VÀ BẰNG NHAU CHO 2 NÚT CHIA SẺ */}
+                    {/* ĐÃ CĂN GIỮA TUYỆT ĐỐI NÚT CHIA SẺ VÀ COPY */}
                     <div style={{ display: 'flex', gap: '10px' }}>
                         <button onClick={handleCopyLink} style={{ flex: 1, backgroundColor: theme.gold, color: '#000', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', cursor: 'pointer', textAlign: 'center' }}>
                             📋 COPY LINK
