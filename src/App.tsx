@@ -823,10 +823,10 @@ function App() {
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🤝 BẢNG VÀNG GIỚI THIỆU</h3>
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '15px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
                     {displayBoard.slice(0, 10).map((user, index) => {
-                        let medal = "🏵️"; // Huy chương mặc định cho Top 4-10
-                        if (index === 0) medal = "👑"; // Vương miện Top 1
-                        else if (index === 1) medal = "💎"; // Kim cương Top 2
-                        else if (index === 2) medal = "🌟"; // Ngôi sao Top 3
+                        let medal = "🏅"; // Huy chương mặc định cho Top 4-10
+                        if (index === 0) medal = "🥇";
+                        else if (index === 1) medal = "🥈";
+                        else if (index === 2) medal = "🥉";
                         return (
                             <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: index < displayBoard.length - 1 ? `1px solid ${theme.border}` : 'none' }}>
                                 <div style={{ display: 'flex', alignItems: 'center' }}>
