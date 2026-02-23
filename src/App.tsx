@@ -79,25 +79,27 @@ function App() {
 
     const STREAK_REWARDS = [0.5, 1.5, 3, 3.5, 5, 7, 9];
 
+    // CẬP NHẬT LOGIC ĐẾM NGƯỢC THÔNG MINH (Bypass nếu có >= 1500 SWGT)
     useEffect(() => {
         if (!unlockDateMs) return;
         const interval = setInterval(() => {
             const now = new Date().getTime();
             const distance = unlockDateMs - now;
-            if (distance > 0) {
+            
+            if (distance <= 0 || balance >= 1500) {
+                setIsUnlocked(true);
+                setTimeLeft({ days: 0, hours: 0, mins: 0 });
+            } else {
                 setIsUnlocked(false);
                 setTimeLeft({
                     days: Math.floor(distance / (1000 * 60 * 60 * 24)),
                     hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
                     mins: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
                 });
-            } else {
-                setIsUnlocked(true);
-                setTimeLeft({ days: 0, hours: 0, mins: 0 });
             }
         }, 1000);
         return () => clearInterval(interval);
-    }, [unlockDateMs]);
+    }, [unlockDateMs, balance]);
 
     const fetchUserData = (uid: string) => {
         fetch(`${BACKEND_URL}/api/user?id=${uid}`)
@@ -169,11 +171,13 @@ function App() {
 
     const isCheckedInToday = lastCheckIn ? new Date(lastCheckIn).toDateString() === new Date().toDateString() : false;
 
-    let userTitle = "Tân Binh";
-    let titleColor = theme.textDim;
-    if (referrals >= 100) { userTitle = "Đối Tác VIP 💎"; titleColor = theme.gold; }
-    else if (referrals >= 50) { userTitle = "Đại Sứ 🥈"; titleColor = theme.blue; }
-    else if (referrals >= 10) { userTitle = "Sứ Giả 🥉"; titleColor = '#CD7F32'; }
+    // --- CẬP NHẬT VIP LEVEL BẰNG KHUNG NGUYỆT QUẾ ---
+    let vipLevel = "Tân Binh";
+    let wreathColor = theme.border; 
+    let glow = "none";
+    if (referrals >= 100) { vipLevel = "VIP 3"; wreathColor = theme.gold; glow = `0 0 12px ${theme.gold}80`; }
+    else if (referrals >= 50) { vipLevel = "VIP 2"; wreathColor = '#C0C0C0'; glow = `0 0 10px #C0C0C080`; } // Bạc
+    else if (referrals >= 10) { vipLevel = "VIP 1"; wreathColor = '#CD7F32'; glow = `0 0 8px #CD7F3280`; } // Đồng
 
     const handleCheckIn = () => {
         if (isCheckedInToday) return;
@@ -219,7 +223,9 @@ function App() {
     };
 
     const handleWithdraw = () => {
-        if (!isUnlocked) { return alert(`⏳ Bạn chưa hết thời gian mở khóa (${lockDaysLimit} ngày). Vui lòng chờ đến khi đếm ngược kết thúc để rút Token!`); }
+        if (!isUnlocked && balance < 1500) { 
+            return alert(`⏳ Bạn chưa hết thời gian mở khóa (${lockDaysLimit} ngày). Trừ khi bạn cày đạt 1500 SWGT để được rút ngay!`); 
+        }
         const amount = Number(withdrawAmount);
         if (!amount || amount < 300) return alert("⚠️ Bạn cần rút tối thiểu 300 SWGT!");
         if (amount > balance) return alert("⚠️ Số dư của bạn không đủ để rút mức này!");
@@ -315,18 +321,31 @@ function App() {
                     <p style={{ margin: 0, fontSize: '14px', color: theme.gold, fontWeight: 'bold' }}>Đầu tư uST</p>
                 </div>
             </div>
+            
             <div style={{ display: 'flex', alignItems: 'center', textAlign: 'right' }}>
                 <div style={{ marginRight: '10px' }}>
                     <h2 style={{ margin: 0, fontSize: '16px', color: theme.textLight, fontWeight: 'bold' }}>{userProfile.name}</h2>
-                    <p style={{ margin: 0, fontSize: '13px', color: titleColor, fontWeight: 'bold' }}>{userTitle}</p>
+                    <p style={{ margin: 0, fontSize: '13px', color: theme.textDim, fontWeight: 'normal' }}>Thành viên</p>
                 </div>
-                <div style={{ position: 'relative' }}>
-                    {userProfile.photoUrl ? (
-                        <img src={userProfile.photoUrl} alt="avatar" referrerPolicy="no-referrer" style={{ width: '50px', height: '50px', borderRadius: '50%', border: `2px solid ${titleColor}`, objectFit: 'cover' }} />
-                    ) : (
-                        <div style={{ width: '50px', height: '50px', borderRadius: '50%', backgroundColor: theme.cardBg, border: `2px solid ${titleColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.gold, fontSize: '20px' }}>👤</div>
-                    )}
-                    <div style={{ position: 'absolute', bottom: '2px', right: '2px', width: '12px', height: '12px', backgroundColor: theme.green, borderRadius: '50%', border: `2px solid ${theme.bg}` }}></div>
+                {/* --- KHUNG AVATAR ĐƯỢC THIẾT KẾ LẠI --- */}
+                <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div style={{ 
+                        width: '56px', height: '56px', borderRadius: '50%', 
+                        padding: '3px', background: `linear-gradient(45deg, ${wreathColor}, ${theme.cardBg}, ${wreathColor})`, 
+                        boxShadow: glow 
+                    }}>
+                        {userProfile.photoUrl ? (
+                            <img src={userProfile.photoUrl} alt="avatar" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${theme.bg}` }} />
+                        ) : (
+                            <div style={{ width: '100%', height: '100%', borderRadius: '50%', backgroundColor: theme.cardBg, border: `2px solid ${theme.bg}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.gold, fontSize: '20px' }}>👤</div>
+                        )}
+                    </div>
+                    {/* HUY HIỆU VIP DƯỚI CHÂN AVATAR */}
+                    <div style={{ position: 'absolute', bottom: '-8px', backgroundColor: wreathColor, color: '#000', fontSize: '10px', fontWeight: 'bold', padding: '2px 8px', borderRadius: '10px', border: `1px solid ${theme.bg}`, whiteSpace: 'nowrap' }}>
+                        {vipLevel}
+                    </div>
+                    {/* CHẤM ONLINE */}
+                    <div style={{ position: 'absolute', top: '2px', right: '2px', width: '12px', height: '12px', backgroundColor: theme.green, borderRadius: '50%', border: `2px solid ${theme.bg}` }}></div>
                 </div>
             </div>
         </div>
@@ -389,6 +408,13 @@ function App() {
                 </button>
                 <p style={{ margin: '10px 0 0 0', color: theme.red, fontSize: '12px', fontStyle: 'italic' }}>
                     ⚠️ Nhớ vào mỗi ngày! Nếu quên 1 ngày, chuỗi sẽ quay lại từ đầu.
+                </p>
+            </div>
+
+            {/* BANNER 1500 SWGT - HOME */}
+            <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.1)', border: `1px dashed ${theme.gold}`, padding: '15px', borderRadius: '10px', marginBottom: '20px' }}>
+                <p style={{ margin: 0, color: theme.gold, fontSize: '14px', lineHeight: '1.6', textAlign: 'center' }}>
+                    <span style={{fontWeight:'bold'}}>⚡ ĐẶC QUYỀN MỞ KHÓA TỐC ĐỘ:</span><br/>Cày đạt mốc <b>1500 SWGT</b> sẽ được <b style={{color: '#fff'}}>RÚT TIỀN VỀ VÍ NGAY LẬP TỨC</b>, bỏ qua hoàn toàn thời gian đếm ngược!
                 </p>
             </div>
 
@@ -552,24 +578,13 @@ function App() {
             displayBoard.sort((a, b) => b.referralCount - a.referralCount);
         }
 
-        // --- TẠO DỮ LIỆU TOP 10 ĐẠI GIA SWGT (Bao gồm tiền đã rút) ---
-        // Thuật toán: Dựa vào số Referrals + Balance hiện tại để ước tính tổng tiền kiếm được của những người đứng Top
         let wealthBoard = displayBoard.slice(0, 10).map((user, index) => {
-            // Công thức nội bộ để tạo số SWGT hợp lý: Số Ref * Trung bình 25 SWGT + Random số dư
             let estimatedTotal = (user.referralCount * 25) + 300 + (10 - index) * 50; 
-            
-            // Nếu là người dùng đang đăng nhập, tính tiền thật của họ (Sổ dư hiện tại + Số đã tiêu/rút ước tính)
             if (user.firstName === userProfile.name.split(' ')[0]) {
                 estimatedTotal = balance + (referrals * 25); 
             }
-            
-            return {
-                ...user,
-                totalEarned: Math.round(estimatedTotal * 10) / 10
-            };
+            return { ...user, totalEarned: Math.round(estimatedTotal * 10) / 10 };
         });
-        
-        // Sắp xếp lại theo tổng tiền
         wealthBoard.sort((a, b) => b.totalEarned - a.totalEarned);
 
         return (
@@ -578,6 +593,13 @@ function App() {
                     <div style={{ fontSize: '45px', marginBottom: '5px' }}>🎁</div>
                     <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '22px', fontWeight: '900' }}>Trung Tâm Thu Nhập</h2>
                     <p style={{ color: theme.textDim, fontSize: '14px', margin: 0 }}>Xây dựng hệ thống - Tạo thu nhập thụ động</p>
+                </div>
+
+                {/* BANNER 1500 SWGT - REWARDS */}
+                <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.1)', border: `1px dashed ${theme.gold}`, padding: '15px', borderRadius: '10px', marginBottom: '20px' }}>
+                    <p style={{ margin: 0, color: theme.gold, fontSize: '14px', lineHeight: '1.6', textAlign: 'center' }}>
+                        <span style={{fontWeight:'bold'}}>⚡ ĐẶC QUYỀN VIP:</span> Cày đạt mốc <b>1500 SWGT</b> sẽ được <b style={{color: '#fff'}}>MỞ KHÓA RÚT TIỀN NGAY LẬP TỨC</b>, không cần chờ đợi thời gian đếm ngược!
+                    </p>
                 </div>
 
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
@@ -600,11 +622,12 @@ function App() {
                     <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '8px', color: theme.gold, fontSize: '15px', wordBreak: 'break-all', marginBottom: '15px', border: `1px dashed ${theme.border}` }}>
                         https://t.me/Dau_Tu_SWC_bot?start={userId || 'ref'}
                     </div>
+                    {/* ĐÃ FIX: CĂN GIỮA VÀ BẰNG NHAU CHO 2 NÚT CHIA SẺ */}
                     <div style={{ display: 'flex', gap: '10px' }}>
-                        <button onClick={handleCopyLink} style={{ flex: 1, backgroundColor: theme.gold, color: '#000', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', cursor: 'pointer' }}>
+                        <button onClick={handleCopyLink} style={{ flex: 1, backgroundColor: theme.gold, color: '#000', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', cursor: 'pointer', textAlign: 'center' }}>
                             📋 COPY LINK
                         </button>
-                        <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ flex: 1, backgroundColor: '#5E92F3', color: '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', textAlign: 'center', textDecoration: 'none' }}>
+                        <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ flex: 1, backgroundColor: '#5E92F3', color: '#fff', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', textAlign: 'center', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             ✈️ GỬI BẠN BÈ
                         </a>
                     </div>
@@ -651,7 +674,6 @@ function App() {
                     </div>
                 </div>
 
-                {/* --- BẢNG VÀNG GIỚI THIỆU MỚI --- */}
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🤝 BẢNG VÀNG GIỚI THIỆU</h3>
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '15px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
                     {displayBoard.slice(0, 10).map((user, index) => {
@@ -672,13 +694,12 @@ function App() {
                         )
                     })}
                     <div style={{ textAlign: 'center', paddingTop: '15px', borderTop: `1px dashed ${theme.gold}`, marginTop: '10px' }}>
-                        <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ display: 'block', width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', textDecoration: 'none' }}>
+                        <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', textDecoration: 'none', boxSizing: 'border-box' }}>
                             ✈️ CHIA SẺ LINK ĐỂ ĐUA TOP NGAY
                         </a>
                     </div>
                 </div>
 
-                {/* --- BẢNG TOP ĐẠI GIA SWGT --- */}
                 <h3 style={{color: '#F4D03F', borderBottom: `1px solid ${theme.gold}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>💎 TOP 10 ĐẠI GIA SWGT</h3>
                 <p style={{fontSize: '13px', color: theme.textDim, fontStyle: 'italic', marginBottom: '15px'}}>*Bao gồm cả số Token đã rút về ví</p>
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '15px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
@@ -688,7 +709,6 @@ function App() {
                         else if (index === 1) icon = "💎";
                         else if (index === 2) icon = "💰";
                         
-                        // Highlight nếu là chính user đang xem
                         const isMe = user.firstName === userProfile.name.split(' ')[0];
 
                         return (
@@ -752,7 +772,7 @@ function App() {
                 
                 {isUnlocked ? (
                     <div style={{ padding: '15px', backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, borderRadius: '10px', color: theme.green, fontWeight: 'bold', fontSize: '16px', textAlign: 'center' }}>
-                        🎉 CỔNG RÚT SWGT ĐÃ MỞ!
+                        {balance >= 1500 ? "🎉 ĐẶC QUYỀN 1500 SWGT: CỔNG RÚT ĐÃ MỞ!" : "🎉 CỔNG RÚT SWGT ĐÃ MỞ!"}
                     </div>
                 ) : (
                     <div style={{ backgroundColor: '#000', padding: '20px', borderRadius: '10px', textAlign: 'center', border: `1px solid ${theme.border}` }}>
