@@ -4,7 +4,6 @@ function App() {
     const [activeTab, setActiveTab] = useState('home');
     const [balance, setBalance] = useState(0);
     
-    // --- STATE CHO VÍ VÀ THÔNG TIN THANH TOÁN ---
     const [withdrawMethod, setWithdrawMethod] = useState('gate'); 
     const [wallet, setWallet] = useState(''); 
     const [gatecode, setGatecode] = useState(''); 
@@ -15,7 +14,6 @@ function App() {
     const [referrals, setReferrals] = useState(0); 
     const [withdrawAmount, setWithdrawAmount] = useState(''); 
     
-    // --- STATE CHUỖI ĐIỂM DANH & MỐC THƯỞNG ---
     const [checkInStreak, setCheckInStreak] = useState(0);
     const [milestones, setMilestones] = useState<any>({});
 
@@ -65,7 +63,7 @@ function App() {
         premium: '#E0B0FF' 
     };
 
-    // --- DANH SÁCH 9 MỐC THƯỞNG ---
+    // --- DANH SÁCH 9 MỐC THƯỞNG MỚI ---
     const MILESTONE_LIST = [
         { req: 3, reward: 10, key: 'milestone3' },
         { req: 10, reward: 25, key: 'milestone10' },
@@ -78,7 +76,8 @@ function App() {
         { req: 500, reward: 1200, key: 'milestone500' }
     ];
 
-    const STREAK_REWARDS = [0.5, 1, 2, 2.3, 3, 3.3, 4];
+    // --- CẬP NHẬT MỐC ĐIỂM DANH ---
+    const STREAK_REWARDS = [0.5, 1.5, 3, 3.5, 5, 7, 9];
 
     useEffect(() => {
         if (!unlockDateMs) return;
@@ -170,7 +169,6 @@ function App() {
 
     const isCheckedInToday = lastCheckIn ? new Date(lastCheckIn).toDateString() === new Date().toDateString() : false;
 
-    // TÍNH TOÁN DANH HIỆU VIP DỰA VÀO SỐ REF
     let userTitle = "Tân Binh";
     let titleColor = theme.textDim;
     if (referrals >= 100) { userTitle = "Đối Tác VIP 💎"; titleColor = theme.gold; }
