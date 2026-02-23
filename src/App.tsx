@@ -65,7 +65,6 @@ function App() {
         premium: '#E0B0FF' 
     };
 
-    // ĐÃ BỔ SUNG THÊM "RANK" ĐỂ HIỂN THỊ DƯỚI TỪNG MỐC Ở TAB PHẦN THƯỞNG
     const MILESTONE_LIST = [
         { req: 3, reward: 10, key: 'milestone3', rank: 'Đại Úy 🎖️' },
         { req: 10, reward: 25, key: 'milestone10', rank: 'Thiếu Tá 🎖️' },
@@ -273,7 +272,9 @@ function App() {
                 setBalance(data.balance);
                 setGiftCodeInput('');
                 alert(`🎉 Chúc mừng! Bạn nhận được +${data.reward} SWGT từ mã quà tặng!`);
-            } else { alert(data.message); }
+            } else {
+                alert(data.message);
+            }
         }).catch(() => alert("⚠️ Lỗi kết nối máy chủ!"));
     };
 
@@ -377,9 +378,6 @@ function App() {
         });
     };
 
-    // ==================================================
-    // KHỐI RENDER: HEADER (CÓ AVATAR & QUÂN HÀM)
-    // ==================================================
     const renderHeader = () => (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 20px', backgroundColor: theme.bg }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -430,11 +428,8 @@ function App() {
         </div>
     );
 
-    // ==================================================
-    // KHỐI RENDER: BẢNG TỔNG TÀI SẢN (DÙNG CHUNG)
-    // ==================================================
     const renderWealthBoard = () => (
-        <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
+        <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', border: `1px solid ${theme.border}`, marginBottom: '20px' }}>
             <h3 style={{color: '#F4D03F', borderBottom: `1px solid ${theme.gold}`, paddingBottom: '10px', margin: '0 0 15px 0', fontSize: '16px'}}>
                 💎 TOP 10 ĐẠI GIA SWGT
             </h3>
@@ -473,10 +468,11 @@ function App() {
     );
 
     // ==================================================
-    // TRANG CHỦ ĐƯỢC SẮP XẾP LẠI THEO YÊU CẦU
+    // TAB TRANG CHỦ ĐƯỢC SẮP XẾP LẠI (ĐÚNG THỨ TỰ YÊU CẦU)
     // ==================================================
     const renderHome = () => (
         <div style={{ padding: '0 20px 20px 20px' }}>
+            {/* THỐNG KÊ */}
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', marginBottom: '20px' }}>
                 <div style={{ flex: 1, backgroundColor: theme.cardBg, borderRadius: '12px', padding: '15px 5px', textAlign: 'center', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: 0, color: theme.gold, fontSize: '22px', fontWeight: 'bold' }}>{balance}</h3>
@@ -536,13 +532,7 @@ function App() {
                 </p>
             </div>
 
-            <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.1)', border: `1px dashed ${theme.gold}`, padding: '15px', borderRadius: '10px', marginBottom: '20px' }}>
-                <p style={{ margin: 0, color: theme.gold, fontSize: '14px', lineHeight: '1.6', textAlign: 'center' }}>
-                    <span style={{fontWeight:'bold'}}>⚡ ĐẶC QUYỀN MỞ KHÓA TỐC ĐỘ:</span><br/>Cày đạt mốc <b>1500 SWGT</b> sẽ được <b style={{color: '#fff'}}>RÚT TIỀN VỀ VÍ NGAY LẬP TỨC</b>, bỏ qua hoàn toàn thời gian đếm ngược!
-                </p>
-            </div>
-
-            {/* 2. Cách Hoạt Động */}
+            {/* 2. Cách Hoạt Động (Hướng Dẫn) */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Cách Hoạt Động</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -646,23 +636,8 @@ function App() {
                 </div>
             </div>
 
-            {/* 4. Bảng Đại Gia */}
-            {renderWealthBoard()}
-
-            {/* 5. Sắp Ra Mắt */}
-            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px dashed ${theme.blue}` }}>
-                <h2 style={{ color: theme.blue, margin: '0 0 15px 0', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>🚀</span> Sắp Ra Mắt (Coming Soon)
-                </h2>
-                <ul style={{ margin: 0, paddingLeft: '20px', color: theme.textDim, fontSize: '14px', lineHeight: '1.8' }}>
-                    <li><b>Vòng Quay Nhân Phẩm:</b> Dùng SWGT để quay thưởng Token/USDT hằng ngày.</li>
-                    <li><b>Staking SWGT:</b> Gửi tiết kiệm SWGT nhận lãi suất qua đêm.</li>
-                    <li><b>Đua Top Tháng:</b> Giải thưởng hiện vật cực khủng cho Top 3 người dẫn đầu bảng vàng.</li>
-                </ul>
-            </div>
-
-            {/* Các thông tin phụ (Cơ cấu & Chính sách Rút Tiền) */}
-            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '15px', border: `1px solid ${theme.border}` }}>
+            {/* 4. Cơ Cấu Phần Thưởng SWGT */}
+            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '18px' }}>💎 Cơ Cấu Phần Thưởng SWGT</h2>
                 <p style={{ color: theme.textLight, fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>📌 Thành viên Thường:</p>
                 <div style={{ color: theme.textDim, fontSize: '14px', margin: '0 0 15px 0', lineHeight: '1.6' }}>
@@ -674,6 +649,13 @@ function App() {
                     <p style={{ margin: 0 }}>Tham gia Channel: <span style={{color: '#34C759'}}>+20 SWGT/người</span></p>
                     <p style={{ margin: 0 }}>Tham gia Nhóm Chat: <span style={{color: '#34C759'}}>+20 SWGT/người</span></p>
                 </div>
+            </div>
+
+            {/* 5. Chính Sách Thanh Khoản (Ghép Banner 1500 SWGT vào) */}
+            <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.1)', border: `1px dashed ${theme.gold}`, padding: '15px', borderRadius: '10px', marginBottom: '10px' }}>
+                <p style={{ margin: 0, color: theme.gold, fontSize: '14px', lineHeight: '1.6', textAlign: 'center' }}>
+                    <span style={{fontWeight:'bold'}}>⚡ ĐẶC QUYỀN MỞ KHÓA TỐC ĐỘ:</span><br/>Cày đạt mốc <b>1500 SWGT</b> sẽ được <b style={{color: '#fff'}}>RÚT TIỀN VỀ VÍ NGAY LẬP TỨC</b>, bỏ qua hoàn toàn thời gian đếm ngược!
+                </p>
             </div>
 
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
@@ -697,14 +679,6 @@ function App() {
                         </div>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', backgroundColor: 'rgba(244, 208, 63, 0.1)', padding: '10px', borderRadius: '8px', border: `1px solid ${theme.gold}` }}>
-                        <span style={{ fontSize: '18px' }}>⚡</span>
-                        <div>
-                            <p style={{ margin: 0, color: theme.gold, fontSize: '14px', fontWeight: 'bold' }}>Đặc quyền vượt rào (Fast-track)</p>
-                            <p style={{ margin: '2px 0 0 0', color: theme.textLight, fontSize: '13px', lineHeight: '1.5' }}>Cán mốc <b style={{color: theme.gold}}>1500 SWGT</b> ➔ <b style={{color: theme.green}}>ĐƯỢC RÚT NGAY LẬP TỨC</b>, bỏ qua mọi thời gian chờ đợi!</p>
-                        </div>
-                    </div>
-
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
                         <span style={{ fontSize: '18px' }}>💸</span>
                         <div>
@@ -714,6 +688,22 @@ function App() {
                     </div>
                 </div>
             </div>
+
+            {/* 6. Bảng Đại Gia */}
+            {renderWealthBoard()}
+
+            {/* 7. Sắp Ra Mắt */}
+            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px dashed ${theme.blue}` }}>
+                <h2 style={{ color: theme.blue, margin: '0 0 15px 0', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>🚀</span> Sắp Ra Mắt (Coming Soon)
+                </h2>
+                <ul style={{ margin: 0, paddingLeft: '20px', color: theme.textDim, fontSize: '14px', lineHeight: '1.8' }}>
+                    <li><b>Vòng Quay Nhân Phẩm:</b> Dùng SWGT để quay thưởng Token/USDT hằng ngày.</li>
+                    <li><b>Staking SWGT:</b> Gửi tiết kiệm SWGT nhận lãi suất qua đêm.</li>
+                    <li><b>Đua Top Tháng:</b> Giải thưởng hiện vật cực khủng cho Top 3 người dẫn đầu bảng vàng.</li>
+                </ul>
+            </div>
+
         </div>
     );
 
