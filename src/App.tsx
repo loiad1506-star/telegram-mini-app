@@ -53,6 +53,14 @@ function App() {
     // STATE MỚI: Quản lý Tab Bảng xếp hạng (Tuần / Tổng)
     const [boardType, setBoardType] = useState('weekly'); 
 
+    // ==========================================
+    // STATE CHO VÒNG QUAY NHÂN PHẨM (MỚI THÊM)
+    // ==========================================
+    const [isSpinning, setIsSpinning] = useState(false);
+    const [wheelRotation, setWheelRotation] = useState(0);
+    const [spinResultMsg, setSpinResultMsg] = useState('');
+    const [fakeWinners, setFakeWinners] = useState("🎉 Mai Thiều Thị vừa trúng 50 SWGT  *** 🔥 Vũ Dũng nổ hũ 100 SWGT  *** 💎 LINH NGUYEN vừa lãi 20 SWGT *** 🚀 Nông Mao vừa lãi 50 SWGT");
+
     const BACKEND_URL = 'https://swc-bot-brain.onrender.com';
 
     const theme = {
@@ -742,7 +750,6 @@ function App() {
                     <span>🚀</span> Sắp Ra Mắt (Coming Soon)
                 </h2>
                 <ul style={{ margin: 0, paddingLeft: '20px', color: theme.textDim, fontSize: '14px', lineHeight: '1.8' }}>
-                    <li><b>Vòng Quay Nhân Phẩm:</b> Dùng SWGT để quay thưởng Token/USDT hằng ngày.</li>
                     <li><b>Staking SWGT:</b> Gửi tiết kiệm SWGT nhận lãi suất qua đêm.</li>
                     <li><b>Đua Top Tháng:</b> Giải thưởng hiện vật cực khủng cho Top 3 người dẫn đầu bảng vàng.</li>
                 </ul>
@@ -750,6 +757,9 @@ function App() {
         </div>
     );
 
+    // ==================================================
+    // PHẦN THƯỞNG
+    // ==================================================
     const renderRewards = () => {
         let nextTarget = 3;
         let nextReward = "+10 SWGT";
@@ -901,6 +911,100 @@ function App() {
         );
     };
 
+    // ==================================================
+    // GIẢI TRÍ (VÒNG QUAY NHÂN PHẨM - MỚI THÊM)
+    // ==================================================
+    const renderGameZone = () => {
+        const wheelSlices = [
+            { label: '0 SWGT', value: 0, color: '#444' },
+            { label: '500 SWGT', value: 500, color: '#F4D03F' },
+            { label: '5 SWGT', value: 5, color: '#5E92F3' },
+            { label: '50 SWGT', value: 50, color: '#34C759' },
+            { label: '10 SWGT', value: 10, color: '#9B59B6' },
+            { label: '100 SWGT', value: 100, color: '#E67E22' },
+            { label: '20 SWGT', value: 20, color: '#E0B0FF' },
+            { label: '0 SWGT', value: 0, color: '#555' }
+        ];
+
+        const handleSpin = () => {
+            if (balance < 20) return alert("⚠️ Bạn cần ít nhất 20 SWGT để mua vé quay!");
+            if (isSpinning) return;
+
+            setIsSpinning(true);
+            setSpinResultMsg('');
+
+            fetch(`${BACKEND_URL}/api/spin-wheel`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const rewardValue = data.reward;
+                    const possibleIndexes = wheelSlices.map((s, i) => s.value === rewardValue ? i : -1).filter(i => i !== -1);
+                    const targetIndex = possibleIndexes[Math.floor(Math.random() * possibleIndexes.length)];
+                    
+                    const sliceAngle = 360 / 8;
+                    const extraSpins = 360 * 5; 
+                    const randomOffset = Math.floor(Math.random() * (sliceAngle - 10)) + 5; 
+                    const finalRotation = wheelRotation + extraSpins + (360 - (targetIndex * sliceAngle)) - randomOffset;
+
+                    setWheelRotation(finalRotation);
+
+                    setTimeout(() => {
+                        setIsSpinning(false);
+                        setBalance(data.newBalance);
+                        if (rewardValue === 0) setSpinResultMsg('Ahhh! Chệch một tí nữa là nổ hũ 500. Quay lại phục thù nào!');
+                        else if (rewardValue >= 50) setSpinResultMsg(`🎉 BÙM!!! CHÚC MỪNG BẠN TRÚNG ${rewardValue} SWGT! NHÂN PHẨM CỰC CAO!`);
+                        else setSpinResultMsg(`Tuyệt vời! Bạn nhận được +${rewardValue} SWGT.`);
+                    }, 5000);
+                } else {
+                    setIsSpinning(false);
+                    alert(data.message);
+                }
+            });
+        };
+
+        return (
+            <div style={{ padding: '0 20px 20px 20px', paddingBottom: '100px', textAlign: 'center' }}>
+                <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '24px', fontWeight: '900' }}>🎰 Vòng Quay Nhân Phẩm</h2>
+                <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 20px 0' }}>Phí quay: <b style={{color: theme.red}}>20 SWGT</b> / lượt</p>
+
+                <div style={{ backgroundColor: '#000', padding: '10px', borderRadius: '8px', border: `1px dashed ${theme.gold}`, marginBottom: '30px', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                    <marquee style={{ color: theme.textLight, fontSize: '13px', fontWeight: 'bold' }}>{fakeWinners}</marquee>
+                </div>
+
+                <div style={{ position: 'relative', width: '280px', height: '280px', margin: '0 auto', marginBottom: '30px' }}>
+                    <div style={{ position: 'absolute', top: '-15px', left: '50%', transform: 'translateX(-50%)', width: '0', height: '0', borderLeft: '15px solid transparent', borderRight: '15px solid transparent', borderTop: `25px solid ${theme.red}`, zIndex: 10 }}></div>
+                    <div style={{ 
+                        width: '100%', height: '100%', borderRadius: '50%', border: `5px solid ${theme.gold}`, boxShadow: '0 0 20px rgba(244, 208, 63, 0.4)',
+                        background: `conic-gradient(#444 0deg 45deg, #F4D03F 45deg 90deg, #5E92F3 90deg 135deg, #34C759 135deg 180deg, #9B59B6 180deg 225deg, #E67E22 225deg 270deg, #E0B0FF 270deg 315deg, #555 315deg 360deg)`,
+                        transform: `rotate(${wheelRotation}deg)`, transition: 'transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99)' 
+                    }}>
+                        {wheelSlices.map((slice, i) => (
+                            <div key={i} style={{ position: 'absolute', top: 0, left: '50%', transform: `translateX(-50%) rotate(${i * 45 + 22.5}deg)`, transformOrigin: '50% 140px', width: '60px', textAlign: 'center', paddingTop: '15px', color: '#fff', fontWeight: 'bold', fontSize: '14px', textShadow: '1px 1px 2px #000', zIndex: 2 }}>
+                                {slice.label}
+                            </div>
+                        ))}
+                    </div>
+                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '40px', height: '40px', backgroundColor: theme.cardBg, borderRadius: '50%', border: `3px solid ${theme.gold}`, zIndex: 5 }}></div>
+                </div>
+
+                <div style={{ minHeight: '40px', marginBottom: '20px' }}>
+                    <p style={{ color: spinResultMsg.includes('500') || spinResultMsg.includes('0') ? theme.textLight : theme.green, fontSize: '15px', fontWeight: 'bold', margin: 0 }}>{spinResultMsg}</p>
+                </div>
+
+                <button onClick={handleSpin} disabled={isSpinning} style={{ width: '100%', backgroundColor: isSpinning ? '#333' : theme.gold, color: isSpinning ? theme.textDim : '#000', padding: '16px', borderRadius: '12px', fontWeight: '900', border: 'none', fontSize: '18px', cursor: isSpinning ? 'not-allowed' : 'pointer', boxShadow: isSpinning ? 'none' : '0 6px 0 #b49010' }}>
+                    {isSpinning ? '⏳ ĐANG QUAY...' : '🎯 QUAY NGAY (-20 SWGT)'}
+                </button>
+            </div>
+        );
+    };
+
+    // ==================================================
+    // VÍ
+    // ==================================================
     const renderWallet = () => (
         <div style={{ padding: '0 20px 20px 20px' }}>
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '30px 20px', border: `1px solid ${theme.border}`, textAlign: 'center', marginBottom: '20px' }}>
@@ -1010,25 +1114,35 @@ function App() {
                 ::-webkit-scrollbar-track { background: #1C1C1E; border-radius: 10px; }
                 ::-webkit-scrollbar-thumb { background: #F4D03F; border-radius: 10px; }
             `}</style>
+            
             {renderHeader()}
+            
             <div style={{ marginTop: '10px' }}>
                 {activeTab === 'home' && renderHome()}
                 {activeTab === 'rewards' && renderRewards()}
+                {/* ĐÃ BỔ SUNG KHỐI GỌI HÀM VÒNG QUAY Ở ĐÂY */}
+                {activeTab === 'game' && renderGameZone()}
                 {activeTab === 'wallet' && renderWallet()}
             </div>
 
+            {/* THANH ĐIỀU HƯỚNG DƯỚI ĐÁY: ĐÃ ĐƯỢC CHIA LÀM 4 TAB ĐỀU NHAU (width: 25%) */}
             <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: theme.cardBg, borderTop: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-around', padding: '15px 0', paddingBottom: 'calc(15px + env(safe-area-inset-bottom))', zIndex: 100 }}>
-                <div onClick={() => setActiveTab('home')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'home' ? theme.gold : theme.textDim, width: '33%', cursor: 'pointer' }}>
-                    <div style={{ fontSize: '26px', marginBottom: '6px' }}>🏠</div>
-                    <span style={{ fontSize: '15px', fontWeight: 'bold' }}>Trang chủ</span>
+                <div onClick={() => setActiveTab('home')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'home' ? theme.gold : theme.textDim, width: '25%', cursor: 'pointer' }}>
+                    <div style={{ fontSize: '24px', marginBottom: '6px' }}>🏠</div>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>Trang chủ</span>
                 </div>
-                <div onClick={() => setActiveTab('rewards')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'rewards' ? theme.gold : theme.textDim, width: '33%', cursor: 'pointer' }}>
-                    <div style={{ fontSize: '26px', marginBottom: '6px' }}>🎁</div>
-                    <span style={{ fontSize: '15px', fontWeight: 'bold' }}>Phần thưởng</span>
+                <div onClick={() => setActiveTab('rewards')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'rewards' ? theme.gold : theme.textDim, width: '25%', cursor: 'pointer' }}>
+                    <div style={{ fontSize: '24px', marginBottom: '6px' }}>🎁</div>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>Thu nhập</span>
                 </div>
-                <div onClick={() => setActiveTab('wallet')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'wallet' ? theme.gold : theme.textDim, width: '33%', cursor: 'pointer' }}>
-                    <div style={{ fontSize: '26px', marginBottom: '6px' }}>👛</div>
-                    <span style={{ fontSize: '15px', fontWeight: 'bold' }}>Ví</span>
+                {/* ĐÃ BỔ SUNG NÚT BẤM CHUYỂN SANG TAB GIẢI TRÍ Ở ĐÂY */}
+                <div onClick={() => setActiveTab('game')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'game' ? theme.gold : theme.textDim, width: '25%', cursor: 'pointer' }}>
+                    <div style={{ fontSize: '24px', marginBottom: '6px' }}>🎰</div>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>Giải trí</span>
+                </div>
+                <div onClick={() => setActiveTab('wallet')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'wallet' ? theme.gold : theme.textDim, width: '25%', cursor: 'pointer' }}>
+                    <div style={{ fontSize: '24px', marginBottom: '6px' }}>👛</div>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>Ví</span>
                 </div>
             </div>
         </div>
