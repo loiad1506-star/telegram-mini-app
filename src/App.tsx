@@ -59,6 +59,9 @@ function App() {
     const [wheelRotation, setWheelRotation] = useState(0);
     const [spinResultMsg, setSpinResultMsg] = useState('');
     
+    // STATE MỚI: THEO DÕI SỐ TIỀN VỪA TRÚNG
+    const [spinEarned, setSpinEarned] = useState(0);
+    
     // STATE MỚI CHO BẢNG TIN NGƯỜI TRÚNG THƯỞNG MƯỢT MÀ
     const [winnersList, setWinnersList] = useState<string[]>([]);
     const [currentWinner, setCurrentWinner] = useState('');
@@ -982,6 +985,7 @@ function App() {
             setTimeout(() => {
                 setIsSpinning(false);
                 setBalance(newBalance);
+                setSpinEarned(prev => prev + rewardValue); // Tích luỹ số tiền kiếm được
                 
                 // GỌI TÊN NGƯỜI CHƠI RA THÔNG BÁO
                 const playerName = userProfile.name || 'Bạn';
@@ -1044,7 +1048,15 @@ function App() {
         return (
             <div style={{ padding: '0 20px 20px 20px', paddingBottom: '100px', textAlign: 'center' }}>
                 <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '24px', fontWeight: '900' }}>🎰 Vòng Quay Nhân Phẩm</h2>
-                <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 20px 0' }}>Phí quay: <b style={{color: theme.red}}>20 SWGT</b> / lượt</p>
+                <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 15px 0' }}>Phí quay: <b style={{color: theme.red}}>20 SWGT</b> / lượt</p>
+
+                {/* BOX HIỂN THỊ SỐ TIỀN VỪA TRÚNG */}
+                <div style={{ backgroundColor: '#000', borderRadius: '12px', padding: '15px', marginBottom: '20px', border: `1px solid ${theme.green}`, display: 'inline-block', minWidth: '60%', boxShadow: '0 0 10px rgba(52, 199, 89, 0.2)' }}>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '13px', fontWeight: 'bold' }}>🎁 Bạn vừa kiếm được:</p>
+                    <h3 style={{ margin: '5px 0 0 0', color: theme.green, fontSize: '26px', fontWeight: '900' }}>
+                        +{spinEarned} <span style={{fontSize: '14px', fontWeight: 'normal'}}>SWGT</span>
+                    </h3>
+                </div>
 
                 {/* KHU VỰC CHỮ NGƯỜI TRÚNG ẢO */}
                 <div style={{ height: '40px', marginBottom: '25px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
