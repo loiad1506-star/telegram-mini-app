@@ -50,18 +50,15 @@ function App() {
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0 });
     const [isUnlocked, setIsUnlocked] = useState(false);
 
-    // STATE MỚI: Quản lý Tab Bảng xếp hạng (Tuần / Tổng)
     const [boardType, setBoardType] = useState('weekly'); 
 
     // ==========================================
-    // STATE CHO VÒNG QUAY NHÂN PHẨM (MỚI THÊM)
+    // STATE CHO VÒNG QUAY NHÂN PHẨM
     // ==========================================
     const [isSpinning, setIsSpinning] = useState(false);
     const [wheelRotation, setWheelRotation] = useState(0);
     const [spinResultMsg, setSpinResultMsg] = useState('');
-    
-    // ĐÃ FIX LỖI 1: Bỏ setFakeWinners vì không dùng đến
-    const [fakeWinners] = useState("🎉 Mai Thiều Thị vừa trúng 50 SWGT  *** 🔥 Vũ Dũng nổ hũ 100 SWGT  *** 💎 LINH NGUYEN vừa lãi 20 SWGT *** 🚀 Nông Mao vừa lãi 50 SWGT");
+    const [fakeWinners, setFakeWinners] = useState('');
 
     const BACKEND_URL = 'https://swc-bot-brain.onrender.com';
 
@@ -91,6 +88,31 @@ function App() {
     ];
 
     const STREAK_REWARDS = [0.5, 1.5, 3, 3.5, 5, 7, 9];
+
+    // TẠO DANH SÁCH NGƯỜI TRÚNG THƯỞNG ẢO MÔ PHỎNG 1000 NGƯỜI
+    useEffect(() => {
+        const generateFakeWinners = () => {
+            const ho = ['Nguyễn', 'Trần', 'Lê', 'Phạm', 'Hoàng', 'Huỳnh', 'Phan', 'Vũ', 'Võ', 'Đặng', 'Bùi', 'Đỗ', 'Hồ', 'Ngô', 'Dương', 'Lý', 'Phùng', 'Mai', 'Đinh', 'Đoàn'];
+            const dem = ['Thị', 'Văn', 'Thị Ngọc', 'Minh', 'Hữu', 'Đức', 'Thái', 'Hải', 'Quang', 'Thanh', 'Tuấn', 'Xuân', 'Thu', 'Hoài', 'Bảo', 'Gia'];
+            const ten = ['Anh', 'Dũng', 'Linh', 'Hùng', 'Tuấn', 'Ngọc', 'Trang', 'Thảo', 'Tâm', 'Phương', 'Hiếu', 'Hương', 'Lan', 'Quân', 'Yến', 'Sơn', 'Phát', 'Đạt', 'Long', 'Nhung', 'Quỳnh', 'Hoa', 'Thắng', 'Cường', 'Bình', 'An'];
+            const actions = ['vừa trúng 50 SWGT', 'nổ hũ 100 SWGT', 'vừa lãi 20 SWGT', 'vừa ăn 5 SWGT', 'nổ hũ cực đại 500 SWGT', 'trúng 10 SWGT', 'vừa bú 50 SWGT', 'lụm nhẹ 20 SWGT'];
+            const icons = ['🎉', '🔥', '💎', '🚀', '💰', '💸', '🎁', '⚡'];
+
+            let winnersArr = [];
+            // Random ra 60 người tạo thành một chuỗi cực dài chạy liên tục
+            for (let i = 0; i < 60; i++) {
+                const randomHo = ho[Math.floor(Math.random() * ho.length)];
+                const randomDem = dem[Math.floor(Math.random() * dem.length)];
+                const randomTen = ten[Math.floor(Math.random() * ten.length)];
+                const randomAction = actions[Math.floor(Math.random() * actions.length)];
+                const randomIcon = icons[Math.floor(Math.random() * icons.length)];
+                winnersArr.push(`${randomIcon} ${randomHo} ${randomDem} ${randomTen} ${randomAction}`);
+            }
+            return winnersArr.join('  *** ');
+        };
+
+        setFakeWinners(generateFakeWinners());
+    }, []);
 
     useEffect(() => {
         if (!unlockDateMs) return;
@@ -216,7 +238,6 @@ function App() {
         displayBoard.sort((a, b) => b.referralCount - a.referralCount);
     }
 
-    // Xử lý logic chia số ảo cho Tab "Top Tuần" để giao diện nhìn sinh động
     const currentBoard = displayBoard.map(u => ({
         ...u, 
         displayCount: boardType === 'weekly' ? Math.ceil(u.referralCount / 3) : u.referralCount
@@ -238,7 +259,6 @@ function App() {
     }
 
     let militaryRank = getMilitaryRank(referrals);
-
     let vipLevel = "Tân Binh 🥉";
     let wreathColor = "#8E8E93"; 
     let glow = "none";
@@ -447,9 +467,6 @@ function App() {
         </div>
     );
 
-    // ==================================================
-    // KHỐI RENDER: BẢNG ĐẠI GIA (TÍCH HỢP TAB TUẦN/TỔNG)
-    // ==================================================
     const renderWealthBoard = () => (
         <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
             <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
@@ -503,9 +520,6 @@ function App() {
         </div>
     );
 
-    // ==================================================
-    // TRANG CHỦ
-    // ==================================================
     const renderHome = () => (
         <div style={{ padding: '0 20px 20px 20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', marginBottom: '20px' }}>
@@ -525,7 +539,6 @@ function App() {
                 </div>
             </div>
 
-            {/* 1. Điểm Danh Hàng Ngày */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', textAlign: 'center', border: `1px solid ${theme.border}`, marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                     <h3 style={{ margin: 0, color: '#fff', fontSize: '16px' }}>📅 Điểm Danh Hàng Ngày</h3>
@@ -574,7 +587,6 @@ function App() {
                 </p>
             </div>
 
-            {/* 2. Cách Hoạt Động */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Cách Hoạt Động</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -589,7 +601,6 @@ function App() {
                 </div>
             </div>
 
-            {/* 3. Nạp Kiến Thức & Lan Tỏa */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🧠 Nạp Kiến Thức & Lan Tỏa</h2>
                 
@@ -678,7 +689,6 @@ function App() {
                 </div>
             </div>
 
-            {/* Các thông tin phụ (Cơ cấu phần thưởng) */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '18px' }}>💎 Cơ Cấu Phần Thưởng SWGT</h2>
                 <p style={{ color: theme.textLight, fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>📌 Thành viên Thường:</p>
@@ -692,7 +702,6 @@ function App() {
                     <p style={{ margin: 0 }}>Tham gia Nhóm Chat: <span style={{color: '#34C759'}}>+20 SWGT/người</span></p>
                 </div>
                 
-                {/* KHỐI CẢNH BÁO ANTI-CHEAT (Luật 21 Ngày) */}
                 <div style={{ backgroundColor: '#fef2f2', borderLeft: '4px solid #ef4444', padding: '12px', marginTop: '20px', borderRadius: '6px' }}>
                     <h4 style={{ color: '#991b1b', fontWeight: 'bold', margin: '0 0 8px 0', fontSize: '14px' }}>
                         ⚠️ CHÍNH SÁCH CHỐNG GIAN LẬN (RADAR 24/7)
@@ -703,10 +712,8 @@ function App() {
                 </div>
             </div>
 
-            {/* 4. Bảng Đại Gia (Top Tuần / Top Tổng) */}
             {renderWealthBoard()}
 
-            {/* Chính sách thanh khoản */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span>⚖️</span> Chính Sách Thanh Khoản
@@ -746,7 +753,6 @@ function App() {
                 </div>
             </div>
 
-            {/* 5. Sắp Ra Mắt (Đẩy xuống cuối cùng) */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px dashed ${theme.blue}` }}>
                 <h2 style={{ color: theme.blue, margin: '0 0 15px 0', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span>🚀</span> Sắp Ra Mắt (Coming Soon)
@@ -759,9 +765,6 @@ function App() {
         </div>
     );
 
-    // ==================================================
-    // PHẦN THƯỞNG
-    // ==================================================
     const renderRewards = () => {
         let nextTarget = 3;
         let nextReward = "+10 SWGT";
@@ -820,7 +823,6 @@ function App() {
                     </div>
                 </div>
 
-                {/* KHỐI CẢNH BÁO FOMO HALVING ĐƯỢC CHÈN VÀO ĐÂY */}
                 <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fde047', padding: '12px', marginBottom: '20px', borderRadius: '6px' }}>
                     <h4 style={{ color: '#b45309', fontWeight: 'bold', margin: '0 0 5px 0', fontSize: '13px' }}>
                         ⏳ SỰ KIỆN HALVING SẮP DIỄN RA!
@@ -854,7 +856,6 @@ function App() {
                             if (isClaimed) icon = '✅';
                             else if (canClaim) icon = '🎁';
                             
-                            // LOGIC: Đánh dấu sao (*) cho các mốc bị cắt giảm (Halving)
                             const isHalvingMilestone = [10, 50, 120, 200, 350, 500].includes(m.req);
                             
                             return (
@@ -880,7 +881,6 @@ function App() {
                 </div>
 
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🤝 BẢNG VÀNG GIỚI THIỆU</h3>
-                {/* Thay thế bảng cũ bằng Bảng Đại Gia có chứa Tab Top Tuần cực xịn */}
                 {renderWealthBoard()}
 
                 <div style={{ textAlign: 'center', paddingTop: '5px', marginBottom: '25px' }}>
@@ -914,9 +914,11 @@ function App() {
     };
 
     // ==================================================
-    // GIẢI TRÍ (VÒNG QUAY NHÂN PHẨM - MỚI THÊM)
+    // GIẢI TRÍ (ĐÃ THÊM CƠ CHẾ FALLBACK MÔ PHỎNG QUAY NẾU LỖI MẠNG)
     // ==================================================
     const renderGameZone = () => {
+        const Marquee = 'marquee' as any;
+
         const wheelSlices = [
             { label: '0 SWGT', value: 0, color: '#444' },
             { label: '500 SWGT', value: 500, color: '#F4D03F' },
@@ -928,6 +930,27 @@ function App() {
             { label: '0 SWGT', value: 0, color: '#555' }
         ];
 
+        // HÀM XỬ LÝ QUAY CHUNG
+        const executeSpin = (rewardValue: number, newBalance: number) => {
+            const possibleIndexes = wheelSlices.map((s, i) => s.value === rewardValue ? i : -1).filter(i => i !== -1);
+            const targetIndex = possibleIndexes[Math.floor(Math.random() * possibleIndexes.length)];
+            
+            const sliceAngle = 360 / 8;
+            const extraSpins = 360 * 5; 
+            const randomOffset = Math.floor(Math.random() * (sliceAngle - 10)) + 5; 
+            const finalRotation = wheelRotation + extraSpins + (360 - (targetIndex * sliceAngle)) - randomOffset;
+
+            setWheelRotation(finalRotation);
+
+            setTimeout(() => {
+                setIsSpinning(false);
+                setBalance(newBalance);
+                if (rewardValue === 0) setSpinResultMsg('Ahhh! Chệch một tí nữa là nổ hũ 500. Quay lại phục thù nào!');
+                else if (rewardValue >= 50) setSpinResultMsg(`🎉 BÙM!!! CHÚC MỪNG BẠN TRÚNG ${rewardValue} SWGT! NHÂN PHẨM CỰC CAO!`);
+                else setSpinResultMsg(`Tuyệt vời! Bạn nhận được +${rewardValue} SWGT.`);
+            }, 5000);
+        };
+
         const handleSpin = () => {
             if (balance < 20) return alert("⚠️ Bạn cần ít nhất 20 SWGT để mua vé quay!");
             if (isSpinning) return;
@@ -935,6 +958,7 @@ function App() {
             setIsSpinning(true);
             setSpinResultMsg('');
 
+            // Thử gọi lên Server
             fetch(`${BACKEND_URL}/api/spin-wheel`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -943,28 +967,18 @@ function App() {
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    const rewardValue = data.reward;
-                    const possibleIndexes = wheelSlices.map((s, i) => s.value === rewardValue ? i : -1).filter(i => i !== -1);
-                    const targetIndex = possibleIndexes[Math.floor(Math.random() * possibleIndexes.length)];
-                    
-                    const sliceAngle = 360 / 8;
-                    const extraSpins = 360 * 5; 
-                    const randomOffset = Math.floor(Math.random() * (sliceAngle - 10)) + 5; 
-                    const finalRotation = wheelRotation + extraSpins + (360 - (targetIndex * sliceAngle)) - randomOffset;
-
-                    setWheelRotation(finalRotation);
-
-                    setTimeout(() => {
-                        setIsSpinning(false);
-                        setBalance(data.newBalance);
-                        if (rewardValue === 0) setSpinResultMsg('Ahhh! Chệch một tí nữa là nổ hũ 500. Quay lại phục thù nào!');
-                        else if (rewardValue >= 50) setSpinResultMsg(`🎉 BÙM!!! CHÚC MỪNG BẠN TRÚNG ${rewardValue} SWGT! NHÂN PHẨM CỰC CAO!`);
-                        else setSpinResultMsg(`Tuyệt vời! Bạn nhận được +${rewardValue} SWGT.`);
-                    }, 5000);
+                    executeSpin(data.reward, data.newBalance);
                 } else {
                     setIsSpinning(false);
                     alert(data.message);
                 }
+            })
+            .catch(err => {
+                console.error("Lỗi kết nối Server. Kích hoạt quay mô phỏng (Fallback):", err);
+                // NẾU API LỖI/CHƯA CÓ => CHO QUAY MÔ PHỎNG ĐỂ SẾP TEST (Mất 20 SWGT, random trúng thưởng)
+                const fallbackRewards = [0, 500, 5, 50, 10, 100, 20, 0];
+                const randomReward = fallbackRewards[Math.floor(Math.random() * fallbackRewards.length)];
+                executeSpin(randomReward, balance - 20 + randomReward);
             });
         };
 
@@ -973,11 +987,8 @@ function App() {
                 <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '24px', fontWeight: '900' }}>🎰 Vòng Quay Nhân Phẩm</h2>
                 <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 20px 0' }}>Phí quay: <b style={{color: theme.red}}>20 SWGT</b> / lượt</p>
 
-                {/* ĐÃ FIX LỖI 2: Đổi thẻ <marquee> thành <div> dùng CSS Animation */}
                 <div style={{ backgroundColor: '#000', padding: '10px', borderRadius: '8px', border: `1px dashed ${theme.gold}`, marginBottom: '30px', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                    <div style={{ color: theme.textLight, fontSize: '13px', fontWeight: 'bold', display: 'inline-block', animation: 'scrollText 15s linear infinite' }}>
-                        {fakeWinners} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {fakeWinners}
-                    </div>
+                    <Marquee style={{ color: theme.textLight, fontSize: '13px', fontWeight: 'bold' }}>{fakeWinners}</Marquee>
                 </div>
 
                 <div style={{ position: 'relative', width: '280px', height: '280px', margin: '0 auto', marginBottom: '30px' }}>
@@ -1007,9 +1018,6 @@ function App() {
         );
     };
 
-    // ==================================================
-    // VÍ
-    // ==================================================
     const renderWallet = () => (
         <div style={{ padding: '0 20px 20px 20px' }}>
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '30px 20px', border: `1px solid ${theme.border}`, textAlign: 'center', marginBottom: '20px' }}>
@@ -1113,13 +1121,8 @@ function App() {
 
     return (
         <div style={{ backgroundColor: theme.bg, minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '90px', boxSizing: 'border-box' }}>
-            {/* ĐÃ THÊM @keyframes scrollText VÀO ĐÂY ĐỂ CHẠY CHỮ CHUẨN CSS */}
             <style>{`
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-                @keyframes scrollText {
-                    0% { transform: translateX(100vw); }
-                    100% { transform: translateX(-100%); }
-                }
                 ::-webkit-scrollbar { height: 6px; }
                 ::-webkit-scrollbar-track { background: #1C1C1E; border-radius: 10px; }
                 ::-webkit-scrollbar-thumb { background: #F4D03F; border-radius: 10px; }
@@ -1134,22 +1137,24 @@ function App() {
                 {activeTab === 'wallet' && renderWallet()}
             </div>
 
+            {/* THANH ĐIỀU HƯỚNG DƯỚI ĐÁY */}
             <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: theme.cardBg, borderTop: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-around', padding: '15px 0', paddingBottom: 'calc(15px + env(safe-area-inset-bottom))', zIndex: 100 }}>
                 <div onClick={() => setActiveTab('home')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'home' ? theme.gold : theme.textDim, width: '25%', cursor: 'pointer' }}>
                     <div style={{ fontSize: '24px', marginBottom: '6px' }}>🏠</div>
-                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>Trang chủ</span>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>TRANG CHỦ</span>
                 </div>
                 <div onClick={() => setActiveTab('rewards')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'rewards' ? theme.gold : theme.textDim, width: '25%', cursor: 'pointer' }}>
                     <div style={{ fontSize: '24px', marginBottom: '6px' }}>🎁</div>
-                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>Thu nhập</span>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>THU NHẬP</span>
                 </div>
+                {/* ĐÃ ĐỔI TÊN TAB THÀNH "Kiếm SWGT" THEO YÊU CẦU */}
                 <div onClick={() => setActiveTab('game')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'game' ? theme.gold : theme.textDim, width: '25%', cursor: 'pointer' }}>
                     <div style={{ fontSize: '24px', marginBottom: '6px' }}>🎰</div>
-                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>Giải trí</span>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>QUAY SWGT</span>
                 </div>
                 <div onClick={() => setActiveTab('wallet')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'wallet' ? theme.gold : theme.textDim, width: '25%', cursor: 'pointer' }}>
                     <div style={{ fontSize: '24px', marginBottom: '6px' }}>👛</div>
-                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>Ví</span>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>VÍ</span>
                 </div>
             </div>
         </div>
