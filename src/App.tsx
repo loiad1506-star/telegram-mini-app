@@ -59,7 +59,9 @@ function App() {
     const [isSpinning, setIsSpinning] = useState(false);
     const [wheelRotation, setWheelRotation] = useState(0);
     const [spinResultMsg, setSpinResultMsg] = useState('');
-    const [fakeWinners, setFakeWinners] = useState("🎉 Mai Thiều Thị vừa trúng 50 SWGT  *** 🔥 Vũ Dũng nổ hũ 100 SWGT  *** 💎 LINH NGUYEN vừa lãi 20 SWGT *** 🚀 Nông Mao vừa lãi 50 SWGT");
+    
+    // ĐÃ SỬA LỖI 1: Bỏ setFakeWinners đi để TypeScript không báo lỗi "khai báo thừa"
+    const fakeWinners = "🎉 Mai Thiều Thị vừa trúng 50 SWGT  *** 🔥 Vũ Dũng nổ hũ 100 SWGT  *** 💎 LINH NGUYEN vừa lãi 20 SWGT *** 🚀 Nông Mao vừa lãi 50 SWGT";
 
     const BACKEND_URL = 'https://swc-bot-brain.onrender.com';
 
@@ -915,6 +917,9 @@ function App() {
     // GIẢI TRÍ (VÒNG QUAY NHÂN PHẨM - MỚI THÊM)
     // ==================================================
     const renderGameZone = () => {
+        // ĐÃ SỬA LỖI 2: Ép kiểu để Typescript hiểu thẻ Marquee là hợp lệ
+        const Marquee = 'marquee' as any;
+
         const wheelSlices = [
             { label: '0 SWGT', value: 0, color: '#444' },
             { label: '500 SWGT', value: 500, color: '#F4D03F' },
@@ -972,7 +977,7 @@ function App() {
                 <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 20px 0' }}>Phí quay: <b style={{color: theme.red}}>20 SWGT</b> / lượt</p>
 
                 <div style={{ backgroundColor: '#000', padding: '10px', borderRadius: '8px', border: `1px dashed ${theme.gold}`, marginBottom: '30px', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                    <marquee style={{ color: theme.textLight, fontSize: '13px', fontWeight: 'bold' }}>{fakeWinners}</marquee>
+                    <Marquee style={{ color: theme.textLight, fontSize: '13px', fontWeight: 'bold' }}>{fakeWinners}</Marquee>
                 </div>
 
                 <div style={{ position: 'relative', width: '280px', height: '280px', margin: '0 auto', marginBottom: '30px' }}>
