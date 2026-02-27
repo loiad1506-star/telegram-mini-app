@@ -1137,19 +1137,19 @@ function App() {
             <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: theme.cardBg, borderTop: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-around', padding: '15px 0', paddingBottom: 'calc(15px + env(safe-area-inset-bottom))', zIndex: 100 }}>
                 <div onClick={() => setActiveTab('home')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'home' ? theme.gold : theme.textDim, width: '25%', cursor: 'pointer' }}>
                     <div style={{ fontSize: '24px', marginBottom: '6px' }}>🏠</div>
-                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>TRANG CHỦ</span>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>Trang chủ</span>
                 </div>
                 <div onClick={() => setActiveTab('rewards')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'rewards' ? theme.gold : theme.textDim, width: '25%', cursor: 'pointer' }}>
                     <div style={{ fontSize: '24px', marginBottom: '6px' }}>🎁</div>
-                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>THU NHẬP</span>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>Thu nhập</span>
                 </div>
                 <div onClick={() => setActiveTab('game')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'game' ? theme.gold : theme.textDim, width: '25%', cursor: 'pointer' }}>
                     <div style={{ fontSize: '24px', marginBottom: '6px' }}>🎰</div>
-                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>QUAY SWGT</span>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>Giải trí</span>
                 </div>
                 <div onClick={() => setActiveTab('wallet')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'wallet' ? theme.gold : theme.textDim, width: '25%', cursor: 'pointer' }}>
                     <div style={{ fontSize: '24px', marginBottom: '6px' }}>👛</div>
-                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>VÍ</span>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>Ví</span>
                 </div>
             </div>
         </div>
