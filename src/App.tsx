@@ -58,7 +58,11 @@ function App() {
     const [isSpinning, setIsSpinning] = useState(false);
     const [wheelRotation, setWheelRotation] = useState(0);
     const [spinResultMsg, setSpinResultMsg] = useState('');
-    const [fakeWinners, setFakeWinners] = useState('');
+    
+    // STATE MỚI CHO BẢNG TIN NGƯỜI TRÚNG THƯỞNG MƯỢT MÀ
+    const [winnersList, setWinnersList] = useState<string[]>([]);
+    const [currentWinner, setCurrentWinner] = useState('');
+    const [showWinner, setShowWinner] = useState(false);
 
     const BACKEND_URL = 'https://swc-bot-brain.onrender.com';
 
@@ -89,30 +93,58 @@ function App() {
 
     const STREAK_REWARDS = [0.5, 1.5, 3, 3.5, 5, 7, 9];
 
-    // TẠO DANH SÁCH NGƯỜI TRÚNG THƯỞNG ẢO MÔ PHỎNG 1000 NGƯỜI
+    // TẠO DANH SÁCH 100 NGƯỜI TRÚNG THƯỞNG ẢO
     useEffect(() => {
         const generateFakeWinners = () => {
             const ho = ['Nguyễn', 'Trần', 'Lê', 'Phạm', 'Hoàng', 'Huỳnh', 'Phan', 'Vũ', 'Võ', 'Đặng', 'Bùi', 'Đỗ', 'Hồ', 'Ngô', 'Dương', 'Lý', 'Phùng', 'Mai', 'Đinh', 'Đoàn'];
-            const dem = ['Thị', 'Văn', 'Thị Ngọc', 'Minh', 'Hữu', 'Đức', 'Thái', 'Hải', 'Quang', 'Thanh', 'Tuấn', 'Xuân', 'Thu', 'Hoài', 'Bảo', 'Gia'];
+            const dem = ['Thị', 'Văn', 'Thị Ngọc', 'Minh', 'Hữu', 'Đức', 'Thái', 'Hải', 'Quang', 'Thanh', 'Tuấn', 'Xuân', 'Thu', 'Hoài', 'Bảo', 'Gia', 'Nhật', 'Đình', 'Khắc', 'Ngọc'];
             const ten = ['Anh', 'Dũng', 'Linh', 'Hùng', 'Tuấn', 'Ngọc', 'Trang', 'Thảo', 'Tâm', 'Phương', 'Hiếu', 'Hương', 'Lan', 'Quân', 'Yến', 'Sơn', 'Phát', 'Đạt', 'Long', 'Nhung', 'Quỳnh', 'Hoa', 'Thắng', 'Cường', 'Bình', 'An'];
-            const actions = ['vừa trúng 50 SWGT', 'nổ hũ 100 SWGT', 'vừa lãi 20 SWGT', 'vừa ăn 5 SWGT', 'nổ hũ cực đại 500 SWGT', 'trúng 10 SWGT', 'vừa bú 50 SWGT', 'lụm nhẹ 20 SWGT'];
+            const actions = ['vừa trúng 50 SWGT', 'nổ hũ 100 SWGT', 'vừa lãi 20 SWGT', 'vừa ăn 5 SWGT', 'nổ hũ cực đại 500 SWGT', 'trúng 10 SWGT', 'vừa bú 50 SWGT', 'lụm nhẹ 20 SWGT', 'vừa trúng 5 SWGT', 'mới húp 10 SWGT'];
             const icons = ['🎉', '🔥', '💎', '🚀', '💰', '💸', '🎁', '⚡'];
 
-            let winnersArr = [];
-            // Random ra 60 người tạo thành một chuỗi cực dài chạy liên tục
-            for (let i = 0; i < 60; i++) {
+            let arr = [];
+            for (let i = 0; i < 100; i++) {
                 const randomHo = ho[Math.floor(Math.random() * ho.length)];
                 const randomDem = dem[Math.floor(Math.random() * dem.length)];
                 const randomTen = ten[Math.floor(Math.random() * ten.length)];
                 const randomAction = actions[Math.floor(Math.random() * actions.length)];
                 const randomIcon = icons[Math.floor(Math.random() * icons.length)];
-                winnersArr.push(`${randomIcon} ${randomHo} ${randomDem} ${randomTen} ${randomAction}`);
+                arr.push(`${randomIcon} ${randomHo} ${randomDem} ${randomTen} ${randomAction}`);
             }
-            return winnersArr.join('  *** ');
+            return arr;
         };
 
-        setFakeWinners(generateFakeWinners());
+        setWinnersList(generateFakeWinners());
     }, []);
+
+    // LOGIC ĐIỀU KHIỂN HIỂN THỊ CHỮ NGƯỜI TRÚNG (CÁCH NHAU 5-10S)
+    useEffect(() => {
+        if (winnersList.length === 0) return;
+        let timeoutId: any;
+        let showTimeoutId: any;
+
+        const runTicker = () => {
+            const msg = winnersList[Math.floor(Math.random() * winnersList.length)];
+            setCurrentWinner(msg);
+            setShowWinner(true);
+
+            // Hiện thông báo trong 3.5 giây rồi ẩn đi
+            showTimeoutId = setTimeout(() => {
+                setShowWinner(false);
+
+                // Nghỉ ngẫu nhiên từ 5 đến 10 giây trước khi hiện người tiếp theo
+                const pauseTime = Math.floor(Math.random() * 5000) + 5000; 
+                timeoutId = setTimeout(runTicker, pauseTime);
+            }, 3500);
+        };
+
+        timeoutId = setTimeout(runTicker, 1500); // Chạy lần đầu sau 1.5s
+
+        return () => {
+            clearTimeout(timeoutId);
+            clearTimeout(showTimeoutId);
+        };
+    }, [winnersList]);
 
     useEffect(() => {
         if (!unlockDateMs) return;
@@ -914,10 +946,9 @@ function App() {
     };
 
     // ==================================================
-    // GIẢI TRÍ (ĐÃ THÊM CƠ CHẾ FALLBACK MÔ PHỎNG QUAY NẾU LỖI MẠNG)
+    // GIẢI TRÍ (ĐÃ CẬP NHẬT TRỌNG SỐ VÀ HIỆU ỨNG TEXT NGƯỜI TRÚNG)
     // ==================================================
     const renderGameZone = () => {
-        const Marquee = 'marquee' as any;
 
         const wheelSlices = [
             { label: '0 SWGT', value: 0, color: '#444' },
@@ -958,7 +989,6 @@ function App() {
             setIsSpinning(true);
             setSpinResultMsg('');
 
-            // Thử gọi lên Server
             fetch(`${BACKEND_URL}/api/spin-wheel`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -975,9 +1005,29 @@ function App() {
             })
             .catch(err => {
                 console.error("Lỗi kết nối Server. Kích hoạt quay mô phỏng (Fallback):", err);
-                // NẾU API LỖI/CHƯA CÓ => CHO QUAY MÔ PHỎNG ĐỂ SẾP TEST (Mất 20 SWGT, random trúng thưởng)
-                const fallbackRewards = [0, 500, 5, 50, 10, 100, 20, 0];
-                const randomReward = fallbackRewards[Math.floor(Math.random() * fallbackRewards.length)];
+                
+                // LOGIC CHIA LẠI TỶ LỆ TRÚNG (WEIGHTED RANDOM) THỰC TẾ HƠN
+                const weights = [
+                    { reward: 0, chance: 45 },    // 45% rơi vào ô 0
+                    { reward: 5, chance: 30 },    // 30% được 5 SWGT
+                    { reward: 10, chance: 15 },   // 15% được 10 SWGT
+                    { reward: 20, chance: 7 },    // 7% được 20 SWGT (Hòa vốn)
+                    { reward: 50, chance: 2 },    // 2% được 50 SWGT
+                    { reward: 100, chance: 0.9 }, // 0.9% nổ hũ 100 SWGT
+                    { reward: 500, chance: 0.1 }  // 0.1% nổ hũ cực đại 500 SWGT
+                ];
+
+                let rand = Math.random() * 100;
+                let randomReward = 0;
+                let cumulative = 0;
+                for (let w of weights) {
+                    cumulative += w.chance;
+                    if (rand <= cumulative) {
+                        randomReward = w.reward;
+                        break;
+                    }
+                }
+                
                 executeSpin(randomReward, balance - 20 + randomReward);
             });
         };
@@ -987,8 +1037,26 @@ function App() {
                 <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '24px', fontWeight: '900' }}>🎰 Vòng Quay Nhân Phẩm</h2>
                 <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 20px 0' }}>Phí quay: <b style={{color: theme.red}}>20 SWGT</b> / lượt</p>
 
-                <div style={{ backgroundColor: '#000', padding: '10px', borderRadius: '8px', border: `1px dashed ${theme.gold}`, marginBottom: '30px', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                    <Marquee style={{ color: theme.textLight, fontSize: '13px', fontWeight: 'bold' }}>{fakeWinners}</Marquee>
+                {/* KHU VỰC CHỮ NGƯỜI TRÚNG ẢO (MỚI) */}
+                <div style={{ height: '40px', marginBottom: '25px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{
+                        opacity: showWinner ? 1 : 0,
+                        transform: showWinner ? 'translateY(0)' : 'translateY(10px)',
+                        transition: 'all 0.5s ease-in-out',
+                        backgroundColor: 'rgba(244, 208, 63, 0.1)',
+                        border: `1px dashed ${theme.gold}`,
+                        padding: '8px 15px',
+                        borderRadius: '20px',
+                        color: theme.textLight,
+                        fontSize: '13px',
+                        fontWeight: 'bold',
+                        whiteSpace: 'nowrap',
+                        maxWidth: '100%',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                    }}>
+                        {currentWinner}
+                    </div>
                 </div>
 
                 <div style={{ position: 'relative', width: '280px', height: '280px', margin: '0 auto', marginBottom: '30px' }}>
@@ -1147,7 +1215,6 @@ function App() {
                     <div style={{ fontSize: '24px', marginBottom: '6px' }}>🎁</div>
                     <span style={{ fontSize: '13px', fontWeight: 'bold' }}>THU NHẬP</span>
                 </div>
-                {/* ĐÃ ĐỔI TÊN TAB THÀNH "Kiếm SWGT" THEO YÊU CẦU */}
                 <div onClick={() => setActiveTab('game')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'game' ? theme.gold : theme.textDim, width: '25%', cursor: 'pointer' }}>
                     <div style={{ fontSize: '24px', marginBottom: '6px' }}>🎰</div>
                     <span style={{ fontSize: '13px', fontWeight: 'bold' }}>QUAY SWGT</span>
