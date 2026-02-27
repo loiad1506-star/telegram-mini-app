@@ -59,10 +59,8 @@ function App() {
     const [wheelRotation, setWheelRotation] = useState(0);
     const [spinResultMsg, setSpinResultMsg] = useState('');
     
-    // STATE MỚI: THEO DÕI SỐ TIỀN VỪA TRÚNG
     const [spinEarned, setSpinEarned] = useState(0);
     
-    // STATE MỚI CHO BẢNG TIN NGƯỜI TRÚNG THƯỞNG MƯỢT MÀ
     const [winnersList, setWinnersList] = useState<string[]>([]);
     const [currentWinner, setCurrentWinner] = useState('');
     const [showWinner, setShowWinner] = useState(false);
@@ -96,7 +94,6 @@ function App() {
 
     const STREAK_REWARDS = [0.5, 1.5, 3, 3.5, 5, 7, 9];
 
-    // TẠO DANH SÁCH 100 NGƯỜI TRÚNG THƯỞNG ẢO
     useEffect(() => {
         const generateFakeWinners = () => {
             const ho = ['Nguyễn', 'Trần', 'Lê', 'Phạm', 'Hoàng', 'Huỳnh', 'Phan', 'Vũ', 'Võ', 'Đặng', 'Bùi', 'Đỗ', 'Hồ', 'Ngô', 'Dương', 'Lý', 'Phùng', 'Mai', 'Đinh', 'Đoàn'];
@@ -120,7 +117,6 @@ function App() {
         setWinnersList(generateFakeWinners());
     }, []);
 
-    // LOGIC ĐIỀU KHIỂN HIỂN THỊ CHỮ NGƯỜI TRÚNG (CÁCH NHAU 5-10S)
     useEffect(() => {
         if (winnersList.length === 0) return;
         let timeoutId: any;
@@ -131,17 +127,14 @@ function App() {
             setCurrentWinner(msg);
             setShowWinner(true);
 
-            // Hiện thông báo trong 3.5 giây rồi ẩn đi
             showTimeoutId = setTimeout(() => {
                 setShowWinner(false);
-
-                // Nghỉ ngẫu nhiên từ 5 đến 10 giây trước khi hiện người tiếp theo
                 const pauseTime = Math.floor(Math.random() * 5000) + 5000; 
                 timeoutId = setTimeout(runTicker, pauseTime);
             }, 3500);
         };
 
-        timeoutId = setTimeout(runTicker, 1500); // Chạy lần đầu sau 1.5s
+        timeoutId = setTimeout(runTicker, 1500); 
 
         return () => {
             clearTimeout(timeoutId);
@@ -954,45 +947,59 @@ function App() {
     const renderGameZone = () => {
 
         const wheelSlices = [
-            { label: '0 SWGT', value: 0, color: '#444' },
-            { label: '500 SWGT', value: 500, color: '#F4D03F' },
-            { label: '5 SWGT', value: 5, color: '#5E92F3' },
-            { label: '50 SWGT', value: 50, color: '#34C759' },
-            { label: '10 SWGT', value: 10, color: '#9B59B6' },
-            { label: '100 SWGT', value: 100, color: '#E67E22' },
-            { label: '20 SWGT', value: 20, color: '#E0B0FF' },
-            { label: '0 SWGT', value: 0, color: '#555' }
+            { label: '0 SWGT', value: 0, color: '#333333' },     // Ô số 1: Xịt (Xám xịt, tối màu)
+            { label: '500 SWGT', value: 500, color: '#F4D03F' }, // Ô số 2: JACKPOT (Vàng rực rỡ, đập vào mắt)
+            { label: '0 SWGT', value: 0, color: '#444444' },     // Ô số 3: Xịt (Xám) -> TẠO HIỆU ỨNG SUÝT TRÚNG
+            { label: '20 SWGT', value: 20, color: '#E0B0FF' },   // Ô số 4: Hòa vốn (Tím nhạt)
+            { label: '5 SWGT', value: 5, color: '#5E92F3' },     // Ô số 5: Thua ít (Xanh dương)
+            { label: '100 SWGT', value: 100, color: '#FF3B30' }, // Ô số 6: Thắng Lớn thứ 2 (Đỏ rực)
+            { label: '10 SWGT', value: 10, color: '#34C759' },   // Ô số 7: Thua ít (Xanh lá)
+            { label: '50 SWGT', value: 50, color: '#E67E22' }    // Ô số 8: Thắng vừa (Cam)
         ];
 
-        // HÀM XỬ LÝ QUAY CHUNG (ĐÃ FIX TỌA ĐỘ TUYỆT ĐỐI GIỮA Ô)
+        // HÀM XỬ LÝ QUAY (UPDATE: ĐÃ TÍCH HỢP HIỆU ỨNG SUÝT TRÚNG - NEAR MISS)
         const executeSpin = (rewardValue: number, newBalance: number) => {
-            const possibleIndexes = wheelSlices.map((s, i) => s.value === rewardValue ? i : -1).filter(i => i !== -1);
-            const targetIndex = possibleIndexes[Math.floor(Math.random() * possibleIndexes.length)];
+            let targetIndex = -1;
+            let randomOffset = 22.5; // Góc mặc định giữa ô
+
+            if (rewardValue === 0) {
+                // 😈 NHÀ CÁI ĐỘT NHẬP: Ép kịch bản rơi vào 2 ô Xịt kẹp sát ô 500 (Ô số 0 và Ô số 2)
+                const nearMissIndexes = [0, 2];
+                targetIndex = nearMissIndexes[Math.floor(Math.random() * nearMissIndexes.length)];
+                
+                // 😈 Ép kim dừng sát vạch kẻ (Chệch 2-3 độ so với ô 500 để tạo ảo giác "vừa trượt mất")
+                if (targetIndex === 0) {
+                    randomOffset = Math.floor(Math.random() * 3) + 2; // Rớt sát mép trái ô 500
+                } else {
+                    randomOffset = 45 - (Math.floor(Math.random() * 3) + 2); // Rớt sát mép phải ô 500
+                }
+            } else {
+                // Các giải khác quay rơi vào giữa ô bình thường
+                const possibleIndexes = wheelSlices.map((s, i) => s.value === rewardValue ? i : -1).filter(i => i !== -1);
+                targetIndex = possibleIndexes[Math.floor(Math.random() * possibleIndexes.length)];
+                randomOffset = Math.floor(Math.random() * 25) + 10; 
+            }
             
             const sliceAngle = 360 / 8;
-            // Cho kim rơi ngẫu nhiên vào giữa ô (từ 10 đến 35 độ) để tránh vạch kẻ
-            const randomOffset = Math.floor(Math.random() * 25) + 10; 
-            
-            // Tính vị trí tuyệt đối của ô thưởng
             const targetAbsoluteAngle = 360 - (targetIndex * sliceAngle) - randomOffset;
             
-            // Lấy số vòng hiện tại, cộng thêm 5 vòng xoáy và trỏ về đúng góc tuyệt đối
+            // Tăng số vòng xoáy lên 8 vòng để kéo dài thời gian lơ lửng, lết bánh
             const currentSpins = Math.floor(wheelRotation / 360);
-            const finalRotation = (currentSpins + 5) * 360 + targetAbsoluteAngle;
+            const finalRotation = (currentSpins + 8) * 360 + targetAbsoluteAngle;
 
             setWheelRotation(finalRotation);
 
+            // Kéo dài thời gian đợi lên 8s để khớp với vòng quay slow-motion
             setTimeout(() => {
                 setIsSpinning(false);
                 setBalance(newBalance);
-                setSpinEarned(prev => prev + rewardValue); // Tích luỹ số tiền kiếm được
+                setSpinEarned(prev => prev + rewardValue); 
                 
-                // GỌI TÊN NGƯỜI CHƠI RA THÔNG BÁO
                 const playerName = userProfile.name || 'Bạn';
                 if (rewardValue === 0) setSpinResultMsg(`Ahhh! ${playerName} chệch một tí nữa là nổ hũ 500. Quay lại phục thù nào!`);
                 else if (rewardValue >= 50) setSpinResultMsg(`🎉 BÙM!!! CHÚC MỪNG ${playerName.toUpperCase()} TRÚNG ${rewardValue} SWGT! NHÂN PHẨM CỰC CAO!`);
                 else setSpinResultMsg(`Tuyệt vời! ${playerName} nhận được +${rewardValue} SWGT.`);
-            }, 5000);
+            }, 8000); // 8 giây
         };
 
         const handleSpin = () => {
@@ -1084,8 +1091,11 @@ function App() {
                     <div style={{ position: 'absolute', top: '-15px', left: '50%', transform: 'translateX(-50%)', width: '0', height: '0', borderLeft: '15px solid transparent', borderRight: '15px solid transparent', borderTop: `25px solid ${theme.red}`, zIndex: 10 }}></div>
                     <div style={{ 
                         width: '100%', height: '100%', borderRadius: '50%', border: `5px solid ${theme.gold}`, boxShadow: '0 0 20px rgba(244, 208, 63, 0.4)',
-                        background: `conic-gradient(#444 0deg 45deg, #F4D03F 45deg 90deg, #5E92F3 90deg 135deg, #34C759 135deg 180deg, #9B59B6 180deg 225deg, #E67E22 225deg 270deg, #E0B0FF 270deg 315deg, #555 315deg 360deg)`,
-                        transform: `rotate(${wheelRotation}deg)`, transition: 'transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99)' 
+                        /* UPDATE MÀU THEO THIẾT KẾ MỚI CỦA MÂM QUAY */
+                        background: `conic-gradient(#333333 0deg 45deg, #F4D03F 45deg 90deg, #444444 90deg 135deg, #E0B0FF 135deg 180deg, #5E92F3 180deg 225deg, #FF3B30 225deg 270deg, #34C759 270deg 315deg, #E67E22 315deg 360deg)`,
+                        transform: `rotate(${wheelRotation}deg)`, 
+                        /* UPDATE HIỆU ỨNG SLOW-MOTION: Chậm dần đều cực gắt ở cuối */
+                        transition: 'transform 8s cubic-bezier(0.15, 0.85, 0.05, 1)' 
                     }}>
                         {wheelSlices.map((slice, i) => (
                             <div key={i} style={{ position: 'absolute', top: 0, left: '50%', transform: `translateX(-50%) rotate(${i * 45 + 22.5}deg)`, transformOrigin: '50% 140px', width: '60px', textAlign: 'center', paddingTop: '15px', color: '#fff', fontWeight: 'bold', fontSize: '14px', textShadow: '1px 1px 2px #000', zIndex: 2 }}>
