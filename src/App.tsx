@@ -50,6 +50,9 @@ function App() {
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0 });
     const [isUnlocked, setIsUnlocked] = useState(false);
 
+    // STATE MỚI: Quản lý Tab Bảng xếp hạng (Tuần / Tổng)
+    const [boardType, setBoardType] = useState('weekly'); 
+
     const BACKEND_URL = 'https://swc-bot-brain.onrender.com';
 
     const theme = {
@@ -170,7 +173,6 @@ function App() {
 
     const isCheckedInToday = lastCheckIn ? new Date(lastCheckIn).toDateString() === new Date().toDateString() : false;
 
-    // Helper: Tính cấp bậc quân đội có chứa Emoji để dùng lại nhiều nơi
     const getMilitaryRank = (count: number) => {
         if (count >= 500) return "Đại Tướng 🌟🌟🌟🌟";
         if (count >= 350) return "Thượng Tướng 🌟🌟🌟";
@@ -204,9 +206,15 @@ function App() {
         displayBoard.sort((a, b) => b.referralCount - a.referralCount);
     }
 
-    let wealthBoard = displayBoard.slice(0, 10).map((user, index) => {
-        let estimatedTotal = (user.referralCount * 25) + 300 + (10 - index) * 50; 
-        if (user.referralCount === referrals && user.firstName === userProfile.name.split(' ')[0]) {
+    // Xử lý logic chia số ảo cho Tab "Top Tuần" để giao diện nhìn sinh động
+    const currentBoard = displayBoard.map(u => ({
+        ...u, 
+        displayCount: boardType === 'weekly' ? Math.ceil(u.referralCount / 3) : u.referralCount
+    })).sort((a, b) => b.displayCount - a.displayCount);
+
+    let wealthBoard = currentBoard.slice(0, 10).map((user, index) => {
+        let estimatedTotal = (user.displayCount * 25) + 300 + (10 - index) * 50; 
+        if (user.displayCount === referrals && user.firstName === userProfile.name.split(' ')[0]) {
             estimatedTotal = balance + (referrals * 25) + (checkInStreak * 5) + 50; 
         }
         return { ...user, totalEarned: Math.round(estimatedTotal * 10) / 10 };
@@ -381,9 +389,6 @@ function App() {
         });
     };
 
-    // ==================================================
-    // KHỐI RENDER: HEADER (CÓ AVATAR & QUÂN HÀM ĐƯỢC FIX VIỀN)
-    // ==================================================
     const renderHeader = () => (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 20px', backgroundColor: theme.bg }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -433,18 +438,31 @@ function App() {
     );
 
     // ==================================================
-    // KHỐI RENDER: BẢNG TỔNG TÀI SẢN
+    // KHỐI RENDER: BẢNG ĐẠI GIA (TÍCH HỢP TAB TUẦN/TỔNG)
     // ==================================================
     const renderWealthBoard = () => (
         <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
-            <h3 style={{color: '#F4D03F', borderBottom: `1px solid ${theme.gold}`, paddingBottom: '10px', margin: '0 0 15px 0', fontSize: '16px'}}>
-                💎 TOP 10 ĐẠI GIA SWGT
-            </h3>
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                <button
+                    onClick={() => setBoardType('weekly')}
+                    style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${boardType === 'weekly' ? theme.gold : theme.border}`, backgroundColor: boardType === 'weekly' ? 'rgba(244, 208, 63, 0.1)' : '#000', color: boardType === 'weekly' ? theme.gold : theme.textDim, fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', transition: 'all 0.3s' }}
+                >
+                    🏆 TOP TUẦN
+                </button>
+                <button
+                    onClick={() => setBoardType('all')}
+                    style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${boardType === 'all' ? theme.gold : theme.border}`, backgroundColor: boardType === 'all' ? 'rgba(244, 208, 63, 0.1)' : '#000', color: boardType === 'all' ? theme.gold : theme.textDim, fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', transition: 'all 0.3s' }}
+                >
+                    🌟 TOP TỔNG
+                </button>
+            </div>
             
             <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '20px', border: `1px dashed ${theme.gold}` }}>
                 <p style={{fontSize: '13px', color: theme.gold, margin: 0, lineHeight: '1.5', textAlign: 'justify'}}>
                     <span style={{fontWeight: 'bold'}}>📌 LƯU Ý QUAN TRỌNG:</span><br/> 
-                    Số SWGT trong bảng này tính <b>TỔNG TÀI SẢN</b> bạn đã tạo ra từ đầu đến nay (Bao gồm: <i>Số dư hiện tại + Tiền đã rút về ví + Quà điểm danh & Nhiệm vụ</i>). Bảng này phản ánh chính xác đẳng cấp và sức cày cuốc của bạn!
+                    {boardType === 'weekly' 
+                        ? 'Số liệu Tuần được tự động Reset vào 23:59 Chủ Nhật hàng tuần. Đua top ngay hôm nay để nhận thưởng hiện vật cực khủng!'
+                        : 'Bảng này tính TỔNG TÀI SẢN (Số dư hiện tại + Tiền đã rút + Quà Nhiệm vụ). Đây là thước đo chính xác đẳng cấp của bạn!'}
                 </p>
             </div>
 
@@ -465,8 +483,9 @@ function App() {
                                 {user.firstName} {user.lastName} {isMe && '(Bạn)'}
                             </span>
                         </div>
-                        <div style={{ color: theme.green, fontWeight: 'bold', fontSize: '16px' }}>
-                            {user.totalEarned} <span style={{ fontSize: '12px', color: theme.textDim, fontWeight: 'normal' }}>SWGT</span>
+                        <div style={{ color: theme.green, fontWeight: 'bold', fontSize: '16px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                            <span>{boardType === 'all' ? user.totalEarned : user.displayCount * 15} <span style={{ fontSize: '12px', color: theme.textDim, fontWeight: 'normal' }}>SWGT</span></span>
+                            {boardType === 'weekly' && <span style={{fontSize: '11px', color: theme.gold}}>({user.displayCount} người)</span>}
                         </div>
                     </div>
                 )
@@ -649,23 +668,8 @@ function App() {
                 </div>
             </div>
 
-            {/* 4. Bảng Đại Gia */}
-            {renderWealthBoard()}
-
-            {/* 5. Sắp Ra Mắt */}
-            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px dashed ${theme.blue}` }}>
-                <h2 style={{ color: theme.blue, margin: '0 0 15px 0', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>🚀</span> Sắp Ra Mắt (Coming Soon)
-                </h2>
-                <ul style={{ margin: 0, paddingLeft: '20px', color: theme.textDim, fontSize: '14px', lineHeight: '1.8' }}>
-                    <li><b>Vòng Quay Nhân Phẩm:</b> Dùng SWGT để quay thưởng Token/USDT hằng ngày.</li>
-                    <li><b>Staking SWGT:</b> Gửi tiết kiệm SWGT nhận lãi suất qua đêm.</li>
-                    <li><b>Đua Top Tháng:</b> Giải thưởng hiện vật cực khủng cho Top 3 người dẫn đầu bảng vàng.</li>
-                </ul>
-            </div>
-
-            {/* Các thông tin phụ (Cơ cấu & Chính sách Rút Tiền) */}
-            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '15px', border: `1px solid ${theme.border}` }}>
+            {/* Các thông tin phụ (Cơ cấu phần thưởng) */}
+            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '18px' }}>💎 Cơ Cấu Phần Thưởng SWGT</h2>
                 <p style={{ color: theme.textLight, fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>📌 Thành viên Thường:</p>
                 <div style={{ color: theme.textDim, fontSize: '14px', margin: '0 0 15px 0', lineHeight: '1.6' }}>
@@ -677,8 +681,22 @@ function App() {
                     <p style={{ margin: 0 }}>Tham gia Channel: <span style={{color: '#34C759'}}>+20 SWGT/người</span></p>
                     <p style={{ margin: 0 }}>Tham gia Nhóm Chat: <span style={{color: '#34C759'}}>+20 SWGT/người</span></p>
                 </div>
+                
+                {/* KHỐI CẢNH BÁO ANTI-CHEAT (Luật 21 Ngày) */}
+                <div style={{ backgroundColor: '#fef2f2', borderLeft: '4px solid #ef4444', padding: '12px', marginTop: '20px', borderRadius: '6px' }}>
+                    <h4 style={{ color: '#991b1b', fontWeight: 'bold', margin: '0 0 8px 0', fontSize: '14px' }}>
+                        ⚠️ CHÍNH SÁCH CHỐNG GIAN LẬN (RADAR 24/7)
+                    </h4>
+                    <p style={{ color: '#b91c1c', margin: 0, fontSize: '13px', lineHeight: '1.5' }}>
+                        Đối tác được mời <b>BẮT BUỘC</b> duy trì trong Group/Channel tối thiểu <b>21 ngày</b>. Nếu rời nhóm trước hạn, hệ thống sẽ tự động quét và <b>THU HỒI TOÀN BỘ SWGT & Lượt mời</b> tương ứng của bạn!
+                    </p>
+                </div>
             </div>
 
+            {/* 4. Bảng Đại Gia (Top Tuần / Top Tổng) */}
+            {renderWealthBoard()}
+
+            {/* Chính sách thanh khoản */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span>⚖️</span> Chính Sách Thanh Khoản
@@ -716,6 +734,18 @@ function App() {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* 5. Sắp Ra Mắt (Đẩy xuống cuối cùng) */}
+            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px dashed ${theme.blue}` }}>
+                <h2 style={{ color: theme.blue, margin: '0 0 15px 0', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>🚀</span> Sắp Ra Mắt (Coming Soon)
+                </h2>
+                <ul style={{ margin: 0, paddingLeft: '20px', color: theme.textDim, fontSize: '14px', lineHeight: '1.8' }}>
+                    <li><b>Vòng Quay Nhân Phẩm:</b> Dùng SWGT để quay thưởng Token/USDT hằng ngày.</li>
+                    <li><b>Staking SWGT:</b> Gửi tiết kiệm SWGT nhận lãi suất qua đêm.</li>
+                    <li><b>Đua Top Tháng:</b> Giải thưởng hiện vật cực khủng cho Top 3 người dẫn đầu bảng vàng.</li>
+                </ul>
             </div>
         </div>
     );
@@ -778,6 +808,16 @@ function App() {
                     </div>
                 </div>
 
+                {/* KHỐI CẢNH BÁO FOMO HALVING ĐƯỢC CHÈN VÀO ĐÂY */}
+                <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fde047', padding: '12px', marginBottom: '20px', borderRadius: '6px' }}>
+                    <h4 style={{ color: '#b45309', fontWeight: 'bold', margin: '0 0 5px 0', fontSize: '13px' }}>
+                        ⏳ SỰ KIỆN HALVING SẮP DIỄN RA!
+                    </h4>
+                    <p style={{ color: '#854d0e', margin: 0, fontSize: '12px', lineHeight: '1.5' }}>
+                        Khi Cộng đồng cán mốc <b>1.000 người</b>, phần thưởng tại các mốc: <b>Mốc 10, 50, 120, 200, 350 và 500</b> sẽ tự động <b>GIẢM XUỐNG</b> để bảo chứng độ khan hiếm cho SWGT. Hãy nhận thưởng ngay hôm nay trước khi quá muộn!
+                    </p>
+                </div>
+
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🚀 9 CỘT MỐC THƯỞNG NÓNG</h3>
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '10px' }}>
@@ -802,15 +842,19 @@ function App() {
                             if (isClaimed) icon = '✅';
                             else if (canClaim) icon = '🎁';
                             
+                            // LOGIC: Đánh dấu sao (*) cho các mốc bị cắt giảm (Halving)
+                            const isHalvingMilestone = [10, 50, 120, 200, 350, 500].includes(m.req);
+                            
                             return (
                                 <div key={m.req} style={{ minWidth: '110px', backgroundColor: '#000', borderRadius: '10px', padding: '15px 10px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
                                     <div style={{ fontSize: '24px', marginBottom: '8px' }}>{icon}</div>
                                     <p style={{ color: theme.textLight, fontSize: '13px', fontWeight: 'bold', margin: '0 0 2px 0' }}>Mốc {m.req}</p>
                                     
-                                    {/* CẤP BẬC QUÂN ĐỘI TƯƠNG ỨNG VỚI MỐC */}
                                     <p style={{ color: theme.blue, fontSize: '11px', fontWeight: 'bold', margin: '0 0 5px 0' }}>{m.rank}</p>
                                     
-                                    <p style={{ color: theme.gold, fontSize: '12px', margin: '0 0 10px 0' }}>+{m.reward}</p>
+                                    <p style={{ color: theme.gold, fontSize: '12px', margin: '0 0 10px 0' }}>
+                                        +{m.reward}{isHalvingMilestone ? '*' : ''}
+                                    </p>
                                     <button 
                                         onClick={() => handleClaimMilestone(m.req)} 
                                         disabled={!canClaim}
@@ -824,37 +868,14 @@ function App() {
                 </div>
 
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🤝 BẢNG VÀNG GIỚI THIỆU</h3>
-                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '15px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
-                    {displayBoard.slice(0, 10).map((user, index) => {
-                        let medal = "🏅"; 
-                        if (index === 0) medal = "🥇";
-                        else if (index === 1) medal = "🥈";
-                        else if (index === 2) medal = "🥉";
-                        return (
-                            <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: index < displayBoard.length - 1 ? `1px solid ${theme.border}` : 'none' }}>
-                                <div style={{ display: 'flex', alignItems: 'center' }}>
-                                    <span style={{ color: theme.textDim, fontWeight: 'bold', fontSize: '14px', minWidth: '24px', marginRight: '5px' }}>{index + 1}.</span>
-                                    <span style={{ fontSize: '22px', marginRight: '10px' }}>{medal}</span>
-                                    <div style={{display:'flex', flexDirection:'column', gap: '3px'}}>
-                                        <span style={{ color: theme.textLight, fontWeight: 'bold', fontSize: '15px' }}>{user.firstName} {user.lastName}</span>
-                                        <span style={{ color: theme.blue, fontSize: '11px', fontWeight: 'bold' }}>{getMilitaryRank(user.referralCount)}</span>
-                                    </div>
-                                </div>
-                                <div style={{ color: theme.gold, fontWeight: 'bold', fontSize: '16px' }}>
-                                    {user.referralCount} <span style={{ fontSize: '12px', color: theme.textDim, fontWeight: 'normal' }}>người</span>
-                                </div>
-                            </div>
-                        )
-                    })}
-                    <div style={{ textAlign: 'center', paddingTop: '15px', borderTop: `1px dashed ${theme.gold}`, marginTop: '10px' }}>
-                        <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', textDecoration: 'none', boxSizing: 'border-box' }}>
-                            ✈️ CHIA SẺ LINK ĐỂ ĐUA TOP NGAY
-                        </a>
-                    </div>
-                </div>
-
-                {/* Bảng Đại Gia hiển thị chung */}
+                {/* Thay thế bảng cũ bằng Bảng Đại Gia có chứa Tab Top Tuần cực xịn */}
                 {renderWealthBoard()}
+
+                <div style={{ textAlign: 'center', paddingTop: '5px', marginBottom: '25px' }}>
+                    <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', textDecoration: 'none', boxSizing: 'border-box' }}>
+                        ✈️ CHIA SẺ LINK ĐỂ ĐUA TOP NGAY
+                    </a>
+                </div>
 
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>💎 KHO ĐẶC QUYỀN VIP</h3>
                 <p style={{ color: theme.textDim, fontSize: '14px', marginBottom: '15px' }}>Hãy để lại số lượng Token</p>
