@@ -961,24 +961,33 @@ function App() {
             { label: '0 SWGT', value: 0, color: '#555' }
         ];
 
-        // HÀM XỬ LÝ QUAY CHUNG
+        // HÀM XỬ LÝ QUAY CHUNG (ĐÃ FIX TỌA ĐỘ TUYỆT ĐỐI GIỮA Ô)
         const executeSpin = (rewardValue: number, newBalance: number) => {
             const possibleIndexes = wheelSlices.map((s, i) => s.value === rewardValue ? i : -1).filter(i => i !== -1);
             const targetIndex = possibleIndexes[Math.floor(Math.random() * possibleIndexes.length)];
             
             const sliceAngle = 360 / 8;
-            const extraSpins = 360 * 5; 
-            const randomOffset = Math.floor(Math.random() * (sliceAngle - 10)) + 5; 
-            const finalRotation = wheelRotation + extraSpins + (360 - (targetIndex * sliceAngle)) - randomOffset;
+            // Cho kim rơi ngẫu nhiên vào giữa ô (từ 10 đến 35 độ) để tránh vạch kẻ
+            const randomOffset = Math.floor(Math.random() * 25) + 10; 
+            
+            // Tính vị trí tuyệt đối của ô thưởng
+            const targetAbsoluteAngle = 360 - (targetIndex * sliceAngle) - randomOffset;
+            
+            // Lấy số vòng hiện tại, cộng thêm 5 vòng xoáy và trỏ về đúng góc tuyệt đối
+            const currentSpins = Math.floor(wheelRotation / 360);
+            const finalRotation = (currentSpins + 5) * 360 + targetAbsoluteAngle;
 
             setWheelRotation(finalRotation);
 
             setTimeout(() => {
                 setIsSpinning(false);
                 setBalance(newBalance);
-                if (rewardValue === 0) setSpinResultMsg('Ahhh! Chệch một tí nữa là nổ hũ 500. Quay lại phục thù nào!');
-                else if (rewardValue >= 50) setSpinResultMsg(`🎉 BÙM!!! CHÚC MỪNG BẠN TRÚNG ${rewardValue} SWGT! NHÂN PHẨM CỰC CAO!`);
-                else setSpinResultMsg(`Tuyệt vời! Bạn nhận được +${rewardValue} SWGT.`);
+                
+                // GỌI TÊN NGƯỜI CHƠI RA THÔNG BÁO
+                const playerName = userProfile.name || 'Bạn';
+                if (rewardValue === 0) setSpinResultMsg(`Ahhh! ${playerName} chệch một tí nữa là nổ hũ 500. Quay lại phục thù nào!`);
+                else if (rewardValue >= 50) setSpinResultMsg(`🎉 BÙM!!! CHÚC MỪNG ${playerName.toUpperCase()} TRÚNG ${rewardValue} SWGT! NHÂN PHẨM CỰC CAO!`);
+                else setSpinResultMsg(`Tuyệt vời! ${playerName} nhận được +${rewardValue} SWGT.`);
             }, 5000);
         };
 
@@ -1006,15 +1015,15 @@ function App() {
             .catch(err => {
                 console.error("Lỗi kết nối Server. Kích hoạt quay mô phỏng (Fallback):", err);
                 
-                // LOGIC CHIA LẠI TỶ LỆ TRÚNG (WEIGHTED RANDOM) THỰC TẾ HƠN
+                // LOGIC CHIA LẠI TỶ LỆ TRÚNG (SIẾT CHẶT X10 LẦN)
                 const weights = [
-                    { reward: 0, chance: 45 },    // 45% rơi vào ô 0
-                    { reward: 5, chance: 30 },    // 30% được 5 SWGT
-                    { reward: 10, chance: 15 },   // 15% được 10 SWGT
-                    { reward: 20, chance: 7 },    // 7% được 20 SWGT (Hòa vốn)
-                    { reward: 50, chance: 2 },    // 2% được 50 SWGT
-                    { reward: 100, chance: 0.9 }, // 0.9% nổ hũ 100 SWGT
-                    { reward: 500, chance: 0.1 }  // 0.1% nổ hũ cực đại 500 SWGT
+                    { reward: 0, chance: 60 },      // 60% xịt (Tăng độ khó)
+                    { reward: 5, chance: 25 },      // 25% được 5 SWGT
+                    { reward: 10, chance: 10 },     // 10% được 10 SWGT
+                    { reward: 20, chance: 4 },      // 4% hoàn vốn 20 SWGT
+                    { reward: 50, chance: 0.89 },   // 0.89% được 50 SWGT
+                    { reward: 100, chance: 0.1 },   // 0.1% trúng 100 SWGT
+                    { reward: 500, chance: 0.01 }   // 0.01% cực khó nổ 500 SWGT
                 ];
 
                 let rand = Math.random() * 100;
@@ -1037,7 +1046,7 @@ function App() {
                 <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '24px', fontWeight: '900' }}>🎰 Vòng Quay Nhân Phẩm</h2>
                 <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 20px 0' }}>Phí quay: <b style={{color: theme.red}}>20 SWGT</b> / lượt</p>
 
-                {/* KHU VỰC CHỮ NGƯỜI TRÚNG ẢO (MỚI) */}
+                {/* KHU VỰC CHỮ NGƯỜI TRÚNG ẢO */}
                 <div style={{ height: '40px', marginBottom: '25px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <div style={{
                         opacity: showWinner ? 1 : 0,
