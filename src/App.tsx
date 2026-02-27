@@ -60,8 +60,8 @@ function App() {
     const [wheelRotation, setWheelRotation] = useState(0);
     const [spinResultMsg, setSpinResultMsg] = useState('');
     
-    // ĐÃ SỬA LỖI 1: Bỏ setFakeWinners đi để TypeScript không báo lỗi "khai báo thừa"
-    const fakeWinners = "🎉 Mai Thiều Thị vừa trúng 50 SWGT  *** 🔥 Vũ Dũng nổ hũ 100 SWGT  *** 💎 LINH NGUYEN vừa lãi 20 SWGT *** 🚀 Nông Mao vừa lãi 50 SWGT";
+    // ĐÃ FIX LỖI 1: Bỏ setFakeWinners vì không dùng đến
+    const [fakeWinners] = useState("🎉 Mai Thiều Thị vừa trúng 50 SWGT  *** 🔥 Vũ Dũng nổ hũ 100 SWGT  *** 💎 LINH NGUYEN vừa lãi 20 SWGT *** 🚀 Nông Mao vừa lãi 50 SWGT");
 
     const BACKEND_URL = 'https://swc-bot-brain.onrender.com';
 
@@ -917,9 +917,6 @@ function App() {
     // GIẢI TRÍ (VÒNG QUAY NHÂN PHẨM - MỚI THÊM)
     // ==================================================
     const renderGameZone = () => {
-        // ĐÃ SỬA LỖI 2: Ép kiểu để Typescript hiểu thẻ Marquee là hợp lệ
-        const Marquee = 'marquee' as any;
-
         const wheelSlices = [
             { label: '0 SWGT', value: 0, color: '#444' },
             { label: '500 SWGT', value: 500, color: '#F4D03F' },
@@ -976,8 +973,11 @@ function App() {
                 <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '24px', fontWeight: '900' }}>🎰 Vòng Quay Nhân Phẩm</h2>
                 <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 20px 0' }}>Phí quay: <b style={{color: theme.red}}>20 SWGT</b> / lượt</p>
 
+                {/* ĐÃ FIX LỖI 2: Đổi thẻ <marquee> thành <div> dùng CSS Animation */}
                 <div style={{ backgroundColor: '#000', padding: '10px', borderRadius: '8px', border: `1px dashed ${theme.gold}`, marginBottom: '30px', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                    <Marquee style={{ color: theme.textLight, fontSize: '13px', fontWeight: 'bold' }}>{fakeWinners}</Marquee>
+                    <div style={{ color: theme.textLight, fontSize: '13px', fontWeight: 'bold', display: 'inline-block', animation: 'scrollText 15s linear infinite' }}>
+                        {fakeWinners} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {fakeWinners}
+                    </div>
                 </div>
 
                 <div style={{ position: 'relative', width: '280px', height: '280px', margin: '0 auto', marginBottom: '30px' }}>
@@ -1113,8 +1113,13 @@ function App() {
 
     return (
         <div style={{ backgroundColor: theme.bg, minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '90px', boxSizing: 'border-box' }}>
+            {/* ĐÃ THÊM @keyframes scrollText VÀO ĐÂY ĐỂ CHẠY CHỮ CHUẨN CSS */}
             <style>{`
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+                @keyframes scrollText {
+                    0% { transform: translateX(100vw); }
+                    100% { transform: translateX(-100%); }
+                }
                 ::-webkit-scrollbar { height: 6px; }
                 ::-webkit-scrollbar-track { background: #1C1C1E; border-radius: 10px; }
                 ::-webkit-scrollbar-thumb { background: #F4D03F; border-radius: 10px; }
@@ -1125,29 +1130,26 @@ function App() {
             <div style={{ marginTop: '10px' }}>
                 {activeTab === 'home' && renderHome()}
                 {activeTab === 'rewards' && renderRewards()}
-                {/* ĐÃ BỔ SUNG KHỐI GỌI HÀM VÒNG QUAY Ở ĐÂY */}
                 {activeTab === 'game' && renderGameZone()}
                 {activeTab === 'wallet' && renderWallet()}
             </div>
 
-            {/* THANH ĐIỀU HƯỚNG DƯỚI ĐÁY: ĐÃ ĐƯỢC CHIA LÀM 4 TAB ĐỀU NHAU (width: 25%) */}
             <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: theme.cardBg, borderTop: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-around', padding: '15px 0', paddingBottom: 'calc(15px + env(safe-area-inset-bottom))', zIndex: 100 }}>
                 <div onClick={() => setActiveTab('home')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'home' ? theme.gold : theme.textDim, width: '25%', cursor: 'pointer' }}>
                     <div style={{ fontSize: '24px', marginBottom: '6px' }}>🏠</div>
-                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>Trang chủ</span>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>TRANG CHỦ</span>
                 </div>
                 <div onClick={() => setActiveTab('rewards')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'rewards' ? theme.gold : theme.textDim, width: '25%', cursor: 'pointer' }}>
                     <div style={{ fontSize: '24px', marginBottom: '6px' }}>🎁</div>
-                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>Thu nhập</span>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>THU NHẬP</span>
                 </div>
-                {/* ĐÃ BỔ SUNG NÚT BẤM CHUYỂN SANG TAB GIẢI TRÍ Ở ĐÂY */}
                 <div onClick={() => setActiveTab('game')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'game' ? theme.gold : theme.textDim, width: '25%', cursor: 'pointer' }}>
                     <div style={{ fontSize: '24px', marginBottom: '6px' }}>🎰</div>
-                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>Giải trí</span>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>QUAY SWGT</span>
                 </div>
                 <div onClick={() => setActiveTab('wallet')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'wallet' ? theme.gold : theme.textDim, width: '25%', cursor: 'pointer' }}>
                     <div style={{ fontSize: '24px', marginBottom: '6px' }}>👛</div>
-                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>Ví</span>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>VÍ</span>
                 </div>
             </div>
         </div>
