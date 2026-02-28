@@ -37,7 +37,6 @@ function App() {
 
     const [userId, setUserId] = useState('');
     
-    // 😈 STATE QUẢN LÝ KHUNG VIỀN AVATAR
     const [userProfile, setUserProfile] = useState({
         name: 'Đang tải...',
         username: '',
@@ -67,7 +66,8 @@ function App() {
     const [spinCount, setSpinCount] = useState(0); 
     const MAX_PITY = 30; 
 
-    const [boxModal, setBoxModal] = useState({ show: false, type: '', label: '', reward: 0, status: 'closed', isFrame: false });
+    // Bổ sung thêm newBalance vào State Modal để cập nhật đúng lúc
+    const [boxModal, setBoxModal] = useState({ show: false, type: '', label: '', reward: 0, status: 'closed', isFrame: false, newBalance: 0 });
 
     const [winnersList, setWinnersList] = useState<string[]>([]);
     const [currentWinner, setCurrentWinner] = useState('');
@@ -89,7 +89,6 @@ function App() {
         premium: '#E0B0FF' 
     };
 
-    // 😈 DANH SÁCH KHUNG VIỀN AVATAR
     const AVATAR_FRAMES = [
         { id: 'bronze', name: 'Khung Đồng', price: 100, border: '3px solid #CD7F32', shadow: '0 0 5px #CD7F32' },
         { id: 'silver', name: 'Khung Bạc', price: 300, border: '3px solid #C0C0C0', shadow: '0 0 8px #C0C0C0' },
@@ -104,16 +103,17 @@ function App() {
         return { border: frame.border, shadow: frame.shadow, animation: frame.animation || 'none' };
     };
 
+    // ĐÃ CẬP NHẬT LẠI THÔNG SỐ SWGT CHUẨN XÁC SAU HALVING
     const MILESTONE_LIST = [
         { req: 3, reward: 10, key: 'milestone3', rank: 'Đại Úy 🎖️' },
-        { req: 10, reward: 25, key: 'milestone10', rank: 'Thiếu Tá 🎖️' },
+        { req: 10, reward: 20, key: 'milestone10', rank: 'Thiếu Tá 🎖️' },
         { req: 20, reward: 40, key: 'milestone20', rank: 'Trung Tá 🎖️' },
-        { req: 50, reward: 100, key: 'milestone50', rank: 'Thượng Tá 🎖️' },
+        { req: 50, reward: 80, key: 'milestone50', rank: 'Thượng Tá 🎖️' },
         { req: 80, reward: 150, key: 'milestone80', rank: 'Đại Tá 🎖️' },
-        { req: 120, reward: 250, key: 'milestone120', rank: 'Thiếu Tướng 🌟' },
-        { req: 200, reward: 425, key: 'milestone200', rank: 'Trung Tướng 🌟🌟' },
-        { req: 350, reward: 800, key: 'milestone350', rank: 'Thượng Tướng 🌟🌟🌟' },
-        { req: 500, reward: 1200, key: 'milestone500', rank: 'Đại Tướng 🌟🌟🌟🌟' }
+        { req: 120, reward: 200, key: 'milestone120', rank: 'Thiếu Tướng 🌟' },
+        { req: 200, reward: 300, key: 'milestone200', rank: 'Trung Tướng 🌟🌟' },
+        { req: 350, reward: 500, key: 'milestone350', rank: 'Thượng Tướng 🌟🌟🌟' },
+        { req: 500, reward: 700, key: 'milestone500', rank: 'Đại Tướng 🌟🌟🌟🌟' }
     ];
 
     const STREAK_REWARDS = [0.5, 1.5, 3, 3.5, 5, 7, 9];
@@ -122,7 +122,7 @@ function App() {
         const generateFakeWinners = () => {
             const ho = ['Nguyễn', 'Trần', 'Lê', 'Phạm', 'Hoàng', 'Huỳnh', 'Phan', 'Vũ', 'Võ', 'Đặng'];
             const ten = ['Anh', 'Dũng', 'Linh', 'Hùng', 'Tuấn', 'Ngọc', 'Trang', 'Thảo', 'Tâm', 'Phương'];
-            const actions = ['vừa bốc trúng 50 SWGT', 'đập rương nổ hũ 100 SWGT', 'vừa bốc trúng 20 SWGT', 'mở hụt rương 500 đầy tiếc nuối', 'bốc trúng rương 500 SWGT', 'đập rương 10 SWGT', 'vừa bốc trúng Khung Ánh Sáng ✨'];
+            const actions = ['vừa mở trúng 50 SWGT', 'đập rương nổ hũ 100 SWGT', 'vừa bốc trúng 20 SWGT', 'mở hụt rương 500 đầy tiếc nuối', 'bốc trúng rương 500 SWGT', 'đập rương 10 SWGT', 'vừa bốc trúng Khung Ánh Sáng ✨'];
             const icons = ['🎁', '💎', '🚀', '💰', '📦', '⚡', '🖼️'];
 
             let arr = [];
@@ -270,16 +270,16 @@ function App() {
 
     let displayBoard = [...leaderboard];
     const dummyUsers = [
-        { firstName: 'Vũ', lastName: 'Dũng', referralCount: 65, photoUrl: '', activeFrame: 'dragon' },
-        { firstName: 'Mai', lastName: 'Thiều Thị', referralCount: 60, photoUrl: '', activeFrame: 'gold' },
-        { firstName: 'LINH', lastName: 'NGUYEN', referralCount: 47, photoUrl: '', activeFrame: 'silver' },
-        { firstName: 'Minh', lastName: 'Ngọc Hoàng', referralCount: 33, photoUrl: '', activeFrame: 'bronze' },
-        { firstName: 'PHƯƠNG', lastName: 'ANH PHÙNG', referralCount: 27, photoUrl: '', activeFrame: 'none' },
-        { firstName: 'Nông', lastName: 'Mao', referralCount: 12, photoUrl: '', activeFrame: 'none' },
-        { firstName: 'Support', lastName: '', referralCount: 11, photoUrl: '', activeFrame: 'none' },
-        { firstName: 'OSAKA', lastName: 'CHAU HUYNH', referralCount: 10, photoUrl: '', activeFrame: 'none' },
-        { firstName: 'Trinh', lastName: 'Lê', referralCount: 9, photoUrl: '', activeFrame: 'none' },
-        { firstName: 'Lý', lastName: 'Hà', referralCount: 8, photoUrl: '', activeFrame: 'none' }
+        { firstName: 'Vũ', lastName: 'Dũng', referralCount: 65 },
+        { firstName: 'Mai', lastName: 'Thiều Thị', referralCount: 60 },
+        { firstName: 'LINH', lastName: 'NGUYEN', referralCount: 47 },
+        { firstName: 'Minh', lastName: 'Ngọc Hoàng', referralCount: 33 },
+        { firstName: 'PHƯƠNG', lastName: 'ANH PHÙNG', referralCount: 27 },
+        { firstName: 'Nông', lastName: 'Mao', referralCount: 12 },
+        { firstName: 'Support', lastName: '', referralCount: 11 },
+        { firstName: 'OSAKA', lastName: 'CHAU HUYNH', referralCount: 10 },
+        { firstName: 'Trinh', lastName: 'Lê', referralCount: 9 },
+        { firstName: 'Lý', lastName: 'Hà', referralCount: 8 }
     ];
     
     if (displayBoard.length < 10) {
@@ -309,7 +309,7 @@ function App() {
     }
 
     let militaryRank = getMilitaryRank(referrals);
-    let vipLevel = "Tân Binh 🥉";
+    let vipLevel = "Tân Binh 🔰";
     let wreathColor = "#8E8E93"; 
 
     if (myRank === 1 && referrals >= 5) { vipLevel = "🏆 TOP 1 SERVER"; wreathColor = "#F4D03F"; }
@@ -462,7 +462,7 @@ function App() {
     };
 
     // ==================================================
-    // GIAO DIỆN HEADER CÓ AVATAR & CHẤM XANH NỔI LÊN TRÊN
+    // GIAO DIỆN HEADER (PHỤC HỒI VÒNG NGUYỆT QUẾ CHO TOP 10 + CHẤM XANH NỔI LÊN)
     // ==================================================
     const renderHeader = () => {
         const myFrameStyle = getFrameStyle(userProfile.activeFrame);
@@ -487,19 +487,33 @@ function App() {
                     
                     <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
                         
-                        {/* Avatar được bọc lớp Khung Viền nằm bên ngoài để Box-Shadow tỏa ra */}
                         <div style={{ position: 'relative', width: '52px', height: '52px', flexShrink: 0 }}>
+                            {/* VÒNG NGUYỆT QUẾ BAO BỌC BÊN NGOÀI CHO TOP 10 */}
+                            <svg viewBox="-5 -5 110 110" style={{ position: 'absolute', width: '140%', height: '140%', top: '-20%', left: '-20%', zIndex: 10, pointerEvents: 'none' }}>
+                                <path d="M 50 90 C 15 90, 5 50, 20 20" fill="none" stroke={wreathColor} strokeWidth="2" />
+                                <path d="M 50 90 C 85 90, 95 50, 80 20" fill="none" stroke={wreathColor} strokeWidth="2" />
+                                <path d="M 20 20 Q 30 15 25 30 Q 15 25 20 20" fill={wreathColor} /> 
+                                <path d="M 12 40 Q 25 35 20 50 Q 5 45 12 40" fill={wreathColor} />
+                                <path d="M 15 65 Q 30 55 25 70 Q 10 70 15 65" fill={wreathColor} />
+                                <path d="M 80 20 Q 70 15 75 30 Q 85 25 80 20" fill={wreathColor} /> 
+                                <path d="M 88 40 Q 75 35 80 50 Q 95 45 88 40" fill={wreathColor} />
+                                <path d="M 85 65 Q 70 55 75 70 Q 90 70 85 65" fill={wreathColor} />
+                            </svg>
+
+                            {/* KHUNG VIỀN TỪ SHOP NẰM Ở LỚP NGOÀI */}
                             <div style={{ position: 'absolute', inset: -2, borderRadius: '50%', border: myFrameStyle.border, boxShadow: myFrameStyle.shadow, animation: myFrameStyle.animation, zIndex: 2, pointerEvents: 'none' }}></div>
-                            <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', backgroundColor: theme.cardBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', color: theme.gold }}>
+                            
+                            {/* ẢNH AVATAR LÕI BÊN TRONG */}
+                            <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', backgroundColor: theme.cardBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', color: theme.gold, position: 'relative', zIndex: 1 }}>
                                 {userProfile.photoUrl ? (
                                     <img src={userProfile.photoUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 ) : myInitials}
                             </div>
                             
-                            {/* CHẤM XANH ONLINE ĐÃ DỜI LÊN GÓC TRÊN CÙNG BÊN PHẢI ĐỂ TRÁNH BỊ ĐÈ */}
-                            <div style={{ position: 'absolute', top: '0px', right: '0px', width: '14px', height: '14px', backgroundColor: '#34C759', borderRadius: '50%', border: `2px solid ${theme.bg}`, zIndex: 15 }}></div>
+                            {/* CHẤM XANH ONLINE GÓC TRÊN CÙNG BÊN PHẢI (CAO NHẤT) */}
+                            <div style={{ position: 'absolute', top: '0px', right: '-4px', width: '14px', height: '14px', backgroundColor: '#34C759', borderRadius: '50%', border: `2px solid ${theme.bg}`, zIndex: 15 }}></div>
                             
-                            {/* THẺ QUÂN HÀM NẰM PHÍA DƯỚI */}
+                            {/* THẺ QUÂN HÀM */}
                             <div style={{ position: 'absolute', bottom: '-10px', left: '50%', transform: 'translateX(-50%)', zIndex: 11, display: 'flex', alignItems: 'center', backgroundColor: '#000', padding: '2px 8px', borderRadius: '12px', border: `1px solid ${wreathColor}`, whiteSpace: 'nowrap' }}>
                                 <span style={{ color: wreathColor, fontSize: '10px', fontWeight: 'bold' }}>{vipLevel}</span>
                             </div>
@@ -511,7 +525,7 @@ function App() {
     };
 
     // ==================================================
-    // KHỐI BẢNG XẾP HẠNG - CÓ CHỮ, CÓ KHUNG VIỀN, CÓ RANK, ĐỦ MỌI CHỈ SỐ
+    // KHỐI RENDER: BẢNG XẾP HẠNG (CHỈ CHỮ VÀ HIỆN ĐỦ SWGT + SỐ NGƯỜI)
     // ==================================================
     const renderWealthBoard = () => (
         <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
@@ -536,50 +550,24 @@ function App() {
             {wealthBoard.slice(0, 10).map((user, index) => {
                 let icon = "💸"; if (index === 0) icon = "👑"; else if (index === 1) icon = "💎"; else if (index === 2) icon = "🌟";
                 const isMe = user.firstName === (userProfile.name || '').split(' ')[0];
-                
-                const photo = isMe && userProfile.photoUrl ? userProfile.photoUrl : (user.photoUrl || user.photo_url);
-                const getInitials = (f, l) => { return ((f ? f.charAt(0) : '') + (l ? l.charAt(0) : '')).toUpperCase().substring(0, 2) || 'U'; };
-                const initials = getInitials(user.firstName, user.lastName);
-                const initialBg = index === 0 ? '#F4D03F' : index === 1 ? '#C0C0C0' : index === 2 ? '#CD7F32' : '#333333';
-                const initialColor = index === 0 ? '#000' : '#FFF';
-
-                let frameStyle = { border: `2px solid ${theme.border}`, shadow: 'none', animation: 'none' };
-                if (isMe && userProfile.activeFrame !== 'none') {
-                    frameStyle = getFrameStyle(userProfile.activeFrame);
-                } else if (user.activeFrame && user.activeFrame !== 'none') {
-                    frameStyle = getFrameStyle(user.activeFrame);
-                } else {
-                    if (index === 0) frameStyle = getFrameStyle('gold');
-                    else if (index === 1) frameStyle = getFrameStyle('silver');
-                    else if (index === 2) frameStyle = getFrameStyle('bronze');
-                }
 
                 return (
                     <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: index < wealthBoard.length - 1 ? `1px solid ${theme.border}` : 'none', backgroundColor: isMe ? 'rgba(244, 208, 63, 0.1)' : 'transparent', borderRadius: '8px', paddingLeft: isMe ? '10px' : '0', paddingRight: isMe ? '10px' : '0' }}>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <span style={{ color: theme.textDim, fontWeight: 'bold', fontSize: '14px', minWidth: '24px', marginRight: '5px' }}>{index + 1}.</span>
                             
-                            {/* AVATAR CÓ BỌC KHUNG VIỀN ĐUA TOP CHUẨN K BỊ LẸM GÓC */}
-                            <div style={{ position: 'relative', width: '42px', height: '42px', flexShrink: 0, marginRight: '10px' }}>
-                                <div style={{ position: 'absolute', inset: -2, borderRadius: '50%', border: frameStyle.border, boxShadow: frameStyle.shadow, animation: frameStyle.animation, zIndex: 2, pointerEvents: 'none' }}></div>
-                                <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', backgroundColor: initialBg, color: initialColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 'bold' }}>
-                                    {photo ? (
-                                        <img src={photo} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                                    ) : initials}
-                                </div>
-                            </div>
-                            
                             <span style={{ fontSize: '20px', marginRight: '8px' }}>{icon}</span>
                             
-                            {/* KHÔI PHỤC HIỂN THỊ CẤP BẬC DƯỚI TÊN NHƯ YÊU CẦU */}
+                            {/* HIỂN THỊ TÊN VÀ CẤP BẬC */}
                             <div style={{display:'flex', flexDirection:'column', gap: '3px'}}>
                                 <span style={{ color: isMe ? theme.gold : theme.textLight, fontWeight: 'bold', fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100px' }}>
                                     {user.firstName} {user.lastName} {isMe && '(Bạn)'}
                                 </span>
-                                <span style={{ color: theme.blue, fontSize: '11px', fontWeight: 'bold' }}>{getMilitaryRank(user.referralCount)}</span>
+                                <span style={{ color: theme.blue, fontSize: '11px', fontWeight: 'bold' }}>{getMilitaryRank(user.displayCount || user.referralCount)}</span>
                             </div>
                         </div>
 
+                        {/* HIỂN THỊ ĐẦY ĐỦ CẢ SWGT VÀ SỐ NGƯỜI */}
                         <div style={{ color: theme.green, fontWeight: 'bold', fontSize: '15px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                             <span>{boardType === 'all' ? user.totalEarned : user.displayCount * 15} <span style={{ fontSize: '11px', color: theme.textDim, fontWeight: 'normal' }}>SWGT</span></span>
                             <span style={{fontSize: '11px', color: theme.gold}}>({user.displayCount || 0} người)</span>
@@ -590,6 +578,9 @@ function App() {
         </div>
     );
 
+    // ==================================================
+    // TRANG CHỦ
+    // ==================================================
     const renderHome = () => (
         <div style={{ padding: '0 20px 20px 20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', marginBottom: '20px' }}>
@@ -660,7 +651,7 @@ function App() {
                 </div>
             </div>
 
-            {/* BẢNG ĐẠI GIA ĐẦY ĐỦ TIÊU ĐỀ */}
+            {/* BẢNG ĐẠI GIA (TẮT ẢNH AVATAR, KHÔI PHỤC TEXT) */}
             {renderWealthBoard()}
 
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
@@ -752,6 +743,9 @@ function App() {
         </div>
     );
 
+    // ==================================================
+    // TAB: PHẦN THƯỞNG (THU NHẬP)
+    // ==================================================
     const renderRewards = () => {
         let nextTarget = 3; let nextReward = "+10 SWGT";
         for (let m of MILESTONE_LIST) { if (referrals < m.req) { nextTarget = m.req; nextReward = `+${m.reward} SWGT`; break; } }
@@ -788,14 +782,12 @@ function App() {
                             const canClaim = referrals >= m.req && !isClaimed;
                             let icon = '🔒'; if (isClaimed) icon = '✅'; else if (canClaim) icon = '🎁';
                             
-                            const isHalvingMilestone = [10, 50, 120, 200, 350, 500].includes(m.req);
-                            
                             return (
                                 <div key={m.req} style={{ minWidth: '110px', backgroundColor: '#000', borderRadius: '10px', padding: '15px 10px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
                                     <div style={{ fontSize: '24px', marginBottom: '8px' }}>{icon}</div>
                                     <p style={{ color: theme.textLight, fontSize: '13px', fontWeight: 'bold', margin: '0 0 2px 0' }}>Mốc {m.req}</p>
                                     <p style={{ color: theme.blue, fontSize: '11px', fontWeight: 'bold', margin: '0 0 5px 0' }}>{m.rank}</p>
-                                    <p style={{ color: theme.gold, fontSize: '12px', margin: '0 0 10px 0' }}>+{m.reward}{isHalvingMilestone ? '*' : ''}</p>
+                                    <p style={{ color: theme.gold, fontSize: '12px', margin: '0 0 10px 0' }}>+{m.reward}</p>
                                     <button onClick={() => handleClaimMilestone(m.req)} disabled={!canClaim} style={{ width: '100%', backgroundColor: isClaimed ? '#333' : (canClaim ? theme.green : '#333'), color: isClaimed ? theme.textDim : (canClaim ? '#fff' : theme.textDim), border: 'none', padding: '8px 0', borderRadius: '6px', fontWeight: 'bold', fontSize: '12px', cursor: canClaim ? 'pointer' : 'not-allowed' }}>
                                         {isClaimed ? 'ĐÃ NHẬN' : 'NHẬN'}
                                     </button>
@@ -831,7 +823,6 @@ function App() {
 
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🤝 BẢNG VÀNG GIỚI THIỆU</h3>
                 
-                {/* HIỂN THỊ CHUNG BẢNG XẾP HẠNG TẠI TAB PHẦN THƯỞNG */}
                 {renderWealthBoard()}
 
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>💎 KHO ĐẶC QUYỀN VIP</h3>
@@ -915,8 +906,9 @@ function App() {
     // ==================================================
     // GIẢI TRÍ: RƯƠNG BÍ ẨN (THAO TÚNG TÂM LÝ 3.0)
     // ==================================================
-    const renderGameZone = () => {
+    const [pendingBoard, setPendingBoard] = useState(null);
 
+    const renderGameZone = () => {
         const handlePickChest = (index) => {
             if (balance < 20) return alert("⚠️ Bạn cần ít nhất 20 SWGT để mua Búa Đập Rương!");
             if (isSpinning) return;
@@ -949,7 +941,6 @@ function App() {
             setSpinCount(prev => prev >= MAX_PITY ? 0 : prev + 1);
 
             let pool = [0, 0, 5, 5, 10, 20]; 
-            
             if (actualReward !== 500) pool.push(500); else pool.push(0);
             
             let finalRewardVisual = actualReward;
@@ -971,52 +962,55 @@ function App() {
                 }
             }
 
+            // BƯỚC 1: CHỈ MỞ RƯƠNG CỦA KHÁCH
             setChestBoard(newBoard);
 
+            // BƯỚC 2: LƯU TRẠNG THÁI LẬT 8 RƯƠNG CÒN LẠI VÀO BỘ NHỚ TẠM (CHƯA HIỂN THỊ)
+            const finalRevealedBoard = newBoard.map(c => ({ ...c, isOpened: true }));
+            setPendingBoard(finalRevealedBoard);
+
+            // BƯỚC 3: ĐỢI 800ms VÀ BẬT BẢNG THÔNG BÁO YÊU CẦU "BẤM ĐỂ MỞ KHÓA"
             setTimeout(() => {
-                const revealedBoard = newBoard.map(c => ({ ...c, isOpened: true }));
-                setChestBoard(revealedBoard);
-                
-                setTimeout(() => {
-                    setBalance(newBalance);
-                    
-                    const playerName = (userProfile.name || 'Bạn').split(' ')[0];
-                    
-                    let boxType = ''; let boxLabel = '';
-                    if (finalRewardVisual === -2) { boxType = 'frame'; boxLabel = '✨ RƯƠNG HUYỀN BÍ'; }
-                    else if (finalRewardVisual === 0) { boxType = 'coal'; boxLabel = '💣 THAN ĐÁ (XỊT)'; }
-                    else if (finalRewardVisual <= 10) { boxType = 'wood'; boxLabel = '📦 RƯƠNG GỖ'; }
-                    else if (finalRewardVisual <= 50) { boxType = 'silver'; boxLabel = '🎁 RƯƠNG BẠC'; }
-                    else { boxType = 'gold'; boxLabel = '💎 RƯƠNG KIM CƯƠNG'; }
+                let boxType = ''; let boxLabel = '';
+                if (finalRewardVisual === -2) { boxType = 'frame'; boxLabel = '✨ RƯƠNG HUYỀN BÍ'; }
+                else if (finalRewardVisual === 0) { boxType = 'coal'; boxLabel = '💣 THAN ĐÁ (XỊT)'; }
+                else if (finalRewardVisual <= 10) { boxType = 'wood'; boxLabel = '📦 RƯƠNG GỖ'; }
+                else if (finalRewardVisual <= 50) { boxType = 'silver'; boxLabel = '🎁 RƯƠNG BẠC'; }
+                else { boxType = 'gold'; boxLabel = '💎 RƯƠNG KIM CƯƠNG'; }
 
-                    setBoxModal({ show: true, type: boxType, label: boxLabel, reward: finalRewardVisual, status: 'closed', isFrame: finalRewardVisual === -2 });
-
-                    if (finalRewardVisual === -2) {
-                        if (!userProfile.ownedFrames.includes('light')) {
-                            setUserProfile(prev => ({ ...prev, ownedFrames: [...prev.ownedFrames, 'light'] }));
-                        }
-                        setSpinResultMsg('🎉 BÙM! Trúng Mảnh Khung Ánh Sáng siêu hiếm!');
-                    } else if (finalRewardVisual === 0) {
-                        setSpinResultMsg(`Trời ơi ${playerName}! Rương 500 nằm ngay bên kia kìa!`);
-                    } else if (finalRewardVisual >= 500) {
-                        setSpinResultMsg(`🏆 ĐẠI CÁT ĐẠI LỢI! NỔ HŨ LỚN!`);
-                    } else {
-                        setSpinResultMsg(`Thu về +${finalRewardVisual} SWGT. Đập phát nữa nổ hũ to hơn nào!`);
-                    }
-                    
-                    setIsSpinning(false);
-                    setTimeout(() => setChestBoard(Array(9).fill({ isOpened: false, reward: null, isMine: false })), 2500);
-                }, 1500); 
-            }, 1000);
+                setBoxModal({ show: true, type: boxType, label: boxLabel, reward: finalRewardVisual, status: 'closed', isFrame: finalRewardVisual === -2, newBalance: newBalance });
+            }, 800); 
         };
 
         const handleOpenBox = () => {
             setBoxModal(prev => ({ ...prev, status: 'opening' }));
+            
             setTimeout(() => {
                 setBoxModal(prev => ({ ...prev, status: 'opened' }));
-                if (boxModal.reward === 0) {
+                
+                // BƯỚC 4: NGAY KHI MỞ QUÀ TRONG BẢNG, LẬT TUNG 8 RƯƠNG CÒN LẠI Ở NỀN ĐỂ DOẠ KHÁCH
+                if (pendingBoard) setChestBoard(pendingBoard);
+                
+                setBalance(boxModal.newBalance);
+                const playerName = (userProfile.name || 'Bạn').split(' ')[0];
+                const r = boxModal.reward;
+
+                if (r === -2) {
+                    if (!userProfile.ownedFrames.includes('light')) {
+                        setUserProfile(prev => ({ ...prev, ownedFrames: [...prev.ownedFrames, 'light'] }));
+                    }
+                    setSpinResultMsg('🎉 BÙM! Trúng Mảnh Khung Ánh Sáng siêu hiếm!');
+                } else if (r === 0) {
+                    setSpinResultMsg(`Trời ơi ${playerName}! Rương 500 nằm ngay bên kia kìa!`);
                     setTimeout(() => setShowRevengePopup(true), 1500);
+                } else if (r >= 500) {
+                    setSpinResultMsg(`🏆 ĐẠI CÁT ĐẠI LỢI! NỔ HŨ LỚN!`);
+                } else {
+                    setSpinResultMsg(`Thu về +${r} SWGT. Đập phát nữa nổ hũ to hơn nào!`);
                 }
+                
+                setIsSpinning(false);
+                setTimeout(() => setChestBoard(Array(9).fill({ isOpened: false, reward: null, isMine: false })), 3500);
             }, 1500); 
         };
 
@@ -1025,16 +1019,31 @@ function App() {
                 <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '24px', fontWeight: '900' }}>🗝️ Chọn Rương Bí Ẩn</h2>
                 <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 15px 0' }}>Mua 1 Búa lật rương: <b style={{color: theme.red}}>20 SWGT</b></p>
 
+                {/* THANH NĂNG LƯỢNG NỔ HŨ CÓ HIỆU ỨNG ANIMATION CHẠY VẰN */}
                 <div style={{ backgroundColor: '#000', borderRadius: '10px', padding: '12px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                         <span style={{ fontSize: '12px', color: theme.textLight, fontWeight: 'bold' }}>⚡ Năng lượng Nổ Hũ</span>
                         <span style={{ fontSize: '12px', color: theme.gold, fontWeight: 'bold' }}>{spinCount} / {MAX_PITY}</span>
                     </div>
-                    <div style={{ width: '100%', height: '10px', backgroundColor: '#222', borderRadius: '5px', overflow: 'hidden' }}>
-                        <div style={{ width: `${(spinCount / MAX_PITY) * 100}%`, height: '100%', backgroundColor: theme.gold, transition: 'width 0.3s' }}></div>
+                    <div style={{ width: '100%', height: '12px', backgroundColor: '#222', borderRadius: '6px', overflow: 'hidden' }}>
+                        <div style={{ 
+                            width: `${(spinCount / MAX_PITY) * 100}%`, height: '100%', 
+                            backgroundImage: 'linear-gradient(-45deg, rgba(255, 255, 255, .2) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, .2) 50%, rgba(255, 255, 255, .2) 75%, transparent 75%, transparent)',
+                            backgroundColor: theme.gold,
+                            backgroundSize: '20px 20px',
+                            animation: 'stripemove 1s linear infinite',
+                            transition: 'width 0.3s' 
+                        }}></div>
                     </div>
                     <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: theme.textDim, fontStyle: 'italic' }}>
                         Chỉ còn <b>{MAX_PITY - spinCount}</b> búa nữa <b style={{color: theme.green}}>CHẮC CHẮN</b> rớt Rương Kim Cương 500 SWGT.
+                    </p>
+                </div>
+
+                {/* DỜI DÒNG CHỮ HƯỚNG DẪN LÊN TRÊN GRID */}
+                <div style={{ minHeight: '40px', marginBottom: '10px', padding: '10px', backgroundColor: 'rgba(244, 208, 63, 0.1)', borderRadius: '10px' }}>
+                    <p style={{ color: (spinResultMsg || '').includes('500') || (spinResultMsg || '').includes('Trời ơi') ? theme.textLight : theme.green, fontSize: '14px', fontWeight: 'bold', margin: 0 }}>
+                        {spinResultMsg || '👇 Chạm vào 1 rương bất kỳ để mở!'}
                     </p>
                 </div>
 
@@ -1069,12 +1078,6 @@ function App() {
                             </div>
                         );
                     })}
-                </div>
-
-                <div style={{ minHeight: '40px', marginBottom: '20px', padding: '10px', backgroundColor: 'rgba(244, 208, 63, 0.1)', borderRadius: '10px' }}>
-                    <p style={{ color: (spinResultMsg || '').includes('500') || (spinResultMsg || '').includes('Trời ơi') ? theme.textLight : theme.green, fontSize: '14px', fontWeight: 'bold', margin: 0 }}>
-                        {spinResultMsg || '👇 Chạm vào 1 rương bất kỳ để mở!'}
-                    </p>
                 </div>
 
                 {/* MODAL MỞ HỘP */}
@@ -1217,6 +1220,7 @@ function App() {
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
                 @keyframes pulseRed { 0% { box-shadow: 0 0 10px #FF3B30; } 50% { box-shadow: 0 0 35px #FF3B30; } 100% { box-shadow: 0 0 10px #FF3B30; } }
                 @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-1deg); } 80% { transform: translate(-1px, -1px) rotate(1deg); } 90% { transform: translate(1px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
+                @keyframes stripemove { 0% { background-position: 0 0; } 100% { background-position: 50px 50px; } }
                 ::-webkit-scrollbar { height: 6px; }
                 ::-webkit-scrollbar-track { background: #1C1C1E; border-radius: 10px; }
                 ::-webkit-scrollbar-thumb { background: #F4D03F; border-radius: 10px; }
