@@ -462,12 +462,10 @@ function App() {
     };
 
     // ==================================================
-    // GIAO DIỆN HEADER (CÓ CHẤM ONLINE VÀ KHUNG VIỀN)
+    // GIAO DIỆN HEADER CÓ AVATAR & CHẤM XANH NỔI LÊN TRÊN
     // ==================================================
     const renderHeader = () => {
         const myFrameStyle = getFrameStyle(userProfile.activeFrame);
-        
-        // Avatar Mặc định cho User
         const getInitials = (f, l) => { return ((f ? f.charAt(0) : '') + (l ? l.charAt(0) : '')).toUpperCase().substring(0, 2) || 'U'; };
         const myInitials = getInitials(userProfile.name?.split(' ')[0], userProfile.name?.split(' ')[1]);
 
@@ -489,23 +487,23 @@ function App() {
                     
                     <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
                         
-                        <div style={{ 
-                            position: 'relative', width: '52px', height: '52px', borderRadius: '50%', padding: '2px', backgroundColor: theme.bg, 
-                            border: myFrameStyle.border, boxShadow: myFrameStyle.shadow, animation: myFrameStyle.animation, zIndex: 1, flexShrink: 0
-                        }}>
-                            {userProfile.photoUrl ? (
-                                <img src={userProfile.photoUrl} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-                            ) : (
-                                <div style={{ width: '100%', height: '100%', borderRadius: '50%', backgroundColor: theme.gold, color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 'bold' }}>{myInitials}</div>
-                            )}
+                        {/* Avatar được bọc lớp Khung Viền nằm bên ngoài để Box-Shadow tỏa ra */}
+                        <div style={{ position: 'relative', width: '52px', height: '52px', flexShrink: 0 }}>
+                            <div style={{ position: 'absolute', inset: -2, borderRadius: '50%', border: myFrameStyle.border, boxShadow: myFrameStyle.shadow, animation: myFrameStyle.animation, zIndex: 2, pointerEvents: 'none' }}></div>
+                            <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', backgroundColor: theme.cardBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', color: theme.gold }}>
+                                {userProfile.photoUrl ? (
+                                    <img src={userProfile.photoUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                ) : myInitials}
+                            </div>
+                            
+                            {/* CHẤM XANH ONLINE ĐÃ DỜI LÊN GÓC TRÊN CÙNG BÊN PHẢI ĐỂ TRÁNH BỊ ĐÈ */}
+                            <div style={{ position: 'absolute', top: '0px', right: '0px', width: '14px', height: '14px', backgroundColor: '#34C759', borderRadius: '50%', border: `2px solid ${theme.bg}`, zIndex: 15 }}></div>
+                            
+                            {/* THẺ QUÂN HÀM NẰM PHÍA DƯỚI */}
+                            <div style={{ position: 'absolute', bottom: '-10px', left: '50%', transform: 'translateX(-50%)', zIndex: 11, display: 'flex', alignItems: 'center', backgroundColor: '#000', padding: '2px 8px', borderRadius: '12px', border: `1px solid ${wreathColor}`, whiteSpace: 'nowrap' }}>
+                                <span style={{ color: wreathColor, fontSize: '10px', fontWeight: 'bold' }}>{vipLevel}</span>
+                            </div>
                         </div>
-                        
-                        <div style={{ position: 'absolute', bottom: '-10px', zIndex: 11, display: 'flex', alignItems: 'center', backgroundColor: '#000', padding: '2px 8px', borderRadius: '12px', border: `1px solid ${wreathColor}` }}>
-                            <span style={{ color: wreathColor, fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>{vipLevel}</span>
-                        </div>
-
-                        {/* ĐÃ FIX: CHẤM XANH ONLINE ĐẨY LÊN TRÊN CÙNG Z-INDEX CAO NHẤT */}
-                        <div style={{ position: 'absolute', bottom: '8px', right: '-4px', width: '14px', height: '14px', backgroundColor: '#34C759', borderRadius: '50%', border: `2px solid ${theme.bg}`, zIndex: 15 }}></div>
                     </div>
                 </div>
             </div>
@@ -513,7 +511,7 @@ function App() {
     };
 
     // ==================================================
-    // KHỐI RENDER: BẢNG XẾP HẠNG (THUẬT TOÁN TẠO AVATAR CHỮ)
+    // KHỐI BẢNG XẾP HẠNG - CÓ CHỮ, CÓ KHUNG VIỀN, CÓ RANK, ĐỦ MỌI CHỈ SỐ
     // ==================================================
     const renderWealthBoard = () => (
         <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
@@ -539,7 +537,6 @@ function App() {
                 let icon = "💸"; if (index === 0) icon = "👑"; else if (index === 1) icon = "💎"; else if (index === 2) icon = "🌟";
                 const isMe = user.firstName === (userProfile.name || '').split(' ')[0];
                 
-                // Thuật toán tạo ảnh Avatar Chữ cái (Tránh lỗi do UI-Avatar bị sập)
                 const photo = isMe && userProfile.photoUrl ? userProfile.photoUrl : (user.photoUrl || user.photo_url);
                 const getInitials = (f, l) => { return ((f ? f.charAt(0) : '') + (l ? l.charAt(0) : '')).toUpperCase().substring(0, 2) || 'U'; };
                 const initials = getInitials(user.firstName, user.lastName);
@@ -562,27 +559,27 @@ function App() {
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <span style={{ color: theme.textDim, fontWeight: 'bold', fontSize: '14px', minWidth: '24px', marginRight: '5px' }}>{index + 1}.</span>
                             
-                            {/* AVATAR CÓ BỌC KHUNG VIỀN ĐUA TOP */}
-                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '10px', overflow: 'hidden', flexShrink: 0, border: frameStyle.border, boxShadow: frameStyle.shadow, animation: frameStyle.animation, padding: '2px' }}>
-                                {photo ? (
-                                    <img src={photo} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
-                                ) : (
-                                    <div style={{ width: '100%', height: '100%', borderRadius: '50%', backgroundColor: initialBg, color: initialColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 'bold' }}>{initials}</div>
-                                )}
+                            {/* AVATAR CÓ BỌC KHUNG VIỀN ĐUA TOP CHUẨN K BỊ LẸM GÓC */}
+                            <div style={{ position: 'relative', width: '42px', height: '42px', flexShrink: 0, marginRight: '10px' }}>
+                                <div style={{ position: 'absolute', inset: -2, borderRadius: '50%', border: frameStyle.border, boxShadow: frameStyle.shadow, animation: frameStyle.animation, zIndex: 2, pointerEvents: 'none' }}></div>
+                                <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', backgroundColor: initialBg, color: initialColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 'bold' }}>
+                                    {photo ? (
+                                        <img src={photo} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                                    ) : initials}
+                                </div>
                             </div>
                             
                             <span style={{ fontSize: '20px', marginRight: '8px' }}>{icon}</span>
                             
-                            {/* KHÔI PHỤC HIỂN THỊ CẤP BẬC DƯỚI TÊN */}
+                            {/* KHÔI PHỤC HIỂN THỊ CẤP BẬC DƯỚI TÊN NHƯ YÊU CẦU */}
                             <div style={{display:'flex', flexDirection:'column', gap: '3px'}}>
-                                <span style={{ color: isMe ? theme.gold : theme.textLight, fontWeight: 'bold', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100px' }}>
+                                <span style={{ color: isMe ? theme.gold : theme.textLight, fontWeight: 'bold', fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100px' }}>
                                     {user.firstName} {user.lastName} {isMe && '(Bạn)'}
                                 </span>
-                                <span style={{ color: theme.blue, fontSize: '11px', fontWeight: 'bold' }}>{getMilitaryRank(user.displayCount || user.referralCount)}</span>
+                                <span style={{ color: theme.blue, fontSize: '11px', fontWeight: 'bold' }}>{getMilitaryRank(user.referralCount)}</span>
                             </div>
                         </div>
 
-                        {/* HIỂN THỊ ĐẦY ĐỦ CẢ SWGT VÀ SỐ NGƯỜI */}
                         <div style={{ color: theme.green, fontWeight: 'bold', fontSize: '15px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                             <span>{boardType === 'all' ? user.totalEarned : user.displayCount * 15} <span style={{ fontSize: '11px', color: theme.textDim, fontWeight: 'normal' }}>SWGT</span></span>
                             <span style={{fontSize: '11px', color: theme.gold}}>({user.displayCount || 0} người)</span>
@@ -593,9 +590,6 @@ function App() {
         </div>
     );
 
-    // ==================================================
-    // TRANG CHỦ
-    // ==================================================
     const renderHome = () => (
         <div style={{ padding: '0 20px 20px 20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', marginBottom: '20px' }}>
@@ -666,10 +660,9 @@ function App() {
                 </div>
             </div>
 
-            {/* BẢNG ĐẠI GIA */}
+            {/* BẢNG ĐẠI GIA ĐẦY ĐỦ TIÊU ĐỀ */}
             {renderWealthBoard()}
 
-            {/* CHÍNH SÁCH THANH KHOẢN */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}><span>⚖️</span> Chính Sách Thanh Khoản</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -759,9 +752,6 @@ function App() {
         </div>
     );
 
-    // ==================================================
-    // TAB THU NHẬP
-    // ==================================================
     const renderRewards = () => {
         let nextTarget = 3; let nextReward = "+10 SWGT";
         for (let m of MILESTONE_LIST) { if (referrals < m.req) { nextTarget = m.req; nextReward = `+${m.reward} SWGT`; break; } }
@@ -841,7 +831,7 @@ function App() {
 
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🤝 BẢNG VÀNG GIỚI THIỆU</h3>
                 
-                {/* HIỂN THỊ CHUNG BẢNG XẾP HẠNG NHƯ TAB TRANG CHỦ */}
+                {/* HIỂN THỊ CHUNG BẢNG XẾP HẠNG TẠI TAB PHẦN THƯỞNG */}
                 {renderWealthBoard()}
 
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>💎 KHO ĐẶC QUYỀN VIP</h3>
