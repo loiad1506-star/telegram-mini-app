@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 function App() {
     const [activeTab, setActiveTab] = useState('home');
@@ -53,26 +53,26 @@ function App() {
     const [lockDaysLimit, setLockDaysLimit] = useState(15);
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0 });
     const [isUnlocked, setIsUnlocked] = useState(false);
-
     const [boardType, setBoardType] = useState('weekly'); 
 
     // ==========================================
-    // STATE CHO KHU VỰC GAME 
+    // KHAI BÁO STATE CHO CẢ 2 GAME (GACHA & SURFER) Ở TOP LEVEL
     // ==========================================
-    const [gameTab, setGameTab] = useState('gacha'); // gacha | surfer
+    const [gameTab, setGameTab] = useState('gacha'); 
 
-    // State Gacha
+    // GACHA STATE
     const [isSpinning, setIsSpinning] = useState(false);
     const [chestBoard, setChestBoard] = useState(Array(9).fill({ isOpened: false, reward: null, isMine: false }));
+    const [pendingBoard, setPendingBoard] = useState(null); 
     const [spinResultMsg, setSpinResultMsg] = useState('');
     const [spinCount, setSpinCount] = useState(0); 
     const MAX_PITY = 30; 
     const [boxModal, setBoxModal] = useState({ show: false, type: '', label: '', reward: 0, status: 'closed', isFrame: false, newBalance: 0 });
     const [showRevengePopup, setShowRevengePopup] = useState(false);
 
-    // State Surfer Game
+    // SURFER GAME STATE
     const canvasRef = useRef(null);
-    const [gameState, setGameState] = useState('start'); // start, playing, gameover
+    const [gameState, setGameState] = useState('start'); 
     const [score, setScore] = useState(0);
     const [highScore, setHighScore] = useState(0);
     const gameRef = useRef({
@@ -113,6 +113,7 @@ function App() {
         return { border: frame.border, shadow: frame.shadow, animation: frame.animation || 'none' };
     };
 
+    // ĐÃ CẬP NHẬT CHÍNH XÁC SỐ SWGT SAU HALVING
     const MILESTONE_LIST = [
         { req: 3, reward: 10, key: 'milestone3', rank: 'Đại Úy 🎖️' },
         { req: 10, reward: 20, key: 'milestone10', rank: 'Thiếu Tá 🎖️' },
@@ -126,6 +127,103 @@ function App() {
     ];
 
     const STREAK_REWARDS = [0.5, 1.5, 3, 3.5, 5, 7, 9];
+
+    // ==========================================
+    // VÒNG LẶP MINIGAME SURFER (CHỈ CHẠY KHI MỞ TAB GAME)
+    // ==========================================
+    useEffect(() => {
+        if (activeTab !== 'game' || gameTab !== 'surfer' || gameState !== 'playing') return;
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        let isRunning = true;
+
+        const gameLoop = () => {
+            if (!isRunning) return;
+            const state = gameRef.current;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#1C1C1E'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            state.velocity += state.gravity;
+            state.playerY += state.velocity;
+            
+            if (state.playerY > canvas.height - 20 || state.playerY < 0) {
+                setGameState('gameover'); cancelAnimationFrame(state.animationId);
+                if (score > highScore) setHighScore(score);
+                return;
+            }
+
+            ctx.fillStyle = theme.blue; ctx.fillRect(50, state.playerY, 30, 20);
+            ctx.strokeStyle = theme.gold; ctx.lineWidth = 2; ctx.strokeRect(50, state.playerY, 30, 20);
+
+            state.frames++;
+            if (state.frames % 80 === 0) {
+                let h = Math.floor(Math.random() * (canvas.height / 2));
+                let isTop = Math.random() > 0.5;
+                state.obstacles.push({ x: canvas.width, y: isTop ? 0 : canvas.height - h, width: 30, height: h, isTop });
+            }
+            if (state.frames % 60 === 0) {
+                state.coins.push({ x: canvas.width + 50, y: Math.floor(Math.random() * (canvas.height - 40)) + 20, radius: 12, collected: false });
+            }
+
+            ctx.fillStyle = theme.red;
+            for (let i = 0; i < state.obstacles.length; i++) {
+                let obs = state.obstacles[i]; obs.x -= state.speed;
+                ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+                ctx.fillStyle = '#FF8A8A'; ctx.fillRect(obs.x + 13, obs.isTop ? obs.height : obs.y - 15, 4, 15); ctx.fillStyle = theme.red;
+                if (50 < obs.x + obs.width && 50 + 30 > obs.x && state.playerY < obs.y + obs.height && state.playerY + 20 > obs.y) {
+                    setGameState('gameover'); cancelAnimationFrame(state.animationId);
+                    if (score > highScore) setHighScore(score);
+                    return;
+                }
+            }
+
+            for (let i = 0; i < state.coins.length; i++) {
+                let coin = state.coins[i];
+                if (!coin.collected) {
+                    coin.x -= state.speed;
+                    ctx.beginPath(); ctx.arc(coin.x, coin.y, coin.radius, 0, Math.PI * 2); ctx.fillStyle = theme.gold; ctx.fill();
+                    ctx.strokeStyle = '#B8860B'; ctx.lineWidth = 2; ctx.stroke();
+                    ctx.fillStyle = '#000'; ctx.font = '10px Arial'; ctx.fillText('S', coin.x - 3, coin.y + 3);
+                    
+                    let distX = (50 + 15) - coin.x; let distY = (state.playerY + 10) - coin.y;
+                    let distance = Math.sqrt(distX * distX + distY * distY);
+                    if (distance < 15 + coin.radius) {
+                        coin.collected = true; setScore(prev => prev + 1);
+                        if (state.speed < 10) state.speed += 0.1; 
+                    }
+                }
+            }
+
+            state.obstacles = state.obstacles.filter(obs => obs.x + obs.width > 0);
+            state.coins = state.coins.filter(coin => coin.x + coin.radius > 0 && !coin.collected);
+            state.animationId = requestAnimationFrame(gameLoop);
+        };
+
+        gameLoop();
+        return () => { isRunning = false; cancelAnimationFrame(gameRef.current.animationId); };
+    }, [gameState, gameTab, activeTab, score, highScore, theme.blue, theme.gold, theme.red]);
+
+    // Các hàm Helper của Game Surfer
+    const jump = () => {
+        if (gameState === 'playing') gameRef.current.velocity = gameRef.current.jumpPower;
+        else if (gameState === 'start' || gameState === 'gameover') {
+            gameRef.current = { playerY: 150, velocity: 0, gravity: 0.6, jumpPower: -9, obstacles: [], coins: [], frames: 0, speed: 5, animationId: null };
+            setScore(0); setGameState('playing');
+        }
+    };
+
+    const handleClaimGameReward = () => {
+        if (score === 0) return alert("Bạn chưa ăn được đồng SWGT nào!");
+        const rewardEarned = Math.floor(score / 5); 
+        if (rewardEarned === 0) return alert(`Bạn ghi được ${score} điểm. Ráng đạt ít nhất 5 điểm để quy đổi SWGT nhé!`);
+        setBalance(prev => prev + rewardEarned);
+        alert(`🎉 Chúc mừng! Bạn đã quy đổi ${score} điểm thành +${rewardEarned} SWGT vào ví!`);
+        setScore(0);
+        setGameState('start');
+    };
 
     useEffect(() => {
         const generateFakeWinners = () => {
@@ -471,7 +569,7 @@ function App() {
     };
 
     // ==================================================
-    // GIAO DIỆN HEADER (CHẤM ONLINE NẰM TRÊN CÙNG)
+    // GIAO DIỆN HEADER CÓ VÒNG NGUYỆT QUẾ CHO TOP 10 VÀ CHẤM ONLINE Ở TOP-RIGHT
     // ==================================================
     const renderHeader = () => {
         const myFrameStyle = getFrameStyle(userProfile.activeFrame);
@@ -497,7 +595,7 @@ function App() {
                     <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
                         
                         <div style={{ position: 'relative', width: '52px', height: '52px', flexShrink: 0 }}>
-                            {/* VÒNG NGUYỆT QUẾ CHO TOP */}
+                            {/* VÒNG NGUYỆT QUẾ BAO BỌC BÊN NGOÀI CHO TOP 10 */}
                             <svg viewBox="-5 -5 110 110" style={{ position: 'absolute', width: '140%', height: '140%', top: '-20%', left: '-20%', zIndex: 10, pointerEvents: 'none' }}>
                                 <path d="M 50 90 C 15 90, 5 50, 20 20" fill="none" stroke={wreathColor} strokeWidth="2" />
                                 <path d="M 50 90 C 85 90, 95 50, 80 20" fill="none" stroke={wreathColor} strokeWidth="2" />
@@ -509,18 +607,18 @@ function App() {
                                 <path d="M 85 65 Q 70 55 75 70 Q 90 70 85 65" fill={wreathColor} />
                             </svg>
 
-                            {/* KHUNG VIỀN SHOP */}
-                            <div style={{ position: 'absolute', inset: -2, borderRadius: '50%', border: myFrameStyle.border, boxShadow: myFrameStyle.shadow, animation: myFrameStyle.animation, zIndex: 12, pointerEvents: 'none' }}></div>
+                            {/* KHUNG VIỀN TỪ SHOP NẰM Ở LỚP NGOÀI */}
+                            <div style={{ position: 'absolute', inset: -2, borderRadius: '50%', border: myFrameStyle.border, boxShadow: myFrameStyle.shadow, animation: myFrameStyle.animation, zIndex: 2, pointerEvents: 'none' }}></div>
                             
-                            {/* AVATAR */}
+                            {/* ẢNH AVATAR HOẶC CHỮ CÁI BÊN TRONG */}
                             <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', backgroundColor: theme.cardBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', color: theme.gold, position: 'relative', zIndex: 1 }}>
                                 {userProfile.photoUrl ? (
                                     <img src={userProfile.photoUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 ) : myInitials}
                             </div>
                             
-                            {/* CHẤM XANH LÁ ONLINE ĐÈ LÊN MỌI THỨ */}
-                            <div style={{ position: 'absolute', top: '0px', right: '-4px', width: '14px', height: '14px', backgroundColor: '#34C759', borderRadius: '50%', border: `2px solid ${theme.bg}`, zIndex: 99 }}></div>
+                            {/* CHẤM XANH ONLINE GÓC TRÊN CÙNG BÊN PHẢI (TOP-RIGHT), Z-INDEX CAO NHẤT */}
+                            <div style={{ position: 'absolute', top: '0px', right: '-4px', width: '14px', height: '14px', backgroundColor: '#34C759', borderRadius: '50%', border: `2px solid ${theme.bg}`, zIndex: 15 }}></div>
                             
                             {/* THẺ QUÂN HÀM */}
                             <div style={{ position: 'absolute', bottom: '-10px', left: '50%', transform: 'translateX(-50%)', zIndex: 11, display: 'flex', alignItems: 'center', backgroundColor: '#000', padding: '2px 8px', borderRadius: '12px', border: `1px solid ${wreathColor}`, whiteSpace: 'nowrap' }}>
@@ -534,7 +632,7 @@ function App() {
     };
 
     // ==================================================
-    // KHỐI RENDER: BẢNG XẾP HẠNG (KHÔNG DÙNG ẢNH AVATAR, CHỈ HIỆN CẤP BẬC)
+    // KHỐI RENDER: BẢNG XẾP HẠNG (CHỈ CHỮ, CÓ KHUNG VIỀN VÀ CẤP BẬC)
     // ==================================================
     const renderWealthBoard = () => (
         <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
@@ -559,14 +657,40 @@ function App() {
             {wealthBoard.slice(0, 10).map((user, index) => {
                 let icon = "💸"; if (index === 0) icon = "👑"; else if (index === 1) icon = "💎"; else if (index === 2) icon = "🌟";
                 const isMe = user.firstName === (userProfile.name || '').split(' ')[0];
+                
+                // THUẬT TOÁN AVATAR CHỮ CÁI CỰC MƯỢT
+                const getInitials = (f, l) => { return ((f ? f.charAt(0) : '') + (l ? l.charAt(0) : '')).toUpperCase().substring(0, 2) || 'U'; };
+                const initials = getInitials(user.firstName, user.lastName);
+                const initialBg = index === 0 ? '#F4D03F' : index === 1 ? '#C0C0C0' : index === 2 ? '#CD7F32' : '#333333';
+                const initialColor = index === 0 ? '#000' : '#FFF';
+
+                let frameStyle = { border: `2px solid ${theme.border}`, shadow: 'none', animation: 'none' };
+                if (isMe && userProfile.activeFrame !== 'none') {
+                    frameStyle = getFrameStyle(userProfile.activeFrame);
+                } else if (user.activeFrame && user.activeFrame !== 'none') {
+                    frameStyle = getFrameStyle(user.activeFrame);
+                } else {
+                    if (index === 0) frameStyle = getFrameStyle('gold');
+                    else if (index === 1) frameStyle = getFrameStyle('silver');
+                    else if (index === 2) frameStyle = getFrameStyle('bronze');
+                }
 
                 return (
                     <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: index < wealthBoard.length - 1 ? `1px solid ${theme.border}` : 'none', backgroundColor: isMe ? 'rgba(244, 208, 63, 0.1)' : 'transparent', borderRadius: '8px', paddingLeft: isMe ? '10px' : '0', paddingRight: isMe ? '10px' : '0' }}>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <span style={{ color: theme.textDim, fontWeight: 'bold', fontSize: '14px', minWidth: '24px', marginRight: '5px' }}>{index + 1}.</span>
                             
+                            {/* AVATAR BẰNG CHỮ (INITIALS) CÓ BỌC KHUNG VIỀN ĐUA TOP */}
+                            <div style={{ position: 'relative', width: '42px', height: '42px', flexShrink: 0, marginRight: '10px' }}>
+                                <div style={{ position: 'absolute', inset: -2, borderRadius: '50%', border: frameStyle.border, boxShadow: frameStyle.shadow, animation: frameStyle.animation, zIndex: 2, pointerEvents: 'none' }}></div>
+                                <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', backgroundColor: initialBg, color: initialColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: 'bold' }}>
+                                    {initials}
+                                </div>
+                            </div>
+                            
                             <span style={{ fontSize: '20px', marginRight: '8px' }}>{icon}</span>
                             
+                            {/* HIỂN THỊ TÊN VÀ CẤP BẬC */}
                             <div style={{display:'flex', flexDirection:'column', gap: '3px'}}>
                                 <span style={{ color: isMe ? theme.gold : theme.textLight, fontWeight: 'bold', fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100px' }}>
                                     {user.firstName} {user.lastName} {isMe && '(Bạn)'}
@@ -575,6 +699,7 @@ function App() {
                             </div>
                         </div>
 
+                        {/* HIỂN THỊ ĐẦY ĐỦ CẢ SWGT VÀ SỐ NGƯỜI */}
                         <div style={{ color: theme.green, fontWeight: 'bold', fontSize: '15px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                             <span>{boardType === 'all' ? user.totalEarned : user.displayCount * 15} <span style={{ fontSize: '11px', color: theme.textDim, fontWeight: 'normal' }}>SWGT</span></span>
                             <span style={{fontSize: '11px', color: theme.gold}}>({user.displayCount || 0} người)</span>
@@ -658,8 +783,10 @@ function App() {
                 </div>
             </div>
 
+            {/* BẢNG ĐẠI GIA ĐẦY ĐỦ TIÊU ĐỀ */}
             {renderWealthBoard()}
 
+            {/* VĂN BẢN CHÍNH SÁCH THANH KHOẢN ĐẦY ĐỦ */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}><span>⚖️</span> Chính Sách Thanh Khoản</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -682,6 +809,7 @@ function App() {
                 </div>
             </div>
 
+            {/* KHU VỰC NẠP KIẾN THỨC NẰM CUỐI */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🧠 Nạp Kiến Thức & Lan Tỏa</h2>
                 
@@ -847,363 +975,6 @@ function App() {
     };
 
     // ==================================================
-    // TAB: KHU VỰC GAME (GACHA + SURFER)
-    // ==================================================
-    const renderGameZone = () => {
-        // --- 1. CODE GAME GACHA (ĐẬP RƯƠNG) ---
-        const handlePickChest = (index) => {
-            if (balance < 20) return alert("⚠️ Bạn cần ít nhất 20 SWGT để mua Búa Đập Rương!");
-            if (isSpinning) return;
-
-            setIsSpinning(true);
-            setSpinResultMsg('');
-
-            fetch(`${BACKEND_URL}/api/spin-wheel`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) { processGachaBoard(index, data.reward, data.newBalance); } 
-                else { setIsSpinning(false); alert(data.message); }
-            })
-            .catch(err => {
-                console.error("Lỗi:", err);
-                let fallbackReward = Math.random() > 0.8 ? 5 : 0;
-                processGachaBoard(index, fallbackReward, balance - 20 + fallbackReward);
-            });
-        };
-
-        const processGachaBoard = (index, actualReward, newBalance) => {
-            setSpinCount(prev => prev >= MAX_PITY ? 0 : prev + 1);
-
-            let pool = [0, 0, 5, 5, 10, 20]; 
-            if (actualReward !== 500) pool.push(500); else pool.push(0);
-            
-            let finalRewardVisual = actualReward;
-            if (actualReward === 0 && Math.random() < 0.15) finalRewardVisual = -2; // Tráo Mảnh Khung
-
-            if (finalRewardVisual !== -2) pool.push(-2); else pool.push(50);
-            pool = pool.sort(() => Math.random() - 0.5);
-
-            let newBoard = Array(9).fill(null);
-            let poolIndex = 0;
-            for(let i=0; i<9; i++) {
-                if (i === index) {
-                    newBoard[i] = { isOpened: true, reward: finalRewardVisual, isMine: true };
-                } else {
-                    newBoard[i] = { isOpened: false, reward: pool[poolIndex], isMine: false };
-                    poolIndex++;
-                }
-            }
-
-            // BƯỚC 1: CHỈ MỞ RƯƠNG CỦA KHÁCH
-            setChestBoard(newBoard);
-
-            // BƯỚC 2: LƯU BỘ BÀI VÀO BỘ NHỚ TẠM THỜI (Chưa mở vội)
-            const finalRevealedBoard = newBoard.map(c => ({ ...c, isOpened: true }));
-            setPendingBoard(finalRevealedBoard);
-
-            // BƯỚC 3: HIỆN THÔNG BÁO "BẤM ĐỂ MỞ KHÓA"
-            setTimeout(() => {
-                let boxType = ''; let boxLabel = '';
-                if (finalRewardVisual === -2) { boxType = 'frame'; boxLabel = '✨ RƯƠNG HUYỀN BÍ'; }
-                else if (finalRewardVisual === 0) { boxType = 'coal'; boxLabel = '💣 THAN ĐÁ (XỊT)'; }
-                else if (finalRewardVisual <= 10) { boxType = 'wood'; boxLabel = '📦 RƯƠNG GỖ'; }
-                else if (finalRewardVisual <= 50) { boxType = 'silver'; boxLabel = '🎁 RƯƠNG BẠC'; }
-                else { boxType = 'gold'; boxLabel = '💎 RƯƠNG KIM CƯƠNG'; }
-
-                setBoxModal({ show: true, type: boxType, label: boxLabel, reward: finalRewardVisual, status: 'closed', isFrame: finalRewardVisual === -2, newBalance: newBalance });
-            }, 800); 
-        };
-
-        const handleOpenBox = () => {
-            setBoxModal(prev => ({ ...prev, status: 'opening' }));
-            
-            setTimeout(() => {
-                setBoxModal(prev => ({ ...prev, status: 'opened' }));
-                
-                // BƯỚC 4: KHI KHÁCH VỪA BẤM NÚT, LẬT ĐỒNG LOẠT 8 RƯƠNG CÒN LẠI DƯỚI NỀN ĐỂ DOẠ!
-                if (pendingBoard) setChestBoard(pendingBoard);
-                
-                setBalance(boxModal.newBalance);
-                const playerName = (userProfile.name || 'Bạn').split(' ')[0];
-                const r = boxModal.reward;
-
-                if (r === -2) {
-                    if (!userProfile.ownedFrames.includes('light')) {
-                        setUserProfile(prev => ({ ...prev, ownedFrames: [...prev.ownedFrames, 'light'] }));
-                    }
-                    setSpinResultMsg('🎉 BÙM! Trúng Mảnh Khung Ánh Sáng siêu hiếm!');
-                } else if (r === 0) {
-                    setSpinResultMsg(`Trời ơi ${playerName}! Rương 500 nằm ngay bên kia kìa!`);
-                    setTimeout(() => setShowRevengePopup(true), 1500);
-                } else if (r >= 500) {
-                    setSpinResultMsg(`🏆 ĐẠI CÁT ĐẠI LỢI! NỔ HŨ LỚN!`);
-                } else {
-                    setSpinResultMsg(`Thu về +${r} SWGT. Đập phát nữa nổ hũ to hơn nào!`);
-                }
-                
-                setIsSpinning(false);
-            }, 1500); 
-        };
-
-        const closeBoxModal = () => {
-            setBoxModal({ ...boxModal, show: false });
-            // Trả bàn cờ về úp sau khi khách đóng Modal
-            setTimeout(() => setChestBoard(Array(9).fill({ isOpened: false, reward: null, isMine: false })), 500);
-        };
-
-        // --- 2. CODE GAME SURFER (CHẠY VÔ TẬN) ---
-        const handleClaimGameReward = () => {
-            if (score === 0) return alert("Bạn chưa ăn được đồng SWGT nào!");
-            const rewardEarned = Math.floor(score / 5); 
-            if (rewardEarned === 0) return alert(`Bạn ghi được ${score} điểm. Ráng đạt ít nhất 5 điểm để quy đổi SWGT nhé!`);
-            setBalance(prev => prev + rewardEarned);
-            alert(`🎉 Chúc mừng! Bạn đã quy đổi ${score} điểm thành +${rewardEarned} SWGT vào ví!`);
-            setScore(0);
-            setGameState('start');
-        };
-
-        const jump = () => {
-            if (gameState === 'playing') gameRef.current.velocity = gameRef.current.jumpPower;
-            else if (gameState === 'start' || gameState === 'gameover') {
-                gameRef.current = { playerY: 150, velocity: 0, gravity: 0.6, jumpPower: -9, obstacles: [], coins: [], frames: 0, speed: 5, animationId: null };
-                setScore(0); setGameState('playing');
-            }
-        };
-
-        useEffect(() => {
-            if (gameState !== 'playing' || gameTab !== 'surfer') return;
-            const canvas = canvasRef.current;
-            const ctx = canvas.getContext('2d');
-            let isRunning = true;
-
-            const gameLoop = () => {
-                if (!isRunning) return;
-                const state = gameRef.current;
-                
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = '#1C1C1E'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                state.velocity += state.gravity;
-                state.playerY += state.velocity;
-                
-                if (state.playerY > canvas.height - 20 || state.playerY < 0) {
-                    setGameState('gameover'); cancelAnimationFrame(state.animationId);
-                    if (score > highScore) setHighScore(score);
-                    return;
-                }
-
-                ctx.fillStyle = theme.blue; ctx.fillRect(50, state.playerY, 30, 20);
-                ctx.strokeStyle = theme.gold; ctx.lineWidth = 2; ctx.strokeRect(50, state.playerY, 30, 20);
-
-                state.frames++;
-                if (state.frames % 80 === 0) {
-                    let h = Math.floor(Math.random() * (canvas.height / 2));
-                    let isTop = Math.random() > 0.5;
-                    state.obstacles.push({ x: canvas.width, y: isTop ? 0 : canvas.height - h, width: 30, height: h, isTop });
-                }
-                if (state.frames % 60 === 0) {
-                    state.coins.push({ x: canvas.width + 50, y: Math.floor(Math.random() * (canvas.height - 40)) + 20, radius: 12, collected: false });
-                }
-
-                ctx.fillStyle = theme.red;
-                for (let i = 0; i < state.obstacles.length; i++) {
-                    let obs = state.obstacles[i]; obs.x -= state.speed;
-                    ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
-                    ctx.fillStyle = '#FF8A8A'; ctx.fillRect(obs.x + 13, obs.isTop ? obs.height : obs.y - 15, 4, 15); ctx.fillStyle = theme.red;
-                    if (50 < obs.x + obs.width && 50 + 30 > obs.x && state.playerY < obs.y + obs.height && state.playerY + 20 > obs.y) {
-                        setGameState('gameover'); cancelAnimationFrame(state.animationId);
-                        if (score > highScore) setHighScore(score);
-                        return;
-                    }
-                }
-
-                for (let i = 0; i < state.coins.length; i++) {
-                    let coin = state.coins[i];
-                    if (!coin.collected) {
-                        coin.x -= state.speed;
-                        ctx.beginPath(); ctx.arc(coin.x, coin.y, coin.radius, 0, Math.PI * 2); ctx.fillStyle = theme.gold; ctx.fill();
-                        ctx.strokeStyle = '#B8860B'; ctx.lineWidth = 2; ctx.stroke();
-                        ctx.fillStyle = '#000'; ctx.font = '10px Arial'; ctx.fillText('S', coin.x - 3, coin.y + 3);
-                        
-                        let distX = (50 + 15) - coin.x; let distY = (state.playerY + 10) - coin.y;
-                        let distance = Math.sqrt(distX * distX + distY * distY);
-                        if (distance < 15 + coin.radius) {
-                            coin.collected = true; setScore(prev => prev + 1);
-                            if (state.speed < 10) state.speed += 0.1; 
-                        }
-                    }
-                }
-
-                state.obstacles = state.obstacles.filter(obs => obs.x + obs.width > 0);
-                state.coins = state.coins.filter(coin => coin.x + coin.radius > 0 && !coin.collected);
-                state.animationId = requestAnimationFrame(gameLoop);
-            };
-
-            gameLoop();
-            return () => { isRunning = false; cancelAnimationFrame(gameRef.current.animationId); };
-        }, [gameState, gameTab]);
-
-        return (
-            <div style={{ padding: '0 20px 20px 20px', paddingBottom: '100px' }}>
-                {/* THANH MENU CHỌN GAME */}
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                    <button onClick={() => setGameTab('gacha')} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: `1px solid ${gameTab === 'gacha' ? theme.gold : theme.border}`, backgroundColor: gameTab === 'gacha' ? 'rgba(244, 208, 63, 0.1)' : '#000', color: gameTab === 'gacha' ? theme.gold : theme.textDim, fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', transition: 'all 0.3s' }}>
-                        🎁 Đập Rương
-                    </button>
-                    <button onClick={() => setGameTab('surfer')} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: `1px solid ${gameTab === 'surfer' ? theme.blue : theme.border}`, backgroundColor: gameTab === 'surfer' ? 'rgba(94, 146, 243, 0.1)' : '#000', color: gameTab === 'surfer' ? theme.blue : theme.textDim, fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', transition: 'all 0.3s' }}>
-                        🚀 Lướt Sóng
-                    </button>
-                </div>
-
-                {/* GAME 1: GACHA RƯƠNG MÙ */}
-                {gameTab === 'gacha' && (
-                    <div style={{ textAlign: 'center' }}>
-                        <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '24px', fontWeight: '900' }}>🗝️ Chọn Rương Bí Ẩn</h2>
-                        <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 15px 0' }}>Mua 1 Búa lật rương: <b style={{color: theme.red}}>20 SWGT</b></p>
-
-                        <div style={{ backgroundColor: '#000', borderRadius: '10px', padding: '12px', marginBottom: '15px', border: `1px solid ${theme.border}` }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                <span style={{ fontSize: '12px', color: theme.textLight, fontWeight: 'bold' }}>⚡ Năng lượng Nổ Hũ</span>
-                                <span style={{ fontSize: '12px', color: theme.gold, fontWeight: 'bold' }}>{spinCount} / {MAX_PITY}</span>
-                            </div>
-                            <div style={{ width: '100%', height: '12px', backgroundColor: '#222', borderRadius: '6px', overflow: 'hidden' }}>
-                                <div style={{ 
-                                    width: `${(spinCount / MAX_PITY) * 100}%`, height: '100%', 
-                                    backgroundImage: 'linear-gradient(-45deg, rgba(255, 255, 255, .2) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, .2) 50%, rgba(255, 255, 255, .2) 75%, transparent 75%, transparent)',
-                                    backgroundColor: theme.gold, backgroundSize: '20px 20px', animation: 'stripemove 1s linear infinite', transition: 'width 0.3s' 
-                                }}></div>
-                            </div>
-                            <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: theme.textDim, fontStyle: 'italic' }}>Chỉ còn <b>{MAX_PITY - spinCount}</b> búa nữa <b style={{color: theme.green}}>CHẮC CHẮN</b> rớt Rương 500 SWGT.</p>
-                        </div>
-
-                        <div style={{ minHeight: '40px', marginBottom: '20px', padding: '10px', backgroundColor: 'rgba(244, 208, 63, 0.1)', borderRadius: '10px' }}>
-                            <p style={{ color: (spinResultMsg || '').includes('500') || (spinResultMsg || '').includes('Trời ơi') ? theme.textLight : theme.green, fontSize: '14px', fontWeight: 'bold', margin: 0 }}>
-                                {spinResultMsg || '👇 Chạm vào 1 rương bất kỳ để mở!'}
-                            </p>
-                        </div>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', maxWidth: '320px', margin: '0 auto', marginBottom: '20px' }}>
-                            {chestBoard.map((chest, i) => {
-                                let content = '📦'; let textColor = '#fff'; let bgItem = theme.gold;
-                                if (chest.isOpened) {
-                                    bgItem = '#1A1A1A';
-                                    if (chest.reward === 500) { content = '💎 500'; textColor = theme.gold; }
-                                    else if (chest.reward === -2) { content = '🧩 Khung'; textColor = '#00FFFF'; }
-                                    else if (chest.reward > 0) { content = `💰 +${chest.reward}`; textColor = theme.green; }
-                                    else { content = '💣 Xịt'; textColor = theme.red; }
-                                }
-                                return (
-                                    <div key={i} onClick={() => !chest.isOpened && handlePickChest(i)} style={{ height: '90px', backgroundColor: bgItem, borderRadius: '15px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontSize: chest.isOpened ? '16px' : '40px', fontWeight: '900', color: textColor, cursor: isSpinning ? 'not-allowed' : 'pointer', border: chest.isMine ? `3px solid ${theme.green}` : `2px solid ${chest.isOpened ? '#333' : '#b49010'}`, boxShadow: chest.isMine ? '0 0 15px rgba(52, 199, 89, 0.6)' : (chest.isOpened ? 'none' : '0 4px 0 #b49010'), transition: 'all 0.3s ease', opacity: chest.isOpened && !chest.isMine ? 0.6 : 1 }}>
-                                        {content}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
-
-                {/* GAME 2: LƯỚT SÓNG uST */}
-                {gameTab === 'surfer' && (
-                    <div style={{ textAlign: 'center' }}>
-                        <h2 style={{ color: theme.blue, margin: '0 0 5px 0', fontSize: '24px', fontWeight: '900' }}>🚀 Lướt Sóng uST</h2>
-                        <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 15px 0' }}>Né Nến Đỏ - Gom SWGT Vàng</p>
-
-                        <div onClick={jump} style={{ position: 'relative', width: '100%', height: '350px', backgroundColor: '#1C1C1E', borderRadius: '15px', overflow: 'hidden', border: `2px solid ${theme.border}`, boxShadow: `0 0 15px rgba(94, 146, 243, 0.2)` }}>
-                            <canvas ref={canvasRef} width={350} height={350} style={{ display: 'block', width: '100%', height: '100%' }} />
-
-                            {gameState === 'start' && (
-                                <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                                    <div style={{ fontSize: '40px', marginBottom: '10px', animation: 'fadeIn 1s infinite alternate' }}>👆</div>
-                                    <h3 style={{ color: '#fff', fontSize: '20px', fontWeight: 'bold', margin: '0 0 10px 0' }}>Chạm để Bay</h3>
-                                    <p style={{ color: theme.gold, fontSize: '14px', margin: 0 }}>Kỷ lục của bạn: {highScore}</p>
-                                </div>
-                            )}
-
-                            {gameState === 'gameover' && (
-                                <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(255, 59, 48, 0.9)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center' }}>
-                                    <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: '900', margin: '0 0 5px 0' }}>BỊ ĐU ĐỈNH!</h2>
-                                    <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '15px', margin: '0 0 20px 0' }}>Tàu uST của bạn đã đâm vào Nến đỏ.</p>
-                                    <div style={{ backgroundColor: '#000', padding: '15px 30px', borderRadius: '15px', marginBottom: '20px' }}>
-                                        <p style={{ margin: '0 0 5px 0', color: theme.textDim, fontSize: '12px' }}>Điểm lần này</p>
-                                        <h1 style={{ margin: 0, color: theme.gold, fontSize: '36px' }}>{score}</h1>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
-                                        <button onClick={jump} style={{ flex: 1, padding: '12px', borderRadius: '10px', backgroundColor: '#333', color: '#fff', border: 'none', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}>🔄 Chơi Lại</button>
-                                        {score >= 5 && (
-                                            <button onClick={handleClaimGameReward} style={{ flex: 1, padding: '12px', borderRadius: '10px', backgroundColor: theme.gold, color: '#000', border: 'none', fontWeight: '900', fontSize: '14px', cursor: 'pointer' }}>💰 Rút SWGT</button>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-
-                            {gameState === 'playing' && (
-                                <div style={{ position: 'absolute', top: '15px', right: '15px', fontSize: '24px', fontWeight: '900', color: theme.gold, textShadow: '2px 2px 4px #000' }}>
-                                    {score}
-                                </div>
-                            )}
-                        </div>
-
-                        <div style={{ marginTop: '20px', backgroundColor: 'rgba(94, 146, 243, 0.1)', padding: '15px', borderRadius: '10px', border: `1px dashed ${theme.blue}` }}>
-                            <p style={{ margin: 0, color: theme.textLight, fontSize: '13px', lineHeight: '1.6' }}>
-                                <span style={{color: theme.blue, fontWeight: 'bold'}}>🎮 Hướng dẫn:</span><br/>
-                                Chạm vào màn hình để đẩy tàu uST bay lên. Né các cây nến đỏ lao tới và nhặt tiền vàng. <br/>
-                                <b>Tỉ lệ quy đổi:</b> 5 điểm Game = 1 SWGT thực tế.
-                            </p>
-                        </div>
-                    </div>
-                )}
-
-                {/* MODAL MỞ HỘP GACHA CHUNG (NẰM DƯỚI CÙNG ĐỂ KHÔNG BỊ LỖI RENDER) */}
-                {boxModal.show && (
-                    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9998, padding: '20px' }}>
-                        <div style={{ backgroundColor: theme.cardBg, border: `2px solid ${boxModal.type === 'gold' ? theme.gold : boxModal.type === 'frame' ? '#00FFFF' : theme.border}`, borderRadius: '20px', padding: '30px 20px', textAlign: 'center', width: '100%', maxWidth: '350px' }}>
-                            {boxModal.status === 'closed' && (
-                                <>
-                                    <h2 style={{ color: theme.textLight, margin: '0 0 10px 0', fontSize: '18px' }}>BẠN VỪA CÂU ĐƯỢC</h2>
-                                    <h1 style={{ color: boxModal.type === 'gold' ? theme.gold : boxModal.type === 'frame' ? '#00FFFF' : theme.blue, margin: '0 0 20px 0', fontSize: '24px', fontWeight: '900' }}>{boxModal.label}</h1>
-                                    <div style={{ fontSize: '80px', marginBottom: '20px' }}>{boxModal.type === 'coal' ? '💣' : boxModal.type === 'gold' ? '💎' : boxModal.type === 'frame' ? '🧩' : '📦'}</div>
-                                    <button onClick={handleOpenBox} style={{ width: '100%', padding: '15px', borderRadius: '10px', backgroundColor: theme.green, color: '#fff', border: 'none', fontWeight: '900', fontSize: '16px', cursor: 'pointer', animation: 'pulseRed 1.5s infinite' }}>BẤM ĐỂ MỞ KHÓA</button>
-                                </>
-                            )}
-                            {boxModal.status === 'opening' && (
-                                <div>
-                                    <div style={{ fontSize: '80px', animation: 'shake 0.5s infinite' }}>{boxModal.type === 'coal' ? '💣' : boxModal.type === 'gold' ? '💎' : boxModal.type === 'frame' ? '🧩' : '📦'}</div>
-                                    <p style={{ color: theme.textDim, fontWeight: 'bold', marginTop: '20px' }}>Đang giải mã từ trường...</p>
-                                </div>
-                            )}
-                            {boxModal.status === 'opened' && (
-                                <>
-                                    {boxModal.isFrame ? (
-                                        <>
-                                            <h2 style={{ color: '#00FFFF', fontSize: '22px', margin: '0 0 10px 0', fontWeight: '900' }}>NHẬN: KHUNG ÁNH SÁNG!</h2>
-                                            <div style={{ width: '60px', height: '60px', borderRadius: '50%', margin: '0 auto 20px auto', border: getFrameStyle('light').border, boxShadow: getFrameStyle('light').shadow, padding: '2px', backgroundColor: '#333' }}>
-                                                <img src={userProfile.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.name || 'U')}&background=F4D03F&color=000&bold=true`} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
-                                            </div>
-                                            <p style={{ color: theme.textDim, fontSize: '14px', marginBottom: '25px' }}>Siêu hiếm! Hãy vào Cửa hàng để trang bị ngay.</p>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <h2 style={{ color: boxModal.reward > 0 ? theme.green : theme.red, fontSize: '28px', margin: '0 0 10px 0', fontWeight: '900' }}>
-                                                {boxModal.reward > 0 ? `+${boxModal.reward} SWGT` : 'TRẮNG TAY!'}
-                                            </h2>
-                                            <p style={{ color: theme.textDim, fontSize: '14px', marginBottom: '25px' }}>
-                                                {boxModal.reward >= 500 ? 'ĐẠI CÁT ĐẠI LỢI! NỔ HŨ TRÚNG MÁNH LỚN!' : boxModal.reward > 0 ? 'Có lộc là vui rồi! Đập thêm rương xịn hơn nào.' : 'Trượt sát nút ô 500. Cay thật! Đập lại ngay!'}
-                                            </p>
-                                        </>
-                                    )}
-                                    <button onClick={closeBoxModal} style={{ width: '100%', padding: '14px', borderRadius: '10px', backgroundColor: '#333', color: '#fff', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>Đóng</button>
-                                </>
-                            )}
-                        </div>
-                    </div>
-                )}
-            </div>
-        );
-    };
-
-    // ==================================================
     // CỬA HÀNG KHUNG VIỀN AVATAR (SHOP)
     // ==================================================
     const renderShop = () => (
@@ -1256,6 +1027,288 @@ function App() {
             </div>
         </div>
     );
+
+    // ==================================================
+    // GIẢI TRÍ: TỔ HỢP TRÒ CHƠI (GACHA + SURFER)
+    // ==================================================
+    const renderGameZone = () => {
+
+        const handlePickChest = (index) => {
+            if (balance < 20) return alert("⚠️ Bạn cần ít nhất 20 SWGT để mua Búa Đập Rương!");
+            if (isSpinning) return;
+
+            setIsSpinning(true);
+            setSpinResultMsg('');
+
+            fetch(`${BACKEND_URL}/api/spin-wheel`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    processGachaBoard(index, data.reward, data.newBalance);
+                } else {
+                    setIsSpinning(false);
+                    alert(data.message);
+                }
+            })
+            .catch(err => {
+                console.error("Lỗi:", err);
+                let fallbackReward = Math.random() > 0.8 ? 5 : 0;
+                processGachaBoard(index, fallbackReward, balance - 20 + fallbackReward);
+            });
+        };
+
+        const processGachaBoard = (index, actualReward, newBalance) => {
+            setSpinCount(prev => prev >= MAX_PITY ? 0 : prev + 1);
+
+            let pool = [0, 0, 5, 5, 10, 20]; 
+            if (actualReward !== 500) pool.push(500); else pool.push(0);
+            
+            let finalRewardVisual = actualReward;
+            if (actualReward === 0 && Math.random() < 0.15) finalRewardVisual = -2;
+
+            if (finalRewardVisual !== -2) pool.push(-2); else pool.push(50);
+            pool = pool.sort(() => Math.random() - 0.5);
+
+            let newBoard = Array(9).fill(null);
+            let poolIndex = 0;
+            for(let i=0; i<9; i++) {
+                if (i === index) {
+                    newBoard[i] = { isOpened: true, reward: finalRewardVisual, isMine: true };
+                } else {
+                    newBoard[i] = { isOpened: false, reward: pool[poolIndex], isMine: false };
+                    poolIndex++;
+                }
+            }
+
+            // MỞ RƯƠNG CỦA KHÁCH
+            setChestBoard(newBoard);
+
+            // LƯU CÁC RƯƠNG CÒN LẠI VÀO BỘ NHỚ TẠM
+            const finalRevealedBoard = newBoard.map(c => ({ ...c, isOpened: true }));
+            setPendingBoard(finalRevealedBoard);
+
+            // BẬT BẢNG YÊU CẦU BẤM MỞ KHÓA
+            setTimeout(() => {
+                let boxType = ''; let boxLabel = '';
+                if (finalRewardVisual === -2) { boxType = 'frame'; boxLabel = '✨ RƯƠNG HUYỀN BÍ'; }
+                else if (finalRewardVisual === 0) { boxType = 'coal'; boxLabel = '💣 THAN ĐÁ (XỊT)'; }
+                else if (finalRewardVisual <= 10) { boxType = 'wood'; boxLabel = '📦 RƯƠNG GỖ'; }
+                else if (finalRewardVisual <= 50) { boxType = 'silver'; boxLabel = '🎁 RƯƠNG BẠC'; }
+                else { boxType = 'gold'; boxLabel = '💎 RƯƠNG KIM CƯƠNG'; }
+
+                setBoxModal({ show: true, type: boxType, label: boxLabel, reward: finalRewardVisual, status: 'closed', isFrame: finalRewardVisual === -2, newBalance: newBalance });
+            }, 800); 
+        };
+
+        const handleOpenBox = () => {
+            setBoxModal(prev => ({ ...prev, status: 'opening' }));
+            
+            setTimeout(() => {
+                setBoxModal(prev => ({ ...prev, status: 'opened' }));
+                
+                // LẬT ĐỒNG LOẠT 8 RƯƠNG CÒN LẠI Ở NỀN
+                if (pendingBoard) setChestBoard(pendingBoard);
+                
+                setBalance(boxModal.newBalance);
+                const playerName = (userProfile.name || 'Bạn').split(' ')[0];
+                const r = boxModal.reward;
+
+                if (r === -2) {
+                    if (!userProfile.ownedFrames.includes('light')) {
+                        setUserProfile(prev => ({ ...prev, ownedFrames: [...prev.ownedFrames, 'light'] }));
+                    }
+                    setSpinResultMsg('🎉 BÙM! Trúng Mảnh Khung Ánh Sáng siêu hiếm!');
+                } else if (r === 0) {
+                    setSpinResultMsg(`Trời ơi ${playerName}! Rương 500 nằm ngay bên kia kìa!`);
+                    setTimeout(() => setShowRevengePopup(true), 1500);
+                } else if (r >= 500) {
+                    setSpinResultMsg(`🏆 ĐẠI CÁT ĐẠI LỢI! NỔ HŨ LỚN!`);
+                } else {
+                    setSpinResultMsg(`Thu về +${r} SWGT. Đập phát nữa nổ hũ to hơn nào!`);
+                }
+                
+                setIsSpinning(false);
+            }, 1500); 
+        };
+
+        const closeBoxModal = () => {
+            setBoxModal({ ...boxModal, show: false });
+            setTimeout(() => setChestBoard(Array(9).fill({ isOpened: false, reward: null, isMine: false })), 500);
+        };
+
+        const handleClaimGameReward = () => {
+            if (score === 0) return alert("Bạn chưa ăn được đồng SWGT nào!");
+            const rewardEarned = Math.floor(score / 5); 
+            if (rewardEarned === 0) return alert(`Bạn ghi được ${score} điểm. Ráng đạt ít nhất 5 điểm để quy đổi SWGT nhé!`);
+            setBalance(prev => prev + rewardEarned);
+            alert(`🎉 Chúc mừng! Bạn đã quy đổi ${score} điểm thành +${rewardEarned} SWGT vào ví!`);
+            setScore(0);
+            setGameState('start');
+        };
+
+        const jump = () => {
+            if (gameState === 'playing') gameRef.current.velocity = gameRef.current.jumpPower;
+            else if (gameState === 'start' || gameState === 'gameover') {
+                gameRef.current = { playerY: 150, velocity: 0, gravity: 0.6, jumpPower: -9, obstacles: [], coins: [], frames: 0, speed: 5, animationId: null };
+                setScore(0); setGameState('playing');
+            }
+        };
+
+        return (
+            <div style={{ padding: '0 20px 20px 20px', paddingBottom: '100px' }}>
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                    <button onClick={() => setGameTab('gacha')} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: `1px solid ${gameTab === 'gacha' ? theme.gold : theme.border}`, backgroundColor: gameTab === 'gacha' ? 'rgba(244, 208, 63, 0.1)' : '#000', color: gameTab === 'gacha' ? theme.gold : theme.textDim, fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', transition: 'all 0.3s' }}>
+                        🎁 Đập Rương
+                    </button>
+                    <button onClick={() => setGameTab('surfer')} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: `1px solid ${gameTab === 'surfer' ? theme.blue : theme.border}`, backgroundColor: gameTab === 'surfer' ? 'rgba(94, 146, 243, 0.1)' : '#000', color: gameTab === 'surfer' ? theme.blue : theme.textDim, fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', transition: 'all 0.3s' }}>
+                        🚀 Lướt Sóng
+                    </button>
+                </div>
+
+                {gameTab === 'gacha' && (
+                    <div style={{ textAlign: 'center' }}>
+                        <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '24px', fontWeight: '900' }}>🗝️ Chọn Rương Bí Ẩn</h2>
+                        <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 15px 0' }}>Mua 1 Búa lật rương: <b style={{color: theme.red}}>20 SWGT</b></p>
+
+                        <div style={{ backgroundColor: '#000', borderRadius: '10px', padding: '12px', marginBottom: '15px', border: `1px solid ${theme.border}` }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                <span style={{ fontSize: '12px', color: theme.textLight, fontWeight: 'bold' }}>⚡ Năng lượng Nổ Hũ</span>
+                                <span style={{ fontSize: '12px', color: theme.gold, fontWeight: 'bold' }}>{spinCount} / {MAX_PITY}</span>
+                            </div>
+                            <div style={{ width: '100%', height: '12px', backgroundColor: '#222', borderRadius: '6px', overflow: 'hidden' }}>
+                                <div style={{ 
+                                    width: `${(spinCount / MAX_PITY) * 100}%`, height: '100%', 
+                                    backgroundImage: 'linear-gradient(-45deg, rgba(255, 255, 255, .2) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, .2) 50%, rgba(255, 255, 255, .2) 75%, transparent 75%, transparent)',
+                                    backgroundColor: theme.gold, backgroundSize: '20px 20px', animation: 'stripemove 1s linear infinite', transition: 'width 0.3s' 
+                                }}></div>
+                            </div>
+                            <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: theme.textDim, fontStyle: 'italic' }}>Chỉ còn <b>{MAX_PITY - spinCount}</b> búa nữa <b style={{color: theme.green}}>CHẮC CHẮN</b> rớt Rương 500 SWGT.</p>
+                        </div>
+
+                        <div style={{ minHeight: '40px', marginBottom: '15px', padding: '10px', backgroundColor: 'rgba(244, 208, 63, 0.1)', borderRadius: '10px' }}>
+                            <p style={{ color: (spinResultMsg || '').includes('500') || (spinResultMsg || '').includes('Trời ơi') ? theme.textLight : theme.green, fontSize: '14px', fontWeight: 'bold', margin: 0 }}>
+                                {spinResultMsg || '👇 Chạm vào 1 rương bất kỳ để mở!'}
+                            </p>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', maxWidth: '320px', margin: '0 auto', marginBottom: '20px' }}>
+                            {chestBoard.map((chest, i) => {
+                                let content = '📦'; let textColor = '#fff'; let bgItem = theme.gold;
+                                if (chest.isOpened) {
+                                    bgItem = '#1A1A1A';
+                                    if (chest.reward === 500) { content = '💎 500'; textColor = theme.gold; }
+                                    else if (chest.reward === -2) { content = '🧩 Khung'; textColor = '#00FFFF'; }
+                                    else if (chest.reward > 0) { content = `💰 +${chest.reward}`; textColor = theme.green; }
+                                    else { content = '💣 Xịt'; textColor = theme.red; }
+                                }
+                                return (
+                                    <div key={i} onClick={() => !chest.isOpened && handlePickChest(i)} style={{ height: '90px', backgroundColor: bgItem, borderRadius: '15px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontSize: chest.isOpened ? '16px' : '40px', fontWeight: '900', color: textColor, cursor: isSpinning ? 'not-allowed' : 'pointer', border: chest.isMine ? `3px solid ${theme.green}` : `2px solid ${chest.isOpened ? '#333' : '#b49010'}`, boxShadow: chest.isMine ? '0 0 15px rgba(52, 199, 89, 0.6)' : (chest.isOpened ? 'none' : '0 4px 0 #b49010'), transition: 'all 0.3s ease', opacity: chest.isOpened && !chest.isMine ? 0.6 : 1 }}>
+                                        {content}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                {gameTab === 'surfer' && (
+                    <div style={{ textAlign: 'center' }}>
+                        <h2 style={{ color: theme.blue, margin: '0 0 5px 0', fontSize: '24px', fontWeight: '900' }}>🚀 Lướt Sóng uST</h2>
+                        <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 15px 0' }}>Né Nến Đỏ - Gom SWGT Vàng</p>
+
+                        <div onClick={jump} style={{ position: 'relative', width: '100%', height: '350px', backgroundColor: '#1C1C1E', borderRadius: '15px', overflow: 'hidden', border: `2px solid ${theme.border}`, boxShadow: `0 0 15px rgba(94, 146, 243, 0.2)` }}>
+                            <canvas ref={canvasRef} width={350} height={350} style={{ display: 'block', width: '100%', height: '100%' }} />
+
+                            {gameState === 'start' && (
+                                <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                    <div style={{ fontSize: '40px', marginBottom: '10px', animation: 'fadeIn 1s infinite alternate' }}>👆</div>
+                                    <h3 style={{ color: '#fff', fontSize: '20px', fontWeight: 'bold', margin: '0 0 10px 0' }}>Chạm để Bay</h3>
+                                    <p style={{ color: theme.gold, fontSize: '14px', margin: 0 }}>Kỷ lục của bạn: {highScore}</p>
+                                </div>
+                            )}
+
+                            {gameState === 'gameover' && (
+                                <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(255, 59, 48, 0.9)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center' }}>
+                                    <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: '900', margin: '0 0 5px 0' }}>BỊ ĐU ĐỈNH!</h2>
+                                    <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '15px', margin: '0 0 20px 0' }}>Tàu uST của bạn đã đâm vào Nến đỏ.</p>
+                                    <div style={{ backgroundColor: '#000', padding: '15px 30px', borderRadius: '15px', marginBottom: '20px' }}>
+                                        <p style={{ margin: '0 0 5px 0', color: theme.textDim, fontSize: '12px' }}>Điểm lần này</p>
+                                        <h1 style={{ margin: 0, color: theme.gold, fontSize: '36px' }}>{score}</h1>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
+                                        <button onClick={jump} style={{ flex: 1, padding: '12px', borderRadius: '10px', backgroundColor: '#333', color: '#fff', border: 'none', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}>🔄 Chơi Lại</button>
+                                        {score >= 5 && (
+                                            <button onClick={handleClaimGameReward} style={{ flex: 1, padding: '12px', borderRadius: '10px', backgroundColor: theme.gold, color: '#000', border: 'none', fontWeight: '900', fontSize: '14px', cursor: 'pointer' }}>💰 Rút SWGT</button>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {gameState === 'playing' && (
+                                <div style={{ position: 'absolute', top: '15px', right: '15px', fontSize: '24px', fontWeight: '900', color: theme.gold, textShadow: '2px 2px 4px #000' }}>
+                                    {score}
+                                </div>
+                            )}
+                        </div>
+
+                        <div style={{ marginTop: '20px', backgroundColor: 'rgba(94, 146, 243, 0.1)', padding: '15px', borderRadius: '10px', border: `1px dashed ${theme.blue}` }}>
+                            <p style={{ margin: 0, color: theme.textLight, fontSize: '13px', lineHeight: '1.6' }}>
+                                <span style={{color: theme.blue, fontWeight: 'bold'}}>🎮 Hướng dẫn:</span><br/>
+                                Chạm vào màn hình để đẩy tàu uST bay lên. Né các cây nến đỏ lao tới và nhặt tiền vàng. <br/>
+                                <b>Tỉ lệ quy đổi:</b> 5 điểm Game = 1 SWGT thực tế.
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {boxModal.show && (
+                    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9998, padding: '20px' }}>
+                        <div style={{ backgroundColor: theme.cardBg, border: `2px solid ${boxModal.type === 'gold' ? theme.gold : boxModal.type === 'frame' ? '#00FFFF' : theme.border}`, borderRadius: '20px', padding: '30px 20px', textAlign: 'center', width: '100%', maxWidth: '350px' }}>
+                            {boxModal.status === 'closed' && (
+                                <>
+                                    <h2 style={{ color: theme.textLight, margin: '0 0 10px 0', fontSize: '18px' }}>BẠN VỪA CÂU ĐƯỢC</h2>
+                                    <h1 style={{ color: boxModal.type === 'gold' ? theme.gold : boxModal.type === 'frame' ? '#00FFFF' : theme.blue, margin: '0 0 20px 0', fontSize: '24px', fontWeight: '900' }}>{boxModal.label}</h1>
+                                    <div style={{ fontSize: '80px', marginBottom: '20px' }}>{boxModal.type === 'coal' ? '💣' : boxModal.type === 'gold' ? '💎' : boxModal.type === 'frame' ? '🧩' : '📦'}</div>
+                                    <button onClick={handleOpenBox} style={{ width: '100%', padding: '15px', borderRadius: '10px', backgroundColor: theme.green, color: '#fff', border: 'none', fontWeight: '900', fontSize: '16px', cursor: 'pointer', animation: 'pulseRed 1.5s infinite' }}>BẤM ĐỂ MỞ KHÓA</button>
+                                </>
+                            )}
+                            {boxModal.status === 'opening' && (
+                                <div>
+                                    <div style={{ fontSize: '80px', animation: 'shake 0.5s infinite' }}>{boxModal.type === 'coal' ? '💣' : boxModal.type === 'gold' ? '💎' : boxModal.type === 'frame' ? '🧩' : '📦'}</div>
+                                    <p style={{ color: theme.textDim, fontWeight: 'bold', marginTop: '20px' }}>Đang giải mã từ trường...</p>
+                                </div>
+                            )}
+                            {boxModal.status === 'opened' && (
+                                <>
+                                    {boxModal.isFrame ? (
+                                        <>
+                                            <h2 style={{ color: '#00FFFF', fontSize: '22px', margin: '0 0 10px 0', fontWeight: '900' }}>NHẬN: KHUNG ÁNH SÁNG!</h2>
+                                            <div style={{ width: '60px', height: '60px', borderRadius: '50%', margin: '0 auto 20px auto', border: getFrameStyle('light').border, boxShadow: getFrameStyle('light').shadow, padding: '2px', backgroundColor: '#333' }}>
+                                                <img src={userProfile.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.name || 'U')}&background=F4D03F&color=000&bold=true`} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                                            </div>
+                                            <p style={{ color: theme.textDim, fontSize: '14px', marginBottom: '25px' }}>Siêu hiếm! Hãy vào Cửa hàng để trang bị ngay.</p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <h2 style={{ color: boxModal.reward > 0 ? theme.green : theme.red, fontSize: '28px', margin: '0 0 10px 0', fontWeight: '900' }}>
+                                                {boxModal.reward > 0 ? `+${boxModal.reward} SWGT` : 'TRẮNG TAY!'}
+                                            </h2>
+                                            <p style={{ color: theme.textDim, fontSize: '14px', marginBottom: '25px' }}>
+                                                {boxModal.reward >= 500 ? 'ĐẠI CÁT ĐẠI LỢI! NỔ HŨ TRÚNG MÁNH LỚN!' : boxModal.reward > 0 ? 'Có lộc là vui rồi! Đập thêm rương xịn hơn nào.' : 'Trượt sát nút ô 500. Cay thật! Đập lại ngay!'}
+                                            </p>
+                                        </>
+                                    )}
+                                    <button onClick={closeBoxModal} style={{ width: '100%', padding: '14px', borderRadius: '10px', backgroundColor: '#333', color: '#fff', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>Đóng</button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    };
 
     const renderWallet = () => (
         <div style={{ padding: '0 20px 20px 20px' }}>
