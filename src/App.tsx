@@ -63,11 +63,11 @@ function App() {
     const [isSpinning, setIsSpinning] = useState(false);
     const [chestBoard, setChestBoard] = useState(Array(9).fill({ isOpened: false, reward: null, isMine: false }));
     const [spinResultMsg, setSpinResultMsg] = useState('');
-    const [spinEarned, setSpinEarned] = useState(0);
     
-    // 😈 Thanh năng lượng bảo hiểm nổ hũ (Pity System) - Giữ nguyên mốc 30
     const [spinCount, setSpinCount] = useState(0); 
     const MAX_PITY = 30; 
+
+    const [boxModal, setBoxModal] = useState({ show: false, type: '', label: '', reward: 0, status: 'closed', isFrame: false });
 
     const [winnersList, setWinnersList] = useState<string[]>([]);
     const [currentWinner, setCurrentWinner] = useState('');
@@ -95,10 +95,10 @@ function App() {
         { id: 'silver', name: 'Khung Bạc', price: 300, border: '3px solid #C0C0C0', shadow: '0 0 8px #C0C0C0' },
         { id: 'gold', name: 'Khung Vàng', price: 800, border: '3px solid #F4D03F', shadow: '0 0 12px #F4D03F' },
         { id: 'dragon', name: 'Rồng Lửa', price: 2000, border: '3px dashed #FF3B30', shadow: '0 0 20px #FF3B30', animation: 'pulseRed 1.5s infinite' },
-        { id: 'light', name: 'Ánh Sáng (Gacha)', price: -1, border: '3px dotted #00FFFF', shadow: '0 0 15px #00FFFF', desc: 'Chỉ rớt từ Rương Bí Ẩn' }
+        { id: 'light', name: 'Ánh Sáng', price: -1, border: '3px dotted #00FFFF', shadow: '0 0 15px #00FFFF', desc: 'Chỉ rớt từ Đập Rương' }
     ];
 
-    const getFrameStyle = (frameId: string) => {
+    const getFrameStyle = (frameId) => {
         const frame = AVATAR_FRAMES.find(f => f.id === frameId);
         if (!frame) return { border: `2px solid ${theme.border}`, shadow: 'none', animation: 'none' };
         return { border: frame.border, shadow: frame.shadow, animation: frame.animation || 'none' };
@@ -122,7 +122,7 @@ function App() {
         const generateFakeWinners = () => {
             const ho = ['Nguyễn', 'Trần', 'Lê', 'Phạm', 'Hoàng', 'Huỳnh', 'Phan', 'Vũ', 'Võ', 'Đặng'];
             const ten = ['Anh', 'Dũng', 'Linh', 'Hùng', 'Tuấn', 'Ngọc', 'Trang', 'Thảo', 'Tâm', 'Phương'];
-            const actions = ['vừa mở trúng 50 SWGT', 'đập hộp nổ hũ 100 SWGT', 'vừa bốc trúng 20 SWGT', 'vừa mở hụt rương 500', 'bốc trúng rương 500 SWGT', 'đập rương 10 SWGT', 'vừa bốc trúng Khung Ánh Sáng ✨'];
+            const actions = ['vừa bốc trúng 50 SWGT', 'đập rương nổ hũ 100 SWGT', 'vừa bốc trúng 20 SWGT', 'mở hụt rương 500 đầy tiếc nuối', 'bốc trúng rương 500 SWGT', 'đập rương 10 SWGT', 'vừa bốc trúng Khung Ánh Sáng ✨'];
             const icons = ['🎁', '💎', '🚀', '💰', '📦', '⚡', '🖼️'];
 
             let arr = [];
@@ -135,33 +135,25 @@ function App() {
             }
             return arr;
         };
-
         setWinnersList(generateFakeWinners());
     }, []);
 
     useEffect(() => {
         if (winnersList.length === 0) return;
-        let timeoutId: any;
-        let showTimeoutId: any;
-
+        let timeoutId;
+        let showTimeoutId;
         const runTicker = () => {
             const msg = winnersList[Math.floor(Math.random() * winnersList.length)];
             setCurrentWinner(msg);
             setShowWinner(true);
-
             showTimeoutId = setTimeout(() => {
                 setShowWinner(false);
                 const pauseTime = Math.floor(Math.random() * 5000) + 5000; 
                 timeoutId = setTimeout(runTicker, pauseTime);
             }, 3500);
         };
-
         timeoutId = setTimeout(runTicker, 1500); 
-
-        return () => {
-            clearTimeout(timeoutId);
-            clearTimeout(showTimeoutId);
-        };
+        return () => { clearTimeout(timeoutId); clearTimeout(showTimeoutId); };
     }, [winnersList]);
 
     useEffect(() => {
@@ -169,7 +161,6 @@ function App() {
         const interval = setInterval(() => {
             const now = new Date().getTime();
             const distance = unlockDateMs - now;
-            
             if (distance <= 0 || balance >= 1500) {
                 setIsUnlocked(true);
                 setTimeLeft({ days: 0, hours: 0, mins: 0 });
@@ -185,7 +176,7 @@ function App() {
         return () => clearInterval(interval);
     }, [unlockDateMs, balance]);
 
-    const fetchUserData = (uid: string) => {
+    const fetchUserData = (uid) => {
         fetch(`${BACKEND_URL}/api/user?id=${uid}`)
             .then(res => res.json())
             .then(data => {
@@ -200,7 +191,6 @@ function App() {
                 if (data.lastCheckInDate) setLastCheckIn(data.lastCheckInDate);
                 setCheckInStreak(data.checkInStreak || 0);
 
-                // Cập nhật khung viền từ DB
                 if (data.activeFrame) {
                     setUserProfile(prev => ({ ...prev, activeFrame: data.activeFrame, ownedFrames: data.ownedFrames || ['none'] }));
                 }
@@ -235,7 +225,7 @@ function App() {
     };
 
     useEffect(() => {
-        const tg = (window as any).Telegram?.WebApp;
+        const tg = (window).Telegram?.WebApp;
         if (tg) {
             tg.ready();
             tg.expand();
@@ -261,7 +251,7 @@ function App() {
 
     const isCheckedInToday = lastCheckIn ? new Date(lastCheckIn).toDateString() === new Date().toDateString() : false;
 
-    const getMilitaryRank = (count: number) => {
+    const getMilitaryRank = (count) => {
         if (count >= 500) return "Đại Tướng 🌟🌟🌟🌟";
         if (count >= 350) return "Thượng Tướng 🌟🌟🌟";
         if (count >= 200) return "Trung Tướng 🌟🌟";
@@ -275,8 +265,6 @@ function App() {
     };
 
     let displayBoard = [...leaderboard];
-    
-    // Mồi nhử: Các dummy user có Avatar thật siêu nét và Khung viền ngẫu nhiên
     const dummyUsers = [
         { firstName: 'Vũ', lastName: 'Dũng', referralCount: 65, photoUrl: 'https://i.pravatar.cc/150?img=11', activeFrame: 'dragon' },
         { firstName: 'Mai', lastName: 'Thiều Thị', referralCount: 60, photoUrl: 'https://i.pravatar.cc/150?img=5', activeFrame: 'gold' },
@@ -303,7 +291,7 @@ function App() {
 
     let wealthBoard = currentBoard.slice(0, 10).map((user, index) => {
         let estimatedTotal = (user.displayCount * 25) + 300 + (10 - index) * 50; 
-        if (user.displayCount === referrals && user.firstName === userProfile.name.split(' ')[0]) {
+        if (user.displayCount === referrals && user.firstName === (userProfile.name || '').split(' ')[0]) {
             estimatedTotal = balance + (referrals * 25) + (checkInStreak * 5) + 50; 
         }
         return { ...user, totalEarned: Math.round(estimatedTotal * 10) / 10 };
@@ -319,27 +307,23 @@ function App() {
     let militaryRank = getMilitaryRank(referrals);
     let vipLevel = "Tân Binh 🥉";
     let wreathColor = "#8E8E93"; 
-    let glow = "none";
 
-    if (myRank === 1 && referrals >= 5) { vipLevel = "🏆 TOP 1 SERVER"; wreathColor = "#F4D03F"; glow = `0 0 15px #F4D03F`; }
-    else if (myRank === 2 && referrals >= 5) { vipLevel = "🔥 TOP 2 SERVER"; wreathColor = "#C0C0C0"; glow = `0 0 12px #C0C0C0`; }
-    else if (myRank === 3 && referrals >= 5) { vipLevel = "🔥 TOP 3 SERVER"; wreathColor = "#CD7F32"; glow = `0 0 12px #CD7F32`; }
-    else if (myRank > 0 && myRank <= 10 && referrals >= 5) { vipLevel = `🌟 TOP ${myRank} SERVER`; wreathColor = theme.blue; glow = `0 0 10px ${theme.blue}`; }
-    else if (referrals >= 100) { vipLevel = "Huyền Thoại 👑"; wreathColor = "#E0B0FF"; glow = `0 0 15px #E0B0FF`; }
-    else if (referrals >= 50) { vipLevel = "Đối Tác VIP 💎"; wreathColor = theme.gold; glow = `0 0 12px ${theme.gold}`; }
-    else if (referrals >= 10) { vipLevel = "Đại Sứ 🥇"; wreathColor = "#C0C0C0"; glow = `0 0 10px #C0C0C0`; }
-    else if (referrals >= 3) { vipLevel = "Sứ Giả 🥈"; wreathColor = "#CD7F32"; glow = `0 0 8px #CD7F32`; }
+    if (myRank === 1 && referrals >= 5) { vipLevel = "🏆 TOP 1 SERVER"; wreathColor = "#F4D03F"; }
+    else if (myRank === 2 && referrals >= 5) { vipLevel = "🔥 TOP 2 SERVER"; wreathColor = "#C0C0C0"; }
+    else if (myRank === 3 && referrals >= 5) { vipLevel = "🔥 TOP 3 SERVER"; wreathColor = "#CD7F32"; }
+    else if (myRank > 0 && myRank <= 10 && referrals >= 5) { vipLevel = `🌟 TOP ${myRank} SERVER`; wreathColor = theme.blue; }
+    else if (referrals >= 100) { vipLevel = "Huyền Thoại 👑"; wreathColor = "#E0B0FF"; }
+    else if (referrals >= 50) { vipLevel = "Đối Tác VIP 💎"; wreathColor = theme.gold; }
+    else if (referrals >= 10) { vipLevel = "Đại Sứ 🥇"; wreathColor = "#C0C0C0"; }
+    else if (referrals >= 3) { vipLevel = "Sứ Giả 🥈"; wreathColor = "#CD7F32"; }
 
-    // HÀM XỬ LÝ MUA/TRANG BỊ KHUNG VIỀN
-    const handleBuyFrame = (frameId: string, price: number) => {
+    const handleBuyFrame = (frameId, price) => {
         if (userProfile.ownedFrames.includes(frameId)) {
             setUserProfile(prev => ({ ...prev, activeFrame: frameId }));
             alert("✅ Đã trang bị khung viền thành công!");
             return;
         }
-
         if (balance < price) return alert(`⚠️ Bạn cần thêm ${price - balance} SWGT nữa để mua Khung này!`);
-        
         if (window.confirm(`Xác nhận dùng ${price} SWGT để mua Khung viền này?`)) {
             setBalance(prev => prev - price);
             setUserProfile(prev => ({ 
@@ -354,14 +338,10 @@ function App() {
     const handleCheckIn = () => {
         if (isCheckedInToday) return;
         fetch(`${BACKEND_URL}/api/checkin`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId })
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId })
         }).then(res => res.json()).then(data => {
             if (data.success) {
-                setBalance(data.balance);
-                setLastCheckIn(data.lastCheckInDate);
-                setCheckInStreak(data.streak);
+                setBalance(data.balance); setLastCheckIn(data.lastCheckInDate); setCheckInStreak(data.streak);
                 alert(`🔥 Điểm danh thành công (Chuỗi ${data.streak} ngày)!\nBạn nhận được +${data.reward} SWGT.`);
             } else { alert(data.message || "❌ Hôm nay bạn đã điểm danh rồi!"); }
         }).catch(() => alert("⚠️ Mạng chậm, vui lòng thử lại sau giây lát!"));
@@ -370,13 +350,10 @@ function App() {
     const handleClaimGiftCode = () => {
         if (!giftCodeInput.trim()) return alert("⚠️ Vui lòng nhập mã Giftcode!");
         fetch(`${BACKEND_URL}/api/claim-giftcode`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, code: giftCodeInput })
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, code: giftCodeInput })
         }).then(res => res.json()).then(data => {
             if (data.success) {
-                setBalance(data.balance);
-                setGiftCodeInput('');
+                setBalance(data.balance); setGiftCodeInput('');
                 alert(`🎉 Chúc mừng! Bạn nhận được +${data.reward} SWGT từ mã quà tặng!`);
             } else { alert(data.message); }
         }).catch(() => alert("⚠️ Lỗi kết nối máy chủ!"));
@@ -386,9 +363,7 @@ function App() {
         if (withdrawMethod === 'gate' && !gatecode) return alert("⚠️ Vui lòng nhập Gatecode/UID của bạn!");
         if (withdrawMethod === 'erc20' && !wallet) return alert("⚠️ Vui lòng nhập địa chỉ ví ERC20!");
         fetch(`${BACKEND_URL}/api/save-wallet`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, wallet, gatecode, fullName, email, phone })
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, wallet, gatecode, fullName, email, phone })
         }).then(() => alert('✅ Đã lưu thông tin thanh toán thành công!'));
     };
 
@@ -407,12 +382,8 @@ function App() {
 
         if (window.confirm(confirmMsg)) {
             fetch(`${BACKEND_URL}/api/withdraw`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, amount, withdrawMethod }) 
-            })
-            .then(res => res.json())
-            .then(data => {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, amount, withdrawMethod }) 
+            }).then(res => res.json()).then(data => {
                 if(data.success) {
                     setBalance(data.balance); setWithdrawAmount(''); 
                     alert(`✅ Yêu cầu rút tiền đã được gửi thành công!\nCổng rút Token SWGT đã mở, Admin sẽ xử lý và chuyển Token cho bạn sớm nhất.`);
@@ -426,65 +397,52 @@ function App() {
         navigator.clipboard.writeText(link).then(() => alert('✅ Đã sao chép link giới thiệu thành công!')).catch(() => alert('❌ Lỗi sao chép!'));
     };
 
-    const handleClaimMilestone = (milestoneReq: number) => {
+    const handleClaimMilestone = (milestoneReq) => {
         fetch(`${BACKEND_URL}/api/claim-milestone`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, milestone: milestoneReq })
-        })
-        .then(res => res.json())
-        .then(data => {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, milestone: milestoneReq })
+        }).then(res => res.json()).then(data => {
             if(data.success) {
-                setBalance(data.balance);
-                setMilestones((prev: any) => ({ ...prev, [`milestone${milestoneReq}`]: true }));
+                setBalance(data.balance); setMilestones(prev => ({ ...prev, [`milestone${milestoneReq}`]: true }));
                 alert(`🎉 Chúc mừng! Bạn đã nhận thành công thưởng mốc ${milestoneReq} người!`);
             } else { alert(data.message || "❌ Chưa đủ điều kiện nhận hoặc đã nhận rồi!"); }
         });
     };
 
-    const redeemItem = (itemName: string, cost: number) => {
+    const redeemItem = (itemName, cost) => {
         if (balance < cost) return alert(`⚠️ Bạn cần thêm ${cost - balance} SWGT nữa để đổi quyền lợi này!`);
         if (window.confirm(`Xác nhận dùng ${cost} SWGT để đổi ${itemName}?`)) {
             fetch(`${BACKEND_URL}/api/redeem`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, itemName, cost })
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, itemName, cost })
             }).then(res => res.json()).then(data => {
                 if(data.success) { setBalance(data.balance); alert("🎉 Yêu cầu đổi quà đã được gửi! Admin sẽ xử lý sớm."); }
             });
         }
     };
 
-    const startTask = (taskType: string, url: string, duration: number) => {
+    const startTask = (taskType, url, duration) => {
         window.open(url, '_blank'); 
         setTaskStarted(prev => ({ ...prev, [taskType]: true }));
         setTaskTimers(prev => ({ ...prev, [taskType]: duration })); 
         const interval = setInterval(() => {
             setTaskTimers(prev => {
-                if (prev[taskType as keyof typeof prev] <= 1) { clearInterval(interval); return { ...prev, [taskType]: 0 }; }
-                return { ...prev, [taskType]: prev[taskType as keyof typeof prev] - 1 };
+                if (prev[taskType] <= 1) { clearInterval(interval); return { ...prev, [taskType]: 0 }; }
+                return { ...prev, [taskType]: prev[taskType] - 1 };
             });
         }, 1000);
     };
 
-    const claimTaskApp = (taskType: string) => {
-        if (taskTimers[taskType as keyof typeof taskTimers] > 0) return alert(`⏳ Vui lòng đợi ${taskTimers[taskType as keyof typeof taskTimers]} giây nữa để nhận thưởng!`);
+    const claimTaskApp = (taskType) => {
+        if (taskTimers[taskType] > 0) return alert(`⏳ Vui lòng đợi ${taskTimers[taskType]} giây nữa để nhận thưởng!`);
         fetch(`${BACKEND_URL}/api/claim-app-task`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, taskType })
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, taskType })
         }).then(res => res.json()).then(data => {
             if(data.success) {
-                setBalance(data.balance);
-                setTasks(prev => ({ ...prev, [`${taskType}TaskDone`]: true }));
+                setBalance(data.balance); setTasks(prev => ({ ...prev, [`${taskType}TaskDone`]: true }));
                 alert(`🎉 Nhận thành công +${data.reward} SWGT!`);
             } else { alert(data.message || "❌ Lỗi: Bạn thao tác quá nhanh hoặc đã nhận rồi!"); }
         });
     };
 
-    // ==================================================
-    // KHỐI RENDER: HEADER (CÓ AVATAR & QUÂN HÀM ĐƯỢC FIX VIỀN)
-    // ==================================================
     const renderHeader = () => {
         const myFrameStyle = getFrameStyle(userProfile.activeFrame);
         return (
@@ -496,22 +454,15 @@ function App() {
                         <p style={{ margin: 0, fontSize: '13px', color: theme.gold, fontWeight: 'bold' }}>Đầu tư uST</p>
                     </div>
                 </div>
-                
                 <div style={{ display: 'flex', alignItems: 'center', textAlign: 'right' }}>
                     <div style={{ marginRight: '15px' }}>
                         <h2 style={{ margin: 0, fontSize: '15px', color: theme.textLight, fontWeight: 'bold' }}>{userProfile.name}</h2>
                         <p style={{ margin: 0, fontSize: '12px', color: theme.textDim, fontWeight: 'bold' }}>{militaryRank}</p>
                     </div>
-                    
                     <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
-                        
-                        <div style={{ 
-                            position: 'relative', width: '52px', height: '52px', borderRadius: '50%', padding: '2px', backgroundColor: theme.bg, 
-                            border: myFrameStyle.border, boxShadow: myFrameStyle.shadow, animation: myFrameStyle.animation, zIndex: 1 
-                        }}>
+                        <div style={{ position: 'relative', width: '52px', height: '52px', borderRadius: '50%', padding: '2px', backgroundColor: theme.bg, border: myFrameStyle.border, boxShadow: myFrameStyle.shadow, animation: myFrameStyle.animation, zIndex: 1 }}>
                             <img src={userProfile.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.name || 'U')}&background=F4D03F&color=000&bold=true`} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
                         </div>
-                        
                         <div style={{ position: 'absolute', bottom: '-10px', zIndex: 11, display: 'flex', alignItems: 'center', backgroundColor: '#000', padding: '2px 8px', borderRadius: '12px', border: `1px solid ${wreathColor}` }}>
                             <span style={{ color: wreathColor, fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>{vipLevel}</span>
                         </div>
@@ -521,9 +472,6 @@ function App() {
         );
     };
 
-    // ==================================================
-    // KHỐI RENDER: BẢNG TỔNG TÀI SẢN (CÓ AVATAR & KHUNG VIỀN)
-    // ==================================================
     const renderWealthBoard = () => (
         <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
             <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
@@ -546,17 +494,14 @@ function App() {
 
             {wealthBoard.slice(0, 10).map((user, index) => {
                 let icon = "💸"; if (index === 0) icon = "👑"; else if (index === 1) icon = "💎"; else if (index === 2) icon = "🌟";
-                const isMe = user.firstName === userProfile.name.split(' ')[0];
-                
+                const isMe = user.firstName === (userProfile.name || '').split(' ')[0];
                 const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName || 'U')}&background=${index < 3 ? 'F4D03F' : '333333'}&color=${index < 3 ? '000' : 'FFF'}&bold=true&size=128`;
                 const displayAvatar = isMe && userProfile.photoUrl ? userProfile.photoUrl : (user.photoUrl || user.photo_url || user.avatar || fallbackAvatar);
 
                 let frameStyle = { border: `2px solid ${theme.border}`, shadow: 'none', animation: 'none' };
-                if (isMe) {
-                    frameStyle = getFrameStyle(userProfile.activeFrame);
-                } else if (user.activeFrame && user.activeFrame !== 'none') {
-                    frameStyle = getFrameStyle(user.activeFrame);
-                } else {
+                if (isMe) frameStyle = getFrameStyle(userProfile.activeFrame);
+                else if (user.activeFrame && user.activeFrame !== 'none') frameStyle = getFrameStyle(user.activeFrame);
+                else {
                     if (index === 0) frameStyle = getFrameStyle('gold');
                     else if (index === 1) frameStyle = getFrameStyle('silver');
                     else if (index === 2) frameStyle = getFrameStyle('bronze');
@@ -566,11 +511,9 @@ function App() {
                     <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: index < wealthBoard.length - 1 ? `1px solid ${theme.border}` : 'none', backgroundColor: isMe ? 'rgba(244, 208, 63, 0.1)' : 'transparent', borderRadius: '8px', paddingLeft: isMe ? '10px' : '0', paddingRight: isMe ? '10px' : '0' }}>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <span style={{ color: theme.textDim, fontWeight: 'bold', fontSize: '14px', minWidth: '24px', marginRight: '5px' }}>{index + 1}.</span>
-                            
                             <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '12px', overflow: 'hidden', flexShrink: 0, border: frameStyle.border, boxShadow: frameStyle.shadow, animation: frameStyle.animation }}>
                                 <img src={displayAvatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = fallbackAvatar; }} />
                             </div>
-                            
                             <span style={{ fontSize: '20px', marginRight: '8px' }}>{icon}</span>
                             <span style={{ color: isMe ? theme.gold : theme.textLight, fontWeight: 'bold', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100px' }}>
                                 {user.firstName} {user.lastName} {isMe && '(Bạn)'}
@@ -586,9 +529,6 @@ function App() {
         </div>
     );
 
-    // ==================================================
-    // TRANG CHỦ
-    // ==================================================
     const renderHome = () => (
         <div style={{ padding: '0 20px 20px 20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', marginBottom: '20px' }}>
@@ -608,18 +548,15 @@ function App() {
                 </div>
             </div>
 
-            {/* 1. Điểm Danh Hàng Ngày */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', textAlign: 'center', border: `1px solid ${theme.border}`, marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                     <h3 style={{ margin: 0, color: '#fff', fontSize: '16px' }}>📅 Điểm Danh Hàng Ngày</h3>
                     <span style={{ color: theme.gold, fontSize: '13px', fontWeight: 'bold' }}>🔥 Chuỗi: {checkInStreak}/7</span>
                 </div>
-                
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', overflowX: 'auto', paddingBottom: '5px' }}>
                     {[1, 2, 3, 4, 5, 6, 7].map((day, idx) => {
                         const isClaimed = isCheckedInToday ? day <= checkInStreak : day < checkInStreak;
                         const isToday = isCheckedInToday ? day === checkInStreak : day === checkInStreak + 1;
-                        
                         let bgColor = '#000'; let textColor = theme.textDim; let borderColor = theme.border;
                         if (isClaimed) { bgColor = 'rgba(52, 199, 89, 0.1)'; textColor = theme.green; borderColor = theme.green; }
                         else if (isToday) { bgColor = 'rgba(244, 208, 63, 0.1)'; textColor = theme.gold; borderColor = theme.gold; }
@@ -628,14 +565,11 @@ function App() {
                             <div key={day} style={{ minWidth: '40px', backgroundColor: bgColor, borderRadius: '8px', padding: '8px 5px', border: `1px solid ${borderColor}`, position: 'relative' }}>
                                 {isClaimed && <div style={{position:'absolute', top:'-6px', right:'-6px', background:'#0F0F0F', borderRadius:'50%', fontSize:'14px', zIndex: 5}}>✅</div>}
                                 <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: textColor }}>Ngày {day}</p>
-                                <p style={{ margin: 0, fontSize: '12px', fontWeight: 'bold', color: textColor }}>
-                                    {isClaimed ? 'Đã nhận' : `+${STREAK_REWARDS[idx]}`}
-                                </p>
+                                <p style={{ margin: 0, fontSize: '12px', fontWeight: 'bold', color: textColor }}>{isClaimed ? 'Đã nhận' : `+${STREAK_REWARDS[idx]}`}</p>
                             </div>
                         );
                     })}
                 </div>
-
                 <button onClick={handleCheckIn} disabled={isCheckedInToday} style={{ width: '100%', backgroundColor: isCheckedInToday ? '#333' : theme.green, color: isCheckedInToday ? theme.textDim : '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: isCheckedInToday ? 'not-allowed' : 'pointer', fontSize: '15px', transition: 'all 0.3s' }}>
                     {isCheckedInToday ? "✅ ĐÃ NHẬN HÔM NAY" : "✋ BẤM ĐIỂM DANH NGAY"}
                 </button>
@@ -648,11 +582,10 @@ function App() {
                 </p>
             </div>
 
-            {/* 2. Cách Hoạt Động */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Cách Hoạt Động</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>📱 Bước 1: Tham gia Bot SWC</span><br/>Liên kết với <a href="https://t.me/Dau_Tu_SWC_bot" target="_blank" rel="noreferrer" style={{color: theme.blue, textDecoration: 'none'}}>@Dau_Tu_SWC_bot</a> trên Telegram để bắt đầu.</p>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>📱 Bước 1: Tham gia Bot SWC</span><br/>Liên kết với @Dau_Tu_SWC_bot trên Telegram để bắt đầu.</p>
                     <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>👥 Bước 2: Mời bạn bè</span><br/>Chia sẻ link giới thiệu và mời bạn bè tham gia cộng đồng SWC.</p>
                     <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>💰 Bước 3: Nhận SWGT</span><br/>Mỗi người bạn mời sẽ giúp bạn kiếm SWGT thưởng.</p>
                     <div style={{ backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, padding: '15px', borderRadius: '10px' }}>
@@ -663,10 +596,16 @@ function App() {
                 </div>
             </div>
 
-            {/* BẢNG ĐẠI GIA (XẾP HẠNG) */}
             {renderWealthBoard()}
 
-            {/* Nạp Kiến Thức (Đã đưa xuống dưới) */}
+            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
+                <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}><span>⚖️</span> Chính Sách Thanh Khoản</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}><span style={{ fontSize: '18px' }}>🎯</span><div><p style={{ margin: 0, color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>Mức tối thiểu</p><p style={{ margin: '2px 0 0 0', color: theme.textDim, fontSize: '13px' }}>Chỉ từ <b style={{color: theme.green}}>500 SWGT</b> / Tài khoản.</p></div></div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}><span style={{ fontSize: '18px' }}>⏳</span><div><p style={{ margin: 0, color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>Thời gian mở khóa cơ bản</p><p style={{ margin: '2px 0 0 0', color: theme.textDim, fontSize: '13px', lineHeight: '1.5' }}>Sau <b style={{color: theme.premium}}>7 ngày</b> (Premium) hoặc <b style={{color: theme.textLight}}>15 ngày</b> (Thường).</p></div></div>
+                </div>
+            </div>
+
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🧠 Nạp Kiến Thức & Lan Tỏa</h2>
                 
@@ -723,12 +662,10 @@ function App() {
                 </div>
             </div>
 
-            {/* Sắp Ra Mắt */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px dashed ${theme.blue}` }}>
-                <h2 style={{ color: theme.blue, margin: '0 0 15px 0', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>🚀</span> Sắp Ra Mắt (Coming Soon)
-                </h2>
+                <h2 style={{ color: theme.blue, margin: '0 0 15px 0', fontSize: '16px' }}>🚀 Sắp Ra Mắt (Coming Soon)</h2>
                 <ul style={{ margin: 0, paddingLeft: '20px', color: theme.textDim, fontSize: '14px', lineHeight: '1.8' }}>
+                    <li><b>Vòng Quay Nhân Phẩm:</b> Dùng SWGT để quay thưởng Token/USDT hằng ngày.</li>
                     <li><b>Staking SWGT:</b> Gửi tiết kiệm SWGT nhận lãi suất qua đêm.</li>
                     <li><b>Đua Top Tháng:</b> Giải thưởng hiện vật cực khủng cho Top 3 người dẫn đầu bảng vàng.</li>
                 </ul>
@@ -736,9 +673,6 @@ function App() {
         </div>
     );
 
-    // ==================================================
-    // TAB: PHẦN THƯỞNG (THU NHẬP)
-    // ==================================================
     const renderRewards = () => {
         let nextTarget = 3; let nextReward = "+10 SWGT";
         for (let m of MILESTONE_LIST) { if (referrals < m.req) { nextTarget = m.req; nextReward = `+${m.reward} SWGT`; break; } }
@@ -751,12 +685,6 @@ function App() {
                     <div style={{ fontSize: '45px', marginBottom: '5px' }}>🎁</div>
                     <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '22px', fontWeight: '900' }}>Trung Tâm Thu Nhập</h2>
                     <p style={{ color: theme.textDim, fontSize: '14px', margin: 0 }}>Xây dựng hệ thống - Tạo thu nhập thụ động</p>
-                </div>
-
-                {/* Khối cảnh báo Halving */}
-                <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fde047', padding: '12px', marginBottom: '20px', borderRadius: '6px' }}>
-                    <h4 style={{ color: '#b45309', fontWeight: 'bold', margin: '0 0 5px 0', fontSize: '13px' }}>⏳ SỰ KIỆN HALVING SẮP DIỄN RA!</h4>
-                    <p style={{ color: '#854d0e', margin: 0, fontSize: '12px', lineHeight: '1.5' }}>Khi Cộng đồng cán mốc <b>1.000 người</b>, phần thưởng tại các mốc: <b>Mốc 10, 50, 120, 200, 350 và 500</b> sẽ tự động <b>GIẢM XUỐNG</b> để bảo chứng độ khan hiếm cho SWGT. Hãy nhận thưởng ngay hôm nay trước khi quá muộn!</p>
                 </div>
                 
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🚀 9 CỘT MỐC THƯỞNG NÓNG</h3>
@@ -815,6 +743,11 @@ function App() {
                         <button onClick={handleCopyLink} style={{ flex: 1, backgroundColor: theme.gold, color: '#000', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', cursor: 'pointer', textAlign: 'center' }}>📋 COPY LINK</button>
                         <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ flex: 1, backgroundColor: '#5E92F3', color: '#fff', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', textAlign: 'center', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✈️ GỬI BẠN BÈ</a>
                     </div>
+                </div>
+
+                <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fde047', padding: '12px', marginBottom: '20px', borderRadius: '6px' }}>
+                    <h4 style={{ color: '#b45309', fontWeight: 'bold', margin: '0 0 5px 0', fontSize: '13px' }}>⏳ SỰ KIỆN HALVING SẮP DIỄN RA!</h4>
+                    <p style={{ color: '#854d0e', margin: 0, fontSize: '12px', lineHeight: '1.5' }}>Khi Cộng đồng cán mốc <b>1.000 người</b>, phần thưởng tại các mốc sẽ tự động <b>GIẢM XUỐNG</b>. Hãy nhận thưởng ngay hôm nay!</p>
                 </div>
 
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🤝 BẢNG VÀNG GIỚI THIỆU</h3>
@@ -930,53 +863,59 @@ function App() {
     // ==================================================
     const renderGameZone = () => {
 
-        const handlePickChest = (index: number) => {
+        const handlePickChest = (index) => {
             if (balance < 20) return alert("⚠️ Bạn cần ít nhất 20 SWGT để mua Búa Đập Rương!");
             if (isSpinning) return;
 
             setIsSpinning(true);
             setSpinResultMsg('');
 
-            const newCount = spinCount + 1;
-            setSpinCount(newCount);
-
-            // 1. XÁC ĐỊNH PHẦN THƯỞNG
-            let actualReward = 0;
-            
-            if (newCount >= MAX_PITY) {
-                actualReward = 500;
-                setSpinCount(0);
-            } else {
-                const weights = [
-                    { reward: 0, chance: 45 },      // 45% Than đá (0đ)
-                    { reward: 5, chance: 35 },      // 35% Rương Gỗ 
-                    { reward: 10, chance: 12 },     // 12% Rương Bạc 
-                    { reward: 20, chance: 5 },      // 5% Hoà vốn
-                    { reward: 50, chance: 1.5 },    // 1.5% Lãi vừa
-                    { reward: -2, chance: 1.5 }     // 1.5% Mảnh Khung
-                ];
-
-                let rand = Math.random() * 100;
-                let cumulative = 0;
-                for (let w of weights) {
-                    cumulative += w.chance;
-                    if (rand <= cumulative) { actualReward = w.reward; break; }
+            // Liên kết gọi API tới Server (đảm bảo số dư đồng bộ)
+            fetch(`${BACKEND_URL}/api/spin-wheel`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    processGachaBoard(index, data.reward, data.newBalance);
+                } else {
+                    setIsSpinning(false);
+                    alert(data.message);
                 }
-            }
+            })
+            .catch(err => {
+                console.error("Lỗi:", err);
+                // Nếu Server lỗi, giả lập kết quả xịt/hoà vốn ở Frontend để game không chết
+                let fallbackReward = Math.random() > 0.8 ? 5 : 0;
+                processGachaBoard(index, fallbackReward, balance - 20 + fallbackReward);
+            });
+        };
 
-            // 2. TẠO BÀN CỜ ẢO GIÁC "SUÝT TRÚNG"
+        const processGachaBoard = (index, actualReward, newBalance) => {
+            setSpinCount(prev => prev >= MAX_PITY ? 0 : prev + 1);
+
+            // TẠO BÀN CỜ ẢO GIÁC "SUÝT TRÚNG"
             let pool = [0, 0, 5, 5, 10, 20]; 
             
+            // Chim mồi 500 luôn xuất hiện chọc tức người chơi
             if (actualReward !== 500) pool.push(500); else pool.push(0);
-            if (actualReward !== -2) pool.push(-2); else pool.push(50);
             
+            // Giả lập rớt mảnh Khung (Nếu Backend trả về 0, thi thoảng Frontend tráo thành mảnh khung để an ủi)
+            let finalRewardVisual = actualReward;
+            if (actualReward === 0 && Math.random() < 0.15) {
+                finalRewardVisual = -2; // -2 là Mảnh Khung
+            }
+
+            if (finalRewardVisual !== -2) pool.push(-2); else pool.push(50);
             pool = pool.sort(() => Math.random() - 0.5);
 
             let newBoard = Array(9).fill(null);
             let poolIndex = 0;
             for(let i=0; i<9; i++) {
                 if (i === index) {
-                    newBoard[i] = { isOpened: true, reward: actualReward, isMine: true };
+                    newBoard[i] = { isOpened: true, reward: finalRewardVisual, isMine: true };
                 } else {
                     newBoard[i] = { isOpened: false, reward: pool[poolIndex], isMine: false };
                     poolIndex++;
@@ -985,39 +924,36 @@ function App() {
 
             setChestBoard(newBoard);
 
-            // 3. Lật ngửa rương sau 1 giây
+            // Lật ngửa rương sau 1 giây
             setTimeout(() => {
                 const revealedBoard = newBoard.map(c => ({ ...c, isOpened: true }));
                 setChestBoard(revealedBoard);
                 
                 setTimeout(() => {
-                    const finalReward = actualReward === -2 ? 0 : actualReward;
-                    setBalance(prev => prev - 20 + finalReward);
+                    setBalance(newBalance);
                     
-                    const playerName = userProfile.name.split(' ')[0] || 'Bạn';
+                    const playerName = (userProfile.name || 'Bạn').split(' ')[0];
                     
                     let boxType = ''; let boxLabel = '';
-                    if (actualReward === -2) { boxType = 'frame'; boxLabel = '✨ RƯƠNG HUYỀN BÍ'; }
-                    else if (actualReward === 0) { boxType = 'coal'; boxLabel = '💣 THAN ĐÁ (XỊT)'; }
-                    else if (actualReward <= 10) { boxType = 'wood'; boxLabel = '📦 RƯƠNG GỖ'; }
-                    else if (actualReward <= 50) { boxType = 'silver'; boxLabel = '🎁 RƯƠNG BẠC'; }
+                    if (finalRewardVisual === -2) { boxType = 'frame'; boxLabel = '✨ RƯƠNG HUYỀN BÍ'; }
+                    else if (finalRewardVisual === 0) { boxType = 'coal'; boxLabel = '💣 THAN ĐÁ (XỊT)'; }
+                    else if (finalRewardVisual <= 10) { boxType = 'wood'; boxLabel = '📦 RƯƠNG GỖ'; }
+                    else if (finalRewardVisual <= 50) { boxType = 'silver'; boxLabel = '🎁 RƯƠNG BẠC'; }
                     else { boxType = 'gold'; boxLabel = '💎 RƯƠNG KIM CƯƠNG'; }
 
-                    setBoxModal({ show: true, type: boxType, label: boxLabel, reward: actualReward, status: 'closed', isFrame: actualReward === -2, frameType: 'light' });
+                    setBoxModal({ show: true, type: boxType, label: boxLabel, reward: finalRewardVisual, status: 'closed', isFrame: finalRewardVisual === -2, frameType: 'light' });
 
-                    if (actualReward === -2) {
+                    if (finalRewardVisual === -2) {
                         if (!userProfile.ownedFrames.includes('light')) {
                             setUserProfile(prev => ({ ...prev, ownedFrames: [...prev.ownedFrames, 'light'] }));
                         }
                         setSpinResultMsg('🎉 BÙM! Trúng Mảnh Khung Ánh Sáng siêu hiếm!');
-                    } else if (actualReward === 0) {
+                    } else if (finalRewardVisual === 0) {
                         setSpinResultMsg(`Trời ơi ${playerName}! Rương 500 nằm ngay bên kia kìa!`);
-                    } else if (actualReward === 500) {
-                        setSpinResultMsg(`🏆 ĐẠI CÁT ĐẠI LỢI! NỔ HŨ 500 SWGT!`);
-                        setSpinEarned(prev => prev + 500);
+                    } else if (finalRewardVisual >= 500) {
+                        setSpinResultMsg(`🏆 ĐẠI CÁT ĐẠI LỢI! NỔ HŨ LỚN!`);
                     } else {
-                        setSpinResultMsg(`Thu về +${actualReward} SWGT. Đập phát nữa nổ hũ to hơn nào!`);
-                        setSpinEarned(prev => prev + actualReward);
+                        setSpinResultMsg(`Thu về +${finalRewardVisual} SWGT. Đập phát nữa nổ hũ to hơn nào!`);
                     }
                     
                     setIsSpinning(false);
@@ -1071,7 +1007,7 @@ function App() {
                                 key={i} 
                                 onClick={() => !chest.isOpened && handlePickChest(i)}
                                 style={{ 
-                                    aspectRatio: '1', backgroundColor: bgItem, borderRadius: '15px', 
+                                    height: '90px', backgroundColor: bgItem, borderRadius: '15px', 
                                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
                                     fontSize: chest.isOpened ? '16px' : '40px', fontWeight: '900', color: textColor,
                                     cursor: isSpinning ? 'not-allowed' : 'pointer',
@@ -1088,7 +1024,7 @@ function App() {
                 </div>
 
                 <div style={{ minHeight: '40px', marginBottom: '20px', padding: '10px', backgroundColor: 'rgba(244, 208, 63, 0.1)', borderRadius: '10px' }}>
-                    <p style={{ color: spinResultMsg.includes('500') || spinResultMsg.includes('Trời ơi') ? theme.textLight : theme.green, fontSize: '14px', fontWeight: 'bold', margin: 0 }}>
+                    <p style={{ color: (spinResultMsg || '').includes('500') || (spinResultMsg || '').includes('Trời ơi') ? theme.textLight : theme.green, fontSize: '14px', fontWeight: 'bold', margin: 0 }}>
                         {spinResultMsg || '👇 Chạm vào 1 rương bất kỳ để mở!'}
                     </p>
                 </div>
@@ -1102,14 +1038,14 @@ function App() {
                                 <>
                                     <h2 style={{ color: theme.textLight, margin: '0 0 10px 0', fontSize: '18px' }}>BẠN VỪA CÂU ĐƯỢC</h2>
                                     <h1 style={{ color: boxModal.type === 'gold' ? theme.gold : boxModal.type === 'frame' ? '#00FFFF' : theme.blue, margin: '0 0 20px 0', fontSize: '24px', fontWeight: '900' }}>{boxModal.label}</h1>
-                                    <div style={{ fontSize: '80px', marginBottom: '20px' }}>{boxModal.type === 'coal' ? '💣' : boxModal.type === 'gold' ? '💎' : boxModal.type === 'frame' ? '✨' : '🎁'}</div>
+                                    <div style={{ fontSize: '80px', marginBottom: '20px' }}>{boxModal.type === 'coal' ? '💣' : boxModal.type === 'gold' ? '💎' : boxModal.type === 'frame' ? '🧩' : '📦'}</div>
                                     <button onClick={handleOpenBox} style={{ width: '100%', padding: '15px', borderRadius: '10px', backgroundColor: theme.green, color: '#fff', border: 'none', fontWeight: '900', fontSize: '16px', cursor: 'pointer', animation: 'pulseRed 1.5s infinite' }}>BẤM ĐỂ MỞ KHÓA</button>
                                 </>
                             )}
 
                             {boxModal.status === 'opening' && (
                                 <div>
-                                    <div style={{ fontSize: '80px', animation: 'shake 0.5s infinite' }}>{boxModal.type === 'coal' ? '💣' : boxModal.type === 'gold' ? '💎' : boxModal.type === 'frame' ? '✨' : '🎁'}</div>
+                                    <div style={{ fontSize: '80px', animation: 'shake 0.5s infinite' }}>{boxModal.type === 'coal' ? '💣' : boxModal.type === 'gold' ? '💎' : boxModal.type === 'frame' ? '🧩' : '📦'}</div>
                                     <p style={{ color: theme.textDim, fontWeight: 'bold', marginTop: '20px' }}>Đang giải mã từ trường...</p>
                                 </div>
                             )}
@@ -1120,7 +1056,7 @@ function App() {
                                         <>
                                             <h2 style={{ color: '#00FFFF', fontSize: '22px', margin: '0 0 10px 0', fontWeight: '900' }}>NHẬN: KHUNG ÁNH SÁNG!</h2>
                                             <div style={{ width: '60px', height: '60px', borderRadius: '50%', margin: '0 auto 20px auto', border: getFrameStyle('light').border, boxShadow: getFrameStyle('light').shadow, padding: '2px', backgroundColor: '#333' }}>
-                                                <img src={userProfile.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.name || 'U')}&background=F4D03F&color=000&bold=true`} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
+                                                <img src={userProfile.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.name || 'U')}&background=F4D03F&color=000&bold=true`} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
                                             </div>
                                             <p style={{ color: theme.textDim, fontSize: '14px', marginBottom: '25px' }}>Siêu hiếm! Hãy vào Cửa hàng để trang bị ngay.</p>
                                         </>
@@ -1130,7 +1066,7 @@ function App() {
                                                 {boxModal.reward > 0 ? `+${boxModal.reward} SWGT` : 'TRẮNG TAY!'}
                                             </h2>
                                             <p style={{ color: theme.textDim, fontSize: '14px', marginBottom: '25px' }}>
-                                                {boxModal.reward >= 50 ? 'Nhân phẩm chói lóa!' : boxModal.reward > 0 ? 'Có lộc là vui rồi!' : 'Than đá không có giá trị quy đổi.'}
+                                                {boxModal.reward >= 500 ? 'ĐẠI CÁT ĐẠI LỢI! NỔ HŨ TRÚNG MÁNH LỚN!' : boxModal.reward > 0 ? 'Có lộc là vui rồi! Đập thêm rương xịn hơn nào.' : 'Trượt sát nút ô 500. Cay thật! Đập lại ngay!'}
                                             </p>
                                         </>
                                     )}
