@@ -52,6 +52,9 @@ function App() {
 
     const [boardType, setBoardType] = useState('weekly'); 
 
+    // STATE: Quản lý hiệu ứng tiền bay lên
+    const [animations, setAnimations] = useState<{id: number, text: string, x: number, y: number}[]>([]);
+
     const BACKEND_URL = 'https://swc-bot-brain.onrender.com';
 
     const theme = {
@@ -67,20 +70,33 @@ function App() {
         premium: '#E0B0FF' 
     };
 
-    // ĐÃ THAY ĐỔI LẠI SỐ LƯỢNG THƯỞNG THEO CƠ CHẾ HALVING
+    // ĐÃ UPDATE HALVING 50% VÀO CÁC MỐC (10, 50, 120, 200, 350, 500)
     const MILESTONE_LIST = [
         { req: 3, reward: 10, key: 'milestone3', rank: 'Đại Úy 🎖️' },
-        { req: 10, reward: 15, key: 'milestone10', rank: 'Thiếu Tá 🎖️' }, // Đã giảm
+        { req: 10, reward: 12.5, key: 'milestone10', rank: 'Thiếu Tá 🎖️' },
         { req: 20, reward: 40, key: 'milestone20', rank: 'Trung Tá 🎖️' },
-        { req: 50, reward: 60, key: 'milestone50', rank: 'Thượng Tá 🎖️' }, // Đã giảm
+        { req: 50, reward: 50, key: 'milestone50', rank: 'Thượng Tá 🎖️' },
         { req: 80, reward: 150, key: 'milestone80', rank: 'Đại Tá 🎖️' },
-        { req: 120, reward: 150, key: 'milestone120', rank: 'Thiếu Tướng 🌟' }, // Đã giảm
-        { req: 200, reward: 250, key: 'milestone200', rank: 'Trung Tướng 🌟🌟' }, // Đã giảm
-        { req: 350, reward: 400, key: 'milestone350', rank: 'Thượng Tướng 🌟🌟🌟' }, // Đã giảm
-        { req: 500, reward: 600, key: 'milestone500', rank: 'Đại Tướng 🌟🌟🌟🌟' } // Đã giảm
+        { req: 120, reward: 125, key: 'milestone120', rank: 'Thiếu Tướng 🌟' },
+        { req: 200, reward: 212.5, key: 'milestone200', rank: 'Trung Tướng 🌟🌟' },
+        { req: 350, reward: 400, key: 'milestone350', rank: 'Thượng Tướng 🌟🌟🌟' },
+        { req: 500, reward: 600, key: 'milestone500', rank: 'Đại Tướng 🌟🌟🌟🌟' }
     ];
 
     const STREAK_REWARDS = [0.5, 1.5, 3, 3.5, 5, 7, 9];
+
+    // HÀM TRIGGER HIỆU ỨNG BAY LÊN
+    const triggerFloatAnim = (reward: string | number, e: React.MouseEvent) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const startX = rect.left + rect.width / 2;
+        const startY = rect.top;
+        const newAnim = { id: Date.now() + Math.random(), text: `+${reward} SWGT`, x: startX, y: startY };
+        
+        setAnimations(prev => [...prev, newAnim]);
+        setTimeout(() => {
+            setAnimations(prev => prev.filter(a => a.id !== newAnim.id));
+        }, 1000);
+    };
 
     useEffect(() => {
         if (!unlockDateMs) return;
@@ -256,7 +272,7 @@ function App() {
         vipLevel = "Sứ Giả 🥈"; wreathColor = "#CD7F32"; 
     }
 
-    const handleCheckIn = () => {
+    const handleCheckIn = (e: React.MouseEvent) => {
         if (isCheckedInToday) return;
         fetch(`${BACKEND_URL}/api/checkin`, {
             method: 'POST',
@@ -267,6 +283,7 @@ function App() {
                 setBalance(data.balance);
                 setLastCheckIn(data.lastCheckInDate);
                 setCheckInStreak(data.streak);
+                triggerFloatAnim(data.reward, e); // Kích hoạt hiệu ứng tiền bay
                 alert(`🔥 Điểm danh thành công (Chuỗi ${data.streak} ngày)!\nBạn nhận được +${data.reward} SWGT.`);
             } else { alert(data.message || "❌ Hôm nay bạn đã điểm danh rồi!"); }
         }).catch(() => alert("⚠️ Mạng chậm, vui lòng thử lại sau giây lát!"));
@@ -331,7 +348,7 @@ function App() {
         navigator.clipboard.writeText(link).then(() => alert('✅ Đã sao chép link giới thiệu thành công!')).catch(() => alert('❌ Lỗi sao chép!'));
     };
 
-    const handleClaimMilestone = (milestoneReq: number) => {
+    const handleClaimMilestone = (milestoneReq: number, reward: number, e: React.MouseEvent) => {
         fetch(`${BACKEND_URL}/api/claim-milestone`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -342,7 +359,7 @@ function App() {
             if(data.success) {
                 setBalance(data.balance);
                 setMilestones((prev: any) => ({ ...prev, [`milestone${milestoneReq}`]: true }));
-                alert(`🎉 Chúc mừng! Bạn đã nhận thành công thưởng mốc ${milestoneReq} người!`);
+                triggerFloatAnim(reward, e); // Kích hoạt hiệu ứng tiền bay
             } else { alert(data.message || "❌ Chưa đủ điều kiện nhận hoặc đã nhận rồi!"); }
         });
     };
@@ -372,7 +389,7 @@ function App() {
         }, 1000);
     };
 
-    const claimTaskApp = (taskType: string) => {
+    const claimTaskApp = (taskType: string, e: React.MouseEvent) => {
         if (taskTimers[taskType as keyof typeof taskTimers] > 0) return alert(`⏳ Vui lòng đợi ${taskTimers[taskType as keyof typeof taskTimers]} giây nữa để nhận thưởng!`);
         fetch(`${BACKEND_URL}/api/claim-app-task`, {
             method: 'POST',
@@ -382,17 +399,17 @@ function App() {
             if(data.success) {
                 setBalance(data.balance);
                 setTasks(prev => ({ ...prev, [`${taskType}TaskDone`]: true }));
-                alert(`🎉 Nhận thành công +${data.reward} SWGT!`);
+                triggerFloatAnim(data.reward, e); // Kích hoạt hiệu ứng tiền bay
             } else { alert(data.message || "❌ Lỗi: Bạn thao tác quá nhanh hoặc đã nhận rồi!"); }
         });
     };
 
     // ==================================================
-    // RENDER HEADER (Khớp chuẩn xác viền Rồng Lửa / Ánh Sáng)
+    // RENDER HEADER (Khung viền ôm khít, xóa SVG rườm rà)
     // ==================================================
     const renderHeader = () => {
         const isFireEffect = (Number(userId || 1) % 2) !== 0; 
-        const effectColor = isFireEffect ? '#FF3B30' : '#00FFFF'; 
+        const effectColor = isFireEffect ? '#FF3B30' : '#00FFFF'; // Đỏ Rồng Lửa / Xanh Ánh Sáng
         const pulseAnim = isFireEffect ? 'pulseGlowRed 2s infinite' : 'pulseGlowCyan 2s infinite';
 
         return (
@@ -413,38 +430,38 @@ function App() {
                     
                     <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
                         
-                        {/* Wrapper ôm Avatar và vòng quay */}
-                        <div style={{ position: 'relative', width: '56px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+                        {/* AVATAR WRAPPER VỚI VIỀN RỒNG LỬA / ÁNH SÁNG ĐÃ ĐƯỢC LÀM ÔM KHÍT */}
+                        <div style={{ position: 'relative', width: '52px', height: '52px', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
                             
-                            {/* Khung viền đứt nét nhấp nháy, xoay vòng khít với avatar */}
+                            {/* Khung viền nét đứt nhấp nháy, xoay vòng */}
                             <div style={{
                                 position: 'absolute',
-                                top: 0, left: 0, right: 0, bottom: 0,
+                                top: '-4px', left: '-4px', right: '-4px', bottom: '-4px',
                                 borderRadius: '50%',
-                                border: `3px dashed ${effectColor}`,
-                                animation: `spin 5s linear infinite, ${pulseAnim}`,
+                                border: `2px dashed ${effectColor}`,
+                                animation: `spin 4s linear infinite, ${pulseAnim}`,
                                 zIndex: 0
                             }}></div>
 
-                            {/* Lớp nền Avatar bên trong */}
-                            <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: theme.bg, zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: `2px solid ${theme.bg}` }}>
+                            {/* Ảnh Avatar */}
+                            <div style={{ width: '100%', height: '100%', borderRadius: '50%', padding: '2px', backgroundColor: theme.bg, zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                                 {userProfile.photoUrl ? (
                                     <img src={userProfile.photoUrl} alt="avatar" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
                                 ) : (
                                     <div style={{ width: '100%', height: '100%', borderRadius: '50%', backgroundColor: theme.cardBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.gold, fontSize: '20px' }}>👤</div>
                                 )}
                             </div>
-                            
-                            {/* Chấm xanh trạng thái Online */}
-                            <div style={{ position: 'absolute', top: '2px', right: '2px', width: '12px', height: '12px', backgroundColor: theme.green, borderRadius: '50%', border: `2px solid ${theme.bg}`, zIndex: 12 }}></div>
                         </div>
                         
-                        {/* Nhãn xếp hạng bên dưới, dời xuống để không cấn vòng xoay */}
-                        <div style={{ position: 'relative', marginTop: '-8px', zIndex: 11, display: 'flex', alignItems: 'center', backgroundColor: '#000', padding: '3px 10px', borderRadius: '12px', border: `1px solid ${wreathColor}`, boxShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                        {/* Nhãn xếp hạng bên dưới */}
+                        <div style={{ position: 'absolute', bottom: '-10px', zIndex: 11, display: 'flex', alignItems: 'center', backgroundColor: '#000', padding: '2px 8px', borderRadius: '12px', border: `1px solid ${wreathColor}`, boxShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
                             <span style={{ color: wreathColor, fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                                 {vipLevel}
                             </span>
                         </div>
+
+                        {/* Chấm xanh trạng thái Online */}
+                        <div style={{ position: 'absolute', top: '0px', right: '-2px', width: '12px', height: '12px', backgroundColor: theme.green, borderRadius: '50%', border: `2px solid ${theme.bg}`, zIndex: 12 }}></div>
                     </div>
                 </div>
             </div>
@@ -462,8 +479,7 @@ function App() {
                         backgroundColor: boardType === 'weekly' ? 'rgba(244, 208, 63, 0.15)' : '#1C1C1E', 
                         color: boardType === 'weekly' ? theme.gold : theme.textDim, 
                         fontWeight: '900', fontSize: '14px', cursor: 'pointer', transition: 'all 0.3s',
-                        boxShadow: boardType === 'weekly' ? `0 0 15px rgba(244, 208, 63, 0.3)` : 'none',
-                        transform: boardType === 'weekly' ? 'scale(1.02)' : 'scale(1)'
+                        boxShadow: boardType === 'weekly' ? `0 0 15px rgba(244, 208, 63, 0.3)` : 'none'
                     }}
                 >
                     🏆 TOP TUẦN
@@ -476,8 +492,7 @@ function App() {
                         backgroundColor: boardType === 'all' ? 'rgba(244, 208, 63, 0.15)' : '#1C1C1E', 
                         color: boardType === 'all' ? theme.gold : theme.textDim, 
                         fontWeight: '900', fontSize: '14px', cursor: 'pointer', transition: 'all 0.3s',
-                        boxShadow: boardType === 'all' ? `0 0 15px rgba(244, 208, 63, 0.3)` : 'none',
-                        transform: boardType === 'all' ? 'scale(1.02)' : 'scale(1)'
+                        boxShadow: boardType === 'all' ? `0 0 15px rgba(244, 208, 63, 0.3)` : 'none'
                     }}
                 >
                     🌟 TOP TỔNG
@@ -581,7 +596,7 @@ function App() {
                 </div>
 
                 <button 
-                    onClick={handleCheckIn} 
+                    onClick={(e) => handleCheckIn(e)} 
                     disabled={isCheckedInToday}
                     style={{ width: '100%', backgroundColor: isCheckedInToday ? '#333' : theme.green, color: isCheckedInToday ? theme.textDim : '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: isCheckedInToday ? 'not-allowed' : 'pointer', fontSize: '15px', transition: 'all 0.3s' }}
                 >
@@ -692,7 +707,7 @@ function App() {
                             {!taskStarted.read ? (
                                 <button onClick={() => startTask('read', 'https://swc.capital/', 60)} style={{ flex: 1, backgroundColor: theme.blue, color: '#fff', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>MỞ ĐỌC NGAY</button>
                             ) : (
-                                <button onClick={() => claimTaskApp('read')} disabled={taskTimers.read > 0} style={{ flex: 1, backgroundColor: taskTimers.read > 0 ? '#333' : theme.gold, color: taskTimers.read > 0 ? theme.textDim : '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: taskTimers.read > 0 ? 'not-allowed' : 'pointer' }}>
+                                <button onClick={(e) => claimTaskApp('read', e)} disabled={taskTimers.read > 0} style={{ flex: 1, backgroundColor: taskTimers.read > 0 ? '#333' : theme.gold, color: taskTimers.read > 0 ? theme.textDim : '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: taskTimers.read > 0 ? 'not-allowed' : 'pointer' }}>
                                     {taskTimers.read > 0 ? `ĐỢI ${taskTimers.read}s` : 'NHẬN QUÀ'}
                                 </button>
                             )}
@@ -713,7 +728,7 @@ function App() {
                             {!taskStarted.youtube ? (
                                 <button onClick={() => startTask('youtube', 'https://www.youtube.com/c/SkyWorldCommunityVietNam/videos', 6)} style={{ flex: 1, backgroundColor: '#FF0000', color: '#fff', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>MỞ XEM NGAY</button>
                             ) : (
-                                <button onClick={() => claimTaskApp('youtube')} disabled={taskTimers.youtube > 0} style={{ flex: 1, backgroundColor: taskTimers.youtube > 0 ? '#333' : theme.gold, color: taskTimers.youtube > 0 ? theme.textDim : '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: taskTimers.youtube > 0 ? 'not-allowed' : 'pointer' }}>
+                                <button onClick={(e) => claimTaskApp('youtube', e)} disabled={taskTimers.youtube > 0} style={{ flex: 1, backgroundColor: taskTimers.youtube > 0 ? '#333' : theme.gold, color: taskTimers.youtube > 0 ? theme.textDim : '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: taskTimers.youtube > 0 ? 'not-allowed' : 'pointer' }}>
                                     {taskTimers.youtube > 0 ? `ĐỢI ${taskTimers.youtube}s` : 'NHẬN QUÀ'}
                                 </button>
                             )}
@@ -734,7 +749,7 @@ function App() {
                             {!taskStarted.facebook ? (
                                 <button onClick={() => startTask('facebook', 'https://www.facebook.com/swc.capital.vn', 5)} style={{ flex: 1, backgroundColor: '#1877F2', color: '#fff', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>MỞ TRANG</button>
                             ) : (
-                                <button onClick={() => claimTaskApp('facebook')} disabled={taskTimers.facebook > 0} style={{ flex: 1, backgroundColor: taskTimers.facebook > 0 ? '#333' : theme.gold, color: taskTimers.facebook > 0 ? theme.textDim : '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: taskTimers.facebook > 0 ? 'not-allowed' : 'pointer' }}>
+                                <button onClick={(e) => claimTaskApp('facebook', e)} disabled={taskTimers.facebook > 0} style={{ flex: 1, backgroundColor: taskTimers.facebook > 0 ? '#333' : theme.gold, color: taskTimers.facebook > 0 ? theme.textDim : '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: taskTimers.facebook > 0 ? 'not-allowed' : 'pointer' }}>
                                     {taskTimers.facebook > 0 ? `ĐỢI ${taskTimers.facebook}s` : 'NHẬN QUÀ'}
                                 </button>
                             )}
@@ -755,7 +770,7 @@ function App() {
                             {!taskStarted.share ? (
                                 <button onClick={() => startTask('share', `https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}`, 5)} style={{ flex: 1, backgroundColor: '#34C759', color: '#fff', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>MỞ CHIA SẺ</button>
                             ) : (
-                                <button onClick={() => claimTaskApp('share')} disabled={taskTimers.share > 0} style={{ flex: 1, backgroundColor: taskTimers.share > 0 ? '#333' : theme.gold, color: taskTimers.share > 0 ? theme.textDim : '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: taskTimers.share > 0 ? 'not-allowed' : 'pointer' }}>
+                                <button onClick={(e) => claimTaskApp('share', e)} disabled={taskTimers.share > 0} style={{ flex: 1, backgroundColor: taskTimers.share > 0 ? '#333' : theme.gold, color: taskTimers.share > 0 ? theme.textDim : '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: taskTimers.share > 0 ? 'not-allowed' : 'pointer' }}>
                                     {taskTimers.share > 0 ? `ĐỢI ${taskTimers.share}s` : 'NHẬN QUÀ'}
                                 </button>
                             )}
@@ -837,14 +852,14 @@ function App() {
 
                 <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fde047', padding: '12px', marginBottom: '20px', borderRadius: '6px' }}>
                     <h4 style={{ color: '#b45309', fontWeight: 'bold', margin: '0 0 5px 0', fontSize: '13px' }}>
-                        ⏳ SỰ KIỆN HALVING SẮP DIỄN RA!
+                        ⏳ SỰ KIỆN HALVING ĐÃ KÍCH HOẠT!
                     </h4>
                     <p style={{ color: '#854d0e', margin: 0, fontSize: '12px', lineHeight: '1.5' }}>
-                        Khi Cộng đồng cán mốc <b>1.000 người</b>, phần thưởng tại các mốc: <b>Mốc 10, 50, 120, 200, 350 và 500</b> sẽ tự động <b>GIẢM XUỐNG</b> để bảo chứng độ khan hiếm cho SWGT. Hãy nhận thưởng ngay hôm nay trước khi quá muộn!
+                        Khi Cộng đồng cán mốc <b>1.000 người</b>, phần thưởng tại các mốc: <b>Mốc 10, 50, 120, 200, 350 và 500</b> đã chính thức <b>BỊ GIẢM 50%</b> để bảo chứng độ khan hiếm cho SWGT.
                     </p>
                 </div>
 
-                <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🚀 9 CỘT MỐC THƯỞNG NÓNG (KHI GROUP ĐẠT 1000 NGƯỜI)</h3>
+                <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🚀 9 CỘT MỐC THƯỞNG NÓNG</h3>
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '10px' }}>
                         <div>
@@ -868,8 +883,6 @@ function App() {
                             if (isClaimed) icon = '✅';
                             else if (canClaim) icon = '🎁';
                             
-                            const isHalvingMilestone = [10, 50, 120, 200, 350, 500].includes(m.req);
-                            
                             return (
                                 <div key={m.req} style={{ minWidth: '110px', backgroundColor: '#000', borderRadius: '10px', padding: '15px 10px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
                                     <div style={{ fontSize: '24px', marginBottom: '8px' }}>{icon}</div>
@@ -877,11 +890,11 @@ function App() {
                                     
                                     <p style={{ color: theme.blue, fontSize: '11px', fontWeight: 'bold', margin: '0 0 5px 0' }}>{m.rank}</p>
                                     
-                                    <p style={{ color: theme.gold, fontSize: '12px', margin: '0 0 10px 0' }}>
-                                        +{m.reward}{isHalvingMilestone ? '*' : ''}
+                                    <p style={{ color: theme.gold, fontSize: '13px', fontWeight: '900', margin: '0 0 10px 0' }}>
+                                        +{m.reward}
                                     </p>
                                     <button 
-                                        onClick={() => handleClaimMilestone(m.req)} 
+                                        onClick={(e) => handleClaimMilestone(m.req, m.reward, e)} 
                                         disabled={!canClaim}
                                         style={{ width: '100%', backgroundColor: isClaimed ? '#333' : (canClaim ? theme.green : '#333'), color: isClaimed ? theme.textDim : (canClaim ? '#fff' : theme.textDim), border: 'none', padding: '8px 0', borderRadius: '6px', fontWeight: 'bold', fontSize: '12px', cursor: canClaim ? 'pointer' : 'not-allowed' }}>
                                         {isClaimed ? 'ĐÃ NHẬN' : 'NHẬN'}
@@ -1030,10 +1043,13 @@ function App() {
         <div style={{ backgroundColor: theme.bg, minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '90px', boxSizing: 'border-box' }}>
             <style>{`
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+                
+                /* Hiệu ứng thanh cuộn */
                 ::-webkit-scrollbar { height: 6px; }
                 ::-webkit-scrollbar-track { background: #1C1C1E; border-radius: 10px; }
                 ::-webkit-scrollbar-thumb { background: #F4D03F; border-radius: 10px; }
                 
+                /* Hiệu ứng viền Avatar xoay và nhấp nháy */
                 @keyframes spin { 
                     100% { transform: rotate(360deg); } 
                 }
@@ -1045,8 +1061,63 @@ function App() {
                     0%, 100% { box-shadow: 0 0 5px #00FFFF, inset 0 0 5px #00FFFF; }
                     50% { box-shadow: 0 0 15px #00FFFF, inset 0 0 10px #00FFFF; }
                 }
+
+                /* Hiệu ứng Navigation Bottom Tab động */
+                .nav-item {
+                    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+                    cursor: pointer;
+                    width: 33%;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    opacity: 0.6;
+                }
+                .nav-item.active {
+                    opacity: 1;
+                    transform: translateY(-4px); /* Nhích nhẹ lên khi Active */
+                }
+                .nav-item:active {
+                    transform: scale(0.92); /* Thu nhỏ khi bấm */
+                }
+                .nav-icon {
+                    font-size: 26px;
+                    margin-bottom: 6px;
+                    transition: all 0.3s ease;
+                }
+                .nav-item.active .nav-icon {
+                    animation: bounceTab 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                    text-shadow: 0 0 15px rgba(244, 208, 63, 0.9); /* Phát sáng mờ cho icon */
+                }
+                @keyframes bounceTab {
+                    0% { transform: scale(1); }
+                    50% { transform: scale(1.25); }
+                    100% { transform: scale(1); }
+                }
+
+                /* Hiệu ứng số tiền thưởng bay lên */
+                @keyframes floatUp {
+                    0% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+                    100% { opacity: 0; transform: translate(-50%, -80px) scale(1.5); }
+                }
+                .floating-reward {
+                    position: fixed;
+                    color: #F4D03F;
+                    font-weight: 900;
+                    font-size: 24px;
+                    pointer-events: none;
+                    z-index: 9999;
+                    animation: floatUp 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+                    text-shadow: 0px 0px 8px rgba(244, 208, 63, 0.8), 0px 2px 4px rgba(0,0,0,1);
+                }
             `}</style>
             
+            {/* RENDER HIỆU ỨNG TIỀN BAY LÊN */}
+            {animations.map(anim => (
+                <div key={anim.id} className="floating-reward" style={{ left: anim.x, top: anim.y }}>
+                    {anim.text}
+                </div>
+            ))}
+
             {renderHeader()}
             <div style={{ marginTop: '10px' }}>
                 {activeTab === 'home' && renderHome()}
@@ -1054,61 +1125,24 @@ function App() {
                 {activeTab === 'wallet' && renderWallet()}
             </div>
 
-            {/* TAB BOTTOM VỚI HIỆU ỨNG ĐỘNG BẬC NHẤT */}
+            {/* THANH ĐIỀU HƯỚNG TÍCH HỢP CLASS ĐỘNG MỚI */}
             <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: theme.cardBg, borderTop: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-around', padding: '15px 0', paddingBottom: 'calc(15px + env(safe-area-inset-bottom))', zIndex: 100 }}>
-                <div 
-                    onClick={() => setActiveTab('home')} 
-                    style={{ 
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', 
-                        color: activeTab === 'home' ? theme.gold : theme.textDim, 
-                        width: '33%', cursor: 'pointer',
-                        transform: activeTab === 'home' ? 'translateY(-5px) scale(1.1)' : 'translateY(0) scale(1)',
-                        transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-                    }}
-                >
-                    <div style={{ 
-                        fontSize: '24px', marginBottom: '4px',
-                        textShadow: activeTab === 'home' ? `0 0 15px ${theme.gold}` : 'none',
-                        filter: activeTab === 'home' ? 'grayscale(0%)' : 'grayscale(100%)'
-                    }}>🏠</div>
-                    <span style={{ fontSize: '13px', fontWeight: 'bold', opacity: activeTab === 'home' ? 1 : 0.7 }}>Trang chủ</span>
+                
+                <div onClick={() => setActiveTab('home')} className={`nav-item ${activeTab === 'home' ? 'active' : ''}`} style={{ color: activeTab === 'home' ? theme.gold : theme.textDim }}>
+                    <div className="nav-icon">🏠</div>
+                    <span style={{ fontSize: '14px', fontWeight: 'bold' }}>Trang chủ</span>
                 </div>
                 
-                <div 
-                    onClick={() => setActiveTab('rewards')} 
-                    style={{ 
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', 
-                        color: activeTab === 'rewards' ? theme.gold : theme.textDim, 
-                        width: '33%', cursor: 'pointer',
-                        transform: activeTab === 'rewards' ? 'translateY(-5px) scale(1.1)' : 'translateY(0) scale(1)',
-                        transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-                    }}
-                >
-                    <div style={{ 
-                        fontSize: '24px', marginBottom: '4px',
-                        textShadow: activeTab === 'rewards' ? `0 0 15px ${theme.gold}` : 'none',
-                        filter: activeTab === 'rewards' ? 'grayscale(0%)' : 'grayscale(100%)'
-                    }}>🎁</div>
-                    <span style={{ fontSize: '13px', fontWeight: 'bold', opacity: activeTab === 'rewards' ? 1 : 0.7 }}>Phần thưởng</span>
+                <div onClick={() => setActiveTab('rewards')} className={`nav-item ${activeTab === 'rewards' ? 'active' : ''}`} style={{ color: activeTab === 'rewards' ? theme.gold : theme.textDim }}>
+                    <div className="nav-icon">🎁</div>
+                    <span style={{ fontSize: '14px', fontWeight: 'bold' }}>Phần thưởng</span>
                 </div>
                 
-                <div 
-                    onClick={() => setActiveTab('wallet')} 
-                    style={{ 
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', 
-                        color: activeTab === 'wallet' ? theme.gold : theme.textDim, 
-                        width: '33%', cursor: 'pointer',
-                        transform: activeTab === 'wallet' ? 'translateY(-5px) scale(1.1)' : 'translateY(0) scale(1)',
-                        transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-                    }}
-                >
-                    <div style={{ 
-                        fontSize: '24px', marginBottom: '4px',
-                        textShadow: activeTab === 'wallet' ? `0 0 15px ${theme.gold}` : 'none',
-                        filter: activeTab === 'wallet' ? 'grayscale(0%)' : 'grayscale(100%)'
-                    }}>👛</div>
-                    <span style={{ fontSize: '13px', fontWeight: 'bold', opacity: activeTab === 'wallet' ? 1 : 0.7 }}>Ví</span>
+                <div onClick={() => setActiveTab('wallet')} className={`nav-item ${activeTab === 'wallet' ? 'active' : ''}`} style={{ color: activeTab === 'wallet' ? theme.gold : theme.textDim }}>
+                    <div className="nav-icon">👛</div>
+                    <span style={{ fontSize: '14px', fontWeight: 'bold' }}>Ví</span>
                 </div>
+
             </div>
         </div>
     );
