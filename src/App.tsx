@@ -250,17 +250,19 @@ function App() {
     };
 
     let displayBoard = [...leaderboard];
+    
+    // CẬP NHẬT: Thêm Avatar giả lập cho các tài khoản ảo để bảng xếp hạng trông xịn xò hơn
     const dummyUsers = [
-        { firstName: 'Vũ', lastName: 'Dũng', referralCount: 65, photoUrl: '' },
-        { firstName: 'Mai', lastName: 'Thiều Thị', referralCount: 60, photoUrl: '' },
-        { firstName: 'LINH', lastName: 'NGUYEN', referralCount: 47, photoUrl: '' },
-        { firstName: 'Minh', lastName: 'Ngọc Hoàng', referralCount: 33, photoUrl: '' },
-        { firstName: 'PHƯƠNG', lastName: 'ANH PHÙNG', referralCount: 27, photoUrl: '' },
-        { firstName: 'Nông', lastName: 'Mao', referralCount: 12, photoUrl: '' },
-        { firstName: 'Support', lastName: '', referralCount: 11, photoUrl: '' },
-        { firstName: 'OSAKA', lastName: 'CHAU HUYNH', referralCount: 10, photoUrl: '' },
-        { firstName: 'Trinh', lastName: 'Lê', referralCount: 9, photoUrl: '' },
-        { firstName: 'Lý', lastName: 'Hà', referralCount: 8, photoUrl: '' }
+        { firstName: 'Vũ', lastName: 'Dũng', referralCount: 65, photoUrl: 'https://i.pravatar.cc/150?img=11' },
+        { firstName: 'Mai', lastName: 'Thiều Thị', referralCount: 60, photoUrl: 'https://i.pravatar.cc/150?img=5' },
+        { firstName: 'LINH', lastName: 'NGUYEN', referralCount: 47, photoUrl: 'https://i.pravatar.cc/150?img=9' },
+        { firstName: 'Minh', lastName: 'Ngọc Hoàng', referralCount: 33, photoUrl: 'https://i.pravatar.cc/150?img=12' },
+        { firstName: 'PHƯƠNG', lastName: 'ANH PHÙNG', referralCount: 27, photoUrl: 'https://i.pravatar.cc/150?img=20' },
+        { firstName: 'Nông', lastName: 'Mao', referralCount: 12, photoUrl: 'https://i.pravatar.cc/150?img=33' },
+        { firstName: 'Support', lastName: '', referralCount: 11, photoUrl: 'https://i.pravatar.cc/150?img=41' },
+        { firstName: 'OSAKA', lastName: 'CHAU HUYNH', referralCount: 10, photoUrl: 'https://i.pravatar.cc/150?img=32' },
+        { firstName: 'Trinh', lastName: 'Lê', referralCount: 9, photoUrl: 'https://i.pravatar.cc/150?img=44' },
+        { firstName: 'Lý', lastName: 'Hà', referralCount: 8, photoUrl: 'https://i.pravatar.cc/150?img=47' }
     ];
     
     if (displayBoard.length < 10) {
@@ -533,15 +535,17 @@ function App() {
                 
                 const isMe = user.firstName === userProfile.name.split(' ')[0];
                 
-                // Lấy Avatar: Nếu là bạn thì ưu tiên lấy avatar profile, còn lại lấy của user (nếu có API trả về)
-                const displayAvatar = isMe && userProfile.photoUrl ? userProfile.photoUrl : user.photoUrl;
+                // Lấy Avatar: Quét lần lượt các trường thông tin trả về (photoUrl, photo_url, avatar)
+                const displayAvatar = isMe && userProfile.photoUrl 
+                    ? userProfile.photoUrl 
+                    : (user.photoUrl || user.photo_url || user.avatar);
 
                 return (
                     <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: index < wealthBoard.length - 1 ? `1px solid ${theme.border}` : 'none', backgroundColor: isMe ? 'rgba(244, 208, 63, 0.1)' : 'transparent', borderRadius: '8px', paddingLeft: isMe ? '10px' : '0', paddingRight: isMe ? '10px' : '0' }}>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <span style={{ color: theme.textDim, fontWeight: 'bold', fontSize: '14px', minWidth: '24px', marginRight: '5px' }}>{index + 1}.</span>
                             
-                            {/* --- MỚI: HIỂN THỊ AVATAR HOẶC CHỮ CÁI ĐẦU TIÊN TÊN --- */}
+                            {/* --- KHU VỰC HIỂN THỊ AVATAR --- */}
                             <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '10px', overflow: 'hidden', border: `1px solid ${isMe ? theme.gold : theme.border}`, flexShrink: 0 }}>
                                 {displayAvatar ? (
                                     <img src={displayAvatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
@@ -712,7 +716,7 @@ function App() {
                 </div>
             </div>
 
-            {/* BLOCK NẠP KIẾN THỨC ĐÃ ĐƯỢC CHUYỂN XUỐNG DƯỚI ĐÂY */}
+            {/* KHU VỰC NẠP KIẾN THỨC ĐÃ CHUYỂN XUỐNG DƯỚI */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🧠 Nạp Kiến Thức & Lan Tỏa</h2>
                 
@@ -800,7 +804,6 @@ function App() {
                     )}
                 </div>
             </div>
-            {/* KẾT THÚC BLOCK NẠP KIẾN THỨC */}
 
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px dashed ${theme.blue}` }}>
                 <h2 style={{ color: theme.blue, margin: '0 0 15px 0', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
