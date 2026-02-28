@@ -16,7 +16,7 @@ function App() {
     const [withdrawAmount, setWithdrawAmount] = useState(''); 
     
     const [checkInStreak, setCheckInStreak] = useState(0);
-    const [milestones, setMilestones] = useState<any>({});
+    const [milestones, setMilestones] = useState({});
     
     const [giftCodeInput, setGiftCodeInput] = useState('');
 
@@ -30,8 +30,8 @@ function App() {
         name: 'Đang tải...', username: '', photoUrl: '', activeFrame: 'none', ownedFrames: ['none']
     });
 
-    const [lastCheckIn, setLastCheckIn] = useState<string | null>(null);
-    const [leaderboard, setLeaderboard] = useState<any[]>([]);
+    const [lastCheckIn, setLastCheckIn] = useState(null);
+    const [leaderboard, setLeaderboard] = useState([]);
 
     const [isPremiumUser, setIsPremiumUser] = useState(false);
     const [unlockDateMs, setUnlockDateMs] = useState(0);
@@ -41,23 +41,11 @@ function App() {
 
     const [boardType, setBoardType] = useState('weekly'); 
 
-    // ==========================================
-    // KHAI BÁO STATE CHO GAME (GACHA & SURFER FULLSCREEN)
-    // ==========================================
-    const [gameTab, setGameTab] = useState('gacha'); 
-    const [isFullScreenGame, setIsFullScreenGame] = useState(false); // BẬT CHẾ ĐỘ TOÀN MÀN HÌNH CHO GAME
-
-    // GACHA STATE
-    const [isSpinning, setIsSpinning] = useState(false);
-    const [chestBoard, setChestBoard] = useState(Array(9).fill({ isOpened: false, reward: null, isMine: false }));
-    const [pendingBoard, setPendingBoard] = useState(null); 
-    const [spinResultMsg, setSpinResultMsg] = useState('');
-    const [spinCount, setSpinCount] = useState(0); 
-    const MAX_PITY = 30; 
-    const [boxModal, setBoxModal] = useState({ show: false, type: '', label: '', reward: 0, status: 'closed', isFrame: false, newBalance: 0 });
+    // GAME STATE
+    const [isFullScreenGame, setIsFullScreenGame] = useState(false); 
     const [showRevengePopup, setShowRevengePopup] = useState(false);
 
-    const BACKEND_URL = 'https://swc-bot-brain.onrender.com';
+    const BACKEND_URL = 'https://swc-bot-brain.onrender.com'; // Thay URL backend của bạn nếu cần
 
     const theme = {
         bg: '#0F0F0F', cardBg: '#1C1C1E', gold: '#F4D03F', textLight: '#FFFFFF', 
@@ -66,11 +54,11 @@ function App() {
     };
 
     const AVATAR_FRAMES = [
-        { id: 'bronze', name: 'Khung Đồng', price: 100, border: '3px solid #CD7F32', shadow: '0 0 5px #CD7F32' },
-        { id: 'silver', name: 'Khung Bạc', price: 300, border: '3px solid #C0C0C0', shadow: '0 0 8px #C0C0C0' },
-        { id: 'gold', name: 'Khung Vàng', price: 800, border: '3px solid #F4D03F', shadow: '0 0 12px #F4D03F' },
-        { id: 'dragon', name: 'Rồng Lửa', price: 2000, border: '3px dashed #FF3B30', shadow: '0 0 20px #FF3B30', animation: 'pulseRed 1.5s infinite' },
-        { id: 'light', name: 'Ánh Sáng', price: -1, border: '3px dotted #00FFFF', shadow: '0 0 15px #00FFFF', desc: 'Chỉ rớt từ Đập Rương' }
+        { id: 'bronze', name: 'Khung Đồng', price: 100, border: '2px solid #CD7F32', shadow: '0 0 5px #CD7F32' },
+        { id: 'silver', name: 'Khung Bạc', price: 300, border: '2px solid #C0C0C0', shadow: '0 0 10px #C0C0C0' },
+        { id: 'gold', name: 'Khung Vàng', price: 800, border: '2px solid #F4D03F', shadow: '0 0 15px #F4D03F', animation: 'sparkleGold 2s infinite' },
+        { id: 'dragon', name: 'Rồng Lửa', price: 2000, border: '2px dashed #FF3B30', shadow: '0 0 20px #FF3B30', animation: 'pulseRed 1.5s infinite' },
+        { id: 'light', name: 'Ánh Sáng', price: -1, border: '2px dotted #00FFFF', shadow: '0 0 15px #00FFFF', animation: 'sparkleRainbow 3s infinite', desc: 'Chỉ rớt từ Đập Rương' }
     ];
 
     const getFrameStyle = (frameId) => {
@@ -290,6 +278,17 @@ function App() {
         });
     };
 
+    const redeemItem = (itemName, cost) => {
+        if (balance < cost) return alert("⚠️ Bạn không đủ SWGT để đổi!");
+        if (window.confirm(`Xác nhận đổi ${cost} SWGT lấy ${itemName}?`)) {
+            fetch(`${BACKEND_URL}/api/redeem`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, itemName, cost }) })
+            .then(res => res.json()).then(data => {
+                if(data.success) { setBalance(data.balance); alert(`🎉 Đổi quyền lợi thành công! Admin sẽ xử lý cho bạn trong chốc lát.`); } 
+                else { alert("❌ Đã xảy ra lỗi hệ thống!"); }
+            });
+        }
+    };
+
     // ==================================================
     // FULLSCREEN GAME COMPONENT: NHẶT SWGT (ENDLESS RUNNER)
     // ==================================================
@@ -422,7 +421,7 @@ function App() {
                                 state.crowdSize -= obs.req; // Bị xe đâm
                                 state.floatingTexts.push({ x: pBox.x, y: pBox.y, text: `-${obs.req} ☠️`, life: 30, color: '#FF3B30' });
                                 if (state.crowdSize <= 0) {
-                                    setGameState('gameover'); cancelAnimationFrame(state.animationId);
+                                    setGs('gameover'); cancelAnimationFrame(state.animationId);
                                     if (state.score > gHigh) setGHigh(state.score); return;
                                 }
                             }
@@ -437,7 +436,7 @@ function App() {
                             state.crowdSize -= 1; // Bom trừ 1 mạng
                             state.floatingTexts.push({ x: pBox.x, y: pBox.y, text: `-1 💣`, life: 30, color: '#FF3B30' });
                             if (state.crowdSize <= 0) {
-                                setGameState('gameover'); cancelAnimationFrame(state.animationId);
+                                setGs('gameover'); cancelAnimationFrame(state.animationId);
                                 if (state.score > gHigh) setGHigh(state.score); return;
                             }
                         }
@@ -593,7 +592,7 @@ function App() {
     };
 
     // ==================================================
-    // KHỐI RENDER: BẢNG XẾP HẠNG (CHỈ CHỮ, CÓ KHUNG VIỀN TỪ SHOP)
+    // KHỐI RENDER: BẢNG XẾP HẠNG (CHỈ CHỮ & ANIMATION)
     // ==================================================
     const renderWealthBoard = () => (
         <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
@@ -624,7 +623,7 @@ function App() {
                 const initialBg = index === 0 ? '#F4D03F' : index === 1 ? '#C0C0C0' : index === 2 ? '#CD7F32' : '#333333';
                 const initialColor = index === 0 ? '#000' : '#FFF';
 
-                // NẾU TÀI KHOẢN CÓ MUA KHUNG VIỀN TRONG SHOP, SẼ HIỂN THỊ KHUNG ĐÓ. NẾU KHÔNG THÌ HIỆN KHUNG MẶC ĐỊNH CỦA TOP.
+                // KHUNG VIỀN ĐỘNG (LOẠI BỎ ẢNH THẬT, CHỈ GIỮ LẠI HIỆU ỨNG KHUNG LẤP LÁNH)
                 let frameStyle = { border: `2px solid ${theme.border}`, shadow: 'none', animation: 'none' };
                 if (isMe && userProfile.activeFrame !== 'none') {
                     frameStyle = getFrameStyle(userProfile.activeFrame);
@@ -635,6 +634,9 @@ function App() {
                     else if (index === 1) frameStyle = getFrameStyle('silver');
                     else if (index === 2) frameStyle = getFrameStyle('bronze');
                 }
+
+                // SỬ DỤNG HÀM GET MILITARY RANK ĐỂ CĂN CHUẨN CẤP BẬC
+                const userMilitaryRank = getMilitaryRank(user.displayCount || user.referralCount);
 
                 return (
                     <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: index < wealthBoard.length - 1 ? `1px solid ${theme.border}` : 'none', backgroundColor: isMe ? 'rgba(244, 208, 63, 0.1)' : 'transparent', borderRadius: '8px', paddingLeft: isMe ? '10px' : '0', paddingRight: isMe ? '10px' : '0' }}>
@@ -649,14 +651,12 @@ function App() {
                                 </div>
                             </div>
                             
-                            <span style={{ fontSize: '20px', marginRight: '8px' }}>{icon}</span>
-                            
                             <div style={{display:'flex', flexDirection:'column', gap: '3px'}}>
                                 <span style={{ color: isMe ? theme.gold : theme.textLight, fontWeight: 'bold', fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100px' }}>
                                     {user.firstName} {user.lastName} {isMe && '(Bạn)'}
                                 </span>
-                                {/* HIỆN QUÂN HÀM DƯỚI TÊN */}
-                                <span style={{ color: theme.blue, fontSize: '11px', fontWeight: 'bold' }}>{getMilitaryRank(user.displayCount || user.referralCount)}</span>
+                                {/* HIỆN QUÂN HÀM DƯỚI TÊN ĐÃ ĐỒNG BỘ */}
+                                <span style={{ color: theme.blue, fontSize: '11px', fontWeight: 'bold' }}>{userMilitaryRank}</span>
                             </div>
                         </div>
 
@@ -905,28 +905,50 @@ function App() {
                 {renderWealthBoard()}
 
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>💎 KHO ĐẶC QUYỀN VIP</h3>
-                <p style={{ color: theme.textDim, fontSize: '14px', marginBottom: '15px' }}>Hãy để lại số lượng Token</p>
+                <p style={{ color: theme.textDim, fontSize: '14px', marginBottom: '15px' }}>Đổi SWGT lấy các phần quà thực tế.</p>
                 
                 <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '15px', marginBottom: '15px', border: `1px solid ${theme.border}`}}>
-                    <h4 style={{margin: '0 0 8px 0', color: '#5E92F3', fontSize: '16px'}}>☕ Cà Phê Chiến Lược : 6000</h4>
+                    <h4 style={{margin: '0 0 8px 0', color: '#5E92F3', fontSize: '16px'}}>☕ Cà Phê Chiến Lược : 6000 SWGT</h4>
                     <p style={{fontSize: '14px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Thảo luận danh mục trực tiếp cùng Admin Ucity.</p>
                     <button onClick={() => redeemItem('Cà Phê Chiến Lược', 6000)} style={{backgroundColor: '#5E92F3', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer'}}>LIÊN HỆ ADMIN</button>
                 </div>
                 
                 <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '15px', marginBottom: '15px', border: `1px solid ${theme.border}`}}>
-                    <h4 style={{margin: '0 0 8px 0', color: '#34C759', fontSize: '16px'}}>🔓 Mở Khóa Group Private : 8000</h4>
+                    <h4 style={{margin: '0 0 8px 0', color: '#34C759', fontSize: '16px'}}>🔓 Mở Khóa Group Private : 8000 SWGT</h4>
                     <p style={{fontSize: '14px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Nhận tín hiệu thị trường và họp Zoom kín hàng tuần.</p>
                     <button onClick={() => redeemItem('Group Private', 8000)} style={{backgroundColor: '#34C759', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer'}}>LIÊN HỆ ADMIN</button>
                 </div>
 
                 <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '15px', marginBottom: '15px', border: `1px solid ${theme.border}`}}>
-                    <h4 style={{margin: '0 0 8px 0', color: theme.gold, fontSize: '16px'}}>🎟️ Phiếu Đầu Tư Ưu Đãi Đặc Biệt : 9000</h4>
+                    <h4 style={{margin: '0 0 8px 0', color: theme.gold, fontSize: '16px'}}>🎟️ Phiếu Đầu Tư Ưu Đãi : 9000 SWGT</h4>
                     <p style={{fontSize: '14px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Nhận Voucher chiết khấu đặc biệt khi vào gói đầu tư lớn.</p>
                     <button onClick={() => redeemItem('Phiếu Đầu Tư', 9000)} style={{backgroundColor: theme.gold, color: '#000', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer'}}>LIÊN HỆ ADMIN</button>
                 </div>
             </div>
         );
     };
+
+    // ==================================================
+    // TAB GIẢI TRÍ (ĐÃ THÊM ĐỂ FIX LỖI ĐEN MÀN HÌNH)
+    // ==================================================
+    const renderGameZone = () => (
+        <div style={{ padding: '0 20px 20px 20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '25px' }}>
+                <div style={{ fontSize: '45px', marginBottom: '5px' }}>🎮</div>
+                <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '22px', fontWeight: '900' }}>Khu Giải Trí</h2>
+                <p style={{ color: theme.textDim, fontSize: '14px', margin: 0 }}>Chơi game nhận SWGT miễn phí</p>
+            </div>
+            
+            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', textAlign: 'center', border: `1px solid ${theme.border}`, marginBottom: '20px' }}>
+                <div style={{ fontSize: '50px', marginBottom: '10px' }}>🏃‍♂️</div>
+                <h3 style={{ color: theme.textLight, fontSize: '18px', margin: '0 0 10px 0' }}>Endless Runner</h3>
+                <p style={{ color: theme.textDim, fontSize: '14px', marginBottom: '20px', lineHeight: '1.5' }}>Thu thập người, né chướng ngại vật và quy đổi điểm ra SWGT để rút thẳng về ví!</p>
+                <button onClick={() => setIsFullScreenGame(true)} style={{ width: '100%', padding: '15px', borderRadius: '10px', backgroundColor: theme.green, color: '#fff', fontSize: '16px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
+                    🚀 CHƠI NGAY
+                </button>
+            </div>
+        </div>
+    );
 
     // ==================================================
     // CỬA HÀNG KHUNG VIỀN AVATAR (SHOP)
@@ -1065,82 +1087,18 @@ function App() {
         </div>
     );
 
-    // ==================================================
-    // GIAO DIỆN GAME CHẠY VÔ TẬN FULL SCREEN (GIỐNG DOGS)
-    // ==================================================
-    if (isFullScreenGame) {
-        return (
-            <div style={{ position: 'fixed', inset: 0, backgroundColor: '#0f172a', zIndex: 99999, touchAction: 'none' }}>
-                <button onClick={() => setIsFullScreenGame(false)} style={{ position: 'absolute', top: '15px', left: '15px', zIndex: 10, background: 'rgba(0,0,0,0.5)', border: 'none', color: '#fff', fontSize: '24px', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer' }}>✖</button>
-                <div style={{ position: 'absolute', top: '15px', right: '15px', zIndex: 10, display: 'flex', gap: '15px', background: 'rgba(0,0,0,0.5)', padding: '5px 15px', borderRadius: '20px' }}>
-                    <div style={{ color: '#fff', fontWeight: 'bold' }}>👥 {gameRef.current.crowdSize || 3}</div>
-                    <div style={{ color: theme.gold, fontWeight: 'bold' }}>💰 {score}</div>
-                </div>
-
-                <div 
-                    onPointerDown={() => { if (gameState === 'playing') gameRef.current.isPressing = true; }} 
-                    onPointerUp={() => { if (gameState === 'playing') gameRef.current.isPressing = false; }}
-                    onPointerLeave={() => { if (gameState === 'playing') gameRef.current.isPressing = false; }}
-                    style={{ width: '100%', height: '100%' }}
-                >
-                    <canvas ref={canvasRef} style={{ display: 'block', width: '100%', height: '100%' }} />
-                </div>
-
-                {/* MÀN HÌNH CHỜ BẮT ĐẦU */}
-                {gameState === 'start' && (
-                    <div onClick={() => { gameRef.current = { playerY: window.innerHeight / 2, velocityY: 0, gravity: 0.35, lift: -0.65, isPressing: false, obstacles: [], coins: [], buildings: [], frames: 0, speed: 4, animationId: null, crowdSize: 3, floatingTexts: [] }; setScore(0); setGameState('playing'); }} style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                        <div style={{ width: '300px', padding: '20px', backgroundColor: theme.cardBg, borderRadius: '20px', textAlign: 'center', border: `2px solid ${theme.blue}` }}>
-                            <h1 style={{ color: theme.blue, fontSize: '32px', margin: '0 0 10px 0', fontWeight: '900', textTransform: 'uppercase' }}>Nhặt SWGT</h1>
-                            <p style={{ color: '#fff', fontSize: '14px', lineHeight: '1.6', marginBottom: '20px' }}>
-                                👆 <b>Chạm & Giữ</b> màn hình để bay.<br/>
-                                🚙 Đâm xe nhỏ hơn để <b>thu phục lính</b>.<br/>
-                                🚙 Đâm xe to hơn sẽ bị <b>mất lính</b>.<br/>
-                                💣 <b>Né Bom</b> (Mất 1 mạng).<br/>
-                                💰 Tỉ lệ quy đổi: <b>5 Điểm = 1 SWGT</b>
-                            </p>
-                            <button style={{ width: '100%', padding: '15px', borderRadius: '10px', backgroundColor: theme.blue, color: '#fff', fontSize: '18px', fontWeight: 'bold', border: 'none' }}>CHẠM ĐỂ BẮT ĐẦU</button>
-                        </div>
-                    </div>
-                )}
-
-                {/* MÀN HÌNH GAME OVER */}
-                {gameState === 'gameover' && (
-                    <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(255, 59, 48, 0.9)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center' }}>
-                        <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: '900', margin: '0 0 5px 0' }}>BẠN ĐÃ MẤT HẾT LÍNH!</h2>
-                        <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '15px', margin: '0 0 20px 0' }}>Thu thập thêm người để đi xa hơn.</p>
-                        
-                        <div style={{ backgroundColor: '#000', padding: '15px 30px', borderRadius: '15px', marginBottom: '20px', minWidth: '200px' }}>
-                            <p style={{ margin: '0 0 5px 0', color: theme.textDim, fontSize: '12px' }}>Điểm lần này</p>
-                            <h1 style={{ margin: 0, color: theme.gold, fontSize: '40px' }}>{score}</h1>
-                        </div>
-
-                        <div style={{ display: 'flex', gap: '15px', width: '100%', maxWidth: '300px' }}>
-                            <button onClick={() => { gameRef.current = { playerY: window.innerHeight / 2, velocityY: 0, gravity: 0.35, lift: -0.65, isPressing: false, obstacles: [], coins: [], buildings: [], frames: 0, speed: 4, animationId: null, crowdSize: 3, floatingTexts: [] }; setScore(0); setGameState('playing'); }} style={{ flex: 1, padding: '15px', borderRadius: '10px', backgroundColor: '#333', color: '#fff', border: 'none', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer' }}>🔄 Chơi Lại</button>
-                            <button onClick={() => {
-                                if (score === 0) return alert("Bạn chưa có điểm nào!");
-                                const rewardEarned = Math.floor(score / 5); 
-                                if (rewardEarned === 0) return alert(`Bạn được ${score} điểm. Đạt 5 điểm để đổi SWGT nhé!`);
-                                setBalance(prev => prev + rewardEarned);
-                                alert(`🎉 Đổi thành công +${rewardEarned} SWGT vào ví!`);
-                                setScore(0); setIsFullScreenGame(false);
-                            }} style={{ flex: 1, padding: '15px', borderRadius: '10px', backgroundColor: theme.gold, color: '#000', border: 'none', fontWeight: '900', fontSize: '16px', cursor: 'pointer' }}>💰 Rút SWGT</button>
-                        </div>
-                    </div>
-                )}
-            </div>
-        );
-    }
+    if (isFullScreenGame) return <FullScreenGame />;
 
     // ==================================================
-    // CẤU TRÚC APP CHÍNH (KHI KHÔNG CHƠI GAME FULLSCREEN)
+    // CẤU TRÚC APP CHÍNH
     // ==================================================
     return (
         <div style={{ backgroundColor: theme.bg, minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '90px', boxSizing: 'border-box' }}>
             <style>{`
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
                 @keyframes pulseRed { 0% { box-shadow: 0 0 10px #FF3B30; } 50% { box-shadow: 0 0 35px #FF3B30; } 100% { box-shadow: 0 0 10px #FF3B30; } }
-                @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-1deg); } 80% { transform: translate(-1px, -1px) rotate(1deg); } 90% { transform: translate(1px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
-                @keyframes stripemove { 0% { background-position: 0 0; } 100% { background-position: 50px 50px; } }
+                @keyframes sparkleGold { 0% { box-shadow: 0 0 5px #F4D03F, inset 0 0 5px #F4D03F; border-color: #F4D03F; } 50% { box-shadow: 0 0 20px #FFF, inset 0 0 10px #F4D03F; border-color: #FFF; } 100% { box-shadow: 0 0 5px #F4D03F, inset 0 0 5px #F4D03F; border-color: #F4D03F; } }
+                @keyframes sparkleRainbow { 0% { border-color: #ff0000; box-shadow: 0 0 15px #ff0000; } 33% { border-color: #00ff00; box-shadow: 0 0 15px #00ff00; } 66% { border-color: #0000ff; box-shadow: 0 0 15px #0000ff; } 100% { border-color: #ff0000; box-shadow: 0 0 15px #ff0000; } }
                 ::-webkit-scrollbar { height: 6px; }
                 ::-webkit-scrollbar-track { background: #1C1C1E; border-radius: 10px; }
                 ::-webkit-scrollbar-thumb { background: #F4D03F; border-radius: 10px; }
@@ -1156,7 +1114,6 @@ function App() {
                 {activeTab === 'wallet' && renderWallet()}
             </div>
 
-            {/* THANH ĐIỀU HƯỚNG DƯỚI ĐÁY CHUẨN 5 NÚT */}
             <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: theme.cardBg, borderTop: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-around', padding: '15px 0', paddingBottom: 'calc(15px + env(safe-area-inset-bottom))', zIndex: 100 }}>
                 <div onClick={() => setActiveTab('home')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'home' ? theme.gold : theme.textDim, width: '20%', cursor: 'pointer' }}>
                     <div style={{ fontSize: '22px', marginBottom: '6px' }}>🏠</div><span style={{ fontSize: '11px', fontWeight: 'bold' }}>TRANG CHỦ</span>
@@ -1175,7 +1132,6 @@ function App() {
                 </div>
             </div>
 
-            {/* BẢNG POP-UP KHIÊU KHÍCH PHỤC THÙ (DÙNG CHO GACHA) */}
             {showRevengePopup && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
                     <div style={{ backgroundColor: theme.cardBg, border: `2px solid ${theme.red}`, borderRadius: '15px', padding: '25px', textAlign: 'center', animation: 'pulseRed 1.2s infinite' }}>
