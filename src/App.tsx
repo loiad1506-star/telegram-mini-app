@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect } from 'react';
 
 function App() {
@@ -36,14 +35,10 @@ function App() {
     });
 
     const [userId, setUserId] = useState('');
-    
-    // 😈 STATE QUẢN LÝ KHUNG VIỀN AVATAR
     const [userProfile, setUserProfile] = useState({
         name: 'Đang tải...',
         username: '',
-        photoUrl: '',
-        activeFrame: 'none', 
-        ownedFrames: ['none']
+        photoUrl: ''
     });
 
     const [lastCheckIn, setLastCheckIn] = useState<string | null>(null);
@@ -58,21 +53,19 @@ function App() {
     const [boardType, setBoardType] = useState('weekly'); 
 
     // ==========================================
-    // STATE CHO RƯƠNG BÍ ẨN (GACHA 3.0)
+    // STATE CHO VÒNG QUAY NHÂN PHẨM
     // ==========================================
     const [isSpinning, setIsSpinning] = useState(false);
-    const [chestBoard, setChestBoard] = useState(Array(9).fill({ isOpened: false, reward: null, isMine: false }));
+    const [wheelRotation, setWheelRotation] = useState(0);
     const [spinResultMsg, setSpinResultMsg] = useState('');
+    
     const [spinEarned, setSpinEarned] = useState(0);
     
-    // 😈 Thanh năng lượng bảo hiểm nổ hũ (Pity System) - Giữ nguyên mốc 30
-    const [spinCount, setSpinCount] = useState(0); 
-    const MAX_PITY = 30; 
-
-    // STATE CHO TICKER THÔNG BÁO NGƯỜI TRÚNG THƯỞNG
     const [winnersList, setWinnersList] = useState<string[]>([]);
     const [currentWinner, setCurrentWinner] = useState('');
     const [showWinner, setShowWinner] = useState(false);
+
+    // 😈 Thêm State cho Pop-up Phục thù
     const [showRevengePopup, setShowRevengePopup] = useState(false);
 
     const BACKEND_URL = 'https://swc-bot-brain.onrender.com';
@@ -88,21 +81,6 @@ function App() {
         red: '#FF3B30',
         blue: '#5E92F3',
         premium: '#E0B0FF' 
-    };
-
-    // 😈 DANH SÁCH KHUNG VIỀN AVATAR
-    const AVATAR_FRAMES = [
-        { id: 'bronze', name: 'Khung Đồng', price: 100, border: '3px solid #CD7F32', shadow: '0 0 5px #CD7F32' },
-        { id: 'silver', name: 'Khung Bạc', price: 300, border: '3px solid #C0C0C0', shadow: '0 0 8px #C0C0C0' },
-        { id: 'gold', name: 'Khung Vàng', price: 800, border: '3px solid #F4D03F', shadow: '0 0 12px #F4D03F' },
-        { id: 'dragon', name: 'Rồng Lửa', price: 2000, border: '3px dashed #FF3B30', shadow: '0 0 20px #FF3B30', animation: 'pulseRed 1.5s infinite' },
-        { id: 'light', name: 'Ánh Sáng (Gacha)', price: -1, border: '3px dotted #00FFFF', shadow: '0 0 15px #00FFFF', desc: 'Chỉ rớt từ Đập Rương' }
-    ];
-
-    const getFrameStyle = (frameId: string) => {
-        const frame = AVATAR_FRAMES.find(f => f.id === frameId);
-        if (!frame) return { border: `2px solid ${theme.border}`, shadow: 'none', animation: 'none' };
-        return { border: frame.border, shadow: frame.shadow, animation: frame.animation || 'none' };
     };
 
     const MILESTONE_LIST = [
@@ -121,18 +99,20 @@ function App() {
 
     useEffect(() => {
         const generateFakeWinners = () => {
-            const ho = ['Nguyễn', 'Trần', 'Lê', 'Phạm', 'Hoàng', 'Huỳnh', 'Phan', 'Vũ', 'Võ', 'Đặng'];
-            const ten = ['Anh', 'Dũng', 'Linh', 'Hùng', 'Tuấn', 'Ngọc', 'Trang', 'Thảo', 'Tâm', 'Phương'];
-            const actions = ['vừa mở trúng 50 SWGT', 'đập hộp nổ hũ 100 SWGT', 'vừa bốc trúng 20 SWGT', 'vừa mở hụt rương 500', 'bốc trúng rương 500 SWGT', 'đập rương 10 SWGT', 'vừa bốc trúng Khung Ánh Sáng ✨'];
-            const icons = ['🎁', '💎', '🚀', '💰', '📦', '⚡', '🖼️'];
+            const ho = ['Nguyễn', 'Trần', 'Lê', 'Phạm', 'Hoàng', 'Huỳnh', 'Phan', 'Vũ', 'Võ', 'Đặng', 'Bùi', 'Đỗ', 'Hồ', 'Ngô', 'Dương', 'Lý', 'Phùng', 'Mai', 'Đinh', 'Đoàn'];
+            const dem = ['Thị', 'Văn', 'Thị Ngọc', 'Minh', 'Hữu', 'Đức', 'Thái', 'Hải', 'Quang', 'Thanh', 'Tuấn', 'Xuân', 'Thu', 'Hoài', 'Bảo', 'Gia', 'Nhật', 'Đình', 'Khắc', 'Ngọc'];
+            const ten = ['Anh', 'Dũng', 'Linh', 'Hùng', 'Tuấn', 'Ngọc', 'Trang', 'Thảo', 'Tâm', 'Phương', 'Hiếu', 'Hương', 'Lan', 'Quân', 'Yến', 'Sơn', 'Phát', 'Đạt', 'Long', 'Nhung', 'Quỳnh', 'Hoa', 'Thắng', 'Cường', 'Bình', 'An'];
+            const actions = ['vừa trúng 50 SWGT', 'nổ hũ 100 SWGT', 'vừa lãi 20 SWGT', 'vừa ăn 5 SWGT', 'nổ hũ cực đại 500 SWGT', 'trúng 10 SWGT', 'vừa bú 50 SWGT', 'lụm nhẹ 20 SWGT', 'vừa trúng 5 SWGT', 'mới húp 10 SWGT'];
+            const icons = ['🎉', '🔥', '💎', '🚀', '💰', '💸', '🎁', '⚡'];
 
             let arr = [];
-            for (let i = 0; i < 50; i++) {
+            for (let i = 0; i < 100; i++) {
                 const randomHo = ho[Math.floor(Math.random() * ho.length)];
+                const randomDem = dem[Math.floor(Math.random() * dem.length)];
                 const randomTen = ten[Math.floor(Math.random() * ten.length)];
                 const randomAction = actions[Math.floor(Math.random() * actions.length)];
                 const randomIcon = icons[Math.floor(Math.random() * icons.length)];
-                arr.push(`${randomIcon} ${randomHo} ${randomTen} ${randomAction}`);
+                arr.push(`${randomIcon} ${randomHo} ${randomDem} ${randomTen} ${randomAction}`);
             }
             return arr;
         };
@@ -158,7 +138,11 @@ function App() {
         };
 
         timeoutId = setTimeout(runTicker, 1500); 
-        return () => { clearTimeout(timeoutId); clearTimeout(showTimeoutId); };
+
+        return () => {
+            clearTimeout(timeoutId);
+            clearTimeout(showTimeoutId);
+        };
     }, [winnersList]);
 
     useEffect(() => {
@@ -196,10 +180,6 @@ function App() {
                 setReferrals(data.referralCount || 0); 
                 if (data.lastCheckInDate) setLastCheckIn(data.lastCheckInDate);
                 setCheckInStreak(data.checkInStreak || 0);
-
-                if (data.activeFrame) {
-                    setUserProfile(prev => ({ ...prev, activeFrame: data.activeFrame, ownedFrames: data.ownedFrames || ['none'] }));
-                }
                 
                 setMilestones({
                     milestone3: data.milestone3, milestone10: data.milestone10, 
@@ -239,12 +219,11 @@ function App() {
             if (user) {
                 const uid = user.id.toString();
                 setUserId(uid);
-                setUserProfile(prev => ({
-                    ...prev,
+                setUserProfile({
                     name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
                     username: user.username ? `@${user.username}` : '@nguoidung',
                     photoUrl: user.photo_url || ''
-                }));
+                });
                 fetchUserData(uid);
             }
         }
@@ -271,19 +250,17 @@ function App() {
     };
 
     let displayBoard = [...leaderboard];
-    
-    // Mồi nhử: Các dummy user có Avatar thật siêu nét
     const dummyUsers = [
-        { firstName: 'Vũ', lastName: 'Dũng', referralCount: 65, photoUrl: 'https://i.pravatar.cc/150?img=11', activeFrame: 'dragon' },
-        { firstName: 'Mai', lastName: 'Thiều Thị', referralCount: 60, photoUrl: 'https://i.pravatar.cc/150?img=5', activeFrame: 'gold' },
-        { firstName: 'LINH', lastName: 'NGUYEN', referralCount: 47, photoUrl: 'https://i.pravatar.cc/150?img=9', activeFrame: 'silver' },
-        { firstName: 'Minh', lastName: 'Ngọc Hoàng', referralCount: 33, photoUrl: 'https://i.pravatar.cc/150?img=12', activeFrame: 'bronze' },
-        { firstName: 'PHƯƠNG', lastName: 'ANH PHÙNG', referralCount: 27, photoUrl: 'https://i.pravatar.cc/150?img=20', activeFrame: 'none' },
-        { firstName: 'Nông', lastName: 'Mao', referralCount: 12, photoUrl: 'https://i.pravatar.cc/150?img=33', activeFrame: 'none' },
-        { firstName: 'Support', lastName: '', referralCount: 11, photoUrl: 'https://i.pravatar.cc/150?img=41', activeFrame: 'none' },
-        { firstName: 'OSAKA', lastName: 'CHAU HUYNH', referralCount: 10, photoUrl: 'https://i.pravatar.cc/150?img=32', activeFrame: 'none' },
-        { firstName: 'Trinh', lastName: 'Lê', referralCount: 9, photoUrl: 'https://i.pravatar.cc/150?img=44', activeFrame: 'none' },
-        { firstName: 'Lý', lastName: 'Hà', referralCount: 8, photoUrl: 'https://i.pravatar.cc/150?img=47', activeFrame: 'none' }
+        { firstName: 'Vũ', lastName: 'Dũng', referralCount: 65 },
+        { firstName: 'Mai', lastName: 'Thiều Thị', referralCount: 60 },
+        { firstName: 'LINH', lastName: 'NGUYEN', referralCount: 47 },
+        { firstName: 'Minh', lastName: 'Ngọc Hoàng', referralCount: 33 },
+        { firstName: 'PHƯƠNG', lastName: 'ANH PHÙNG', referralCount: 27 },
+        { firstName: 'Nông', lastName: 'Mao', referralCount: 12 },
+        { firstName: 'Support', lastName: '', referralCount: 11 },
+        { firstName: 'OSAKA', lastName: 'CHAU HUYNH', referralCount: 10 },
+        { firstName: 'Trinh', lastName: 'Lê', referralCount: 9 },
+        { firstName: 'Lý', lastName: 'Hà', referralCount: 8 }
     ];
     
     if (displayBoard.length < 10) {
@@ -317,35 +294,30 @@ function App() {
     let wreathColor = "#8E8E93"; 
     let glow = "none";
 
-    if (myRank === 1 && referrals >= 5) { vipLevel = "🏆 TOP 1 SERVER"; wreathColor = "#F4D03F"; glow = `0 0 15px #F4D03F`; }
-    else if (myRank === 2 && referrals >= 5) { vipLevel = "🔥 TOP 2 SERVER"; wreathColor = "#C0C0C0"; glow = `0 0 12px #C0C0C0`; }
-    else if (myRank === 3 && referrals >= 5) { vipLevel = "🔥 TOP 3 SERVER"; wreathColor = "#CD7F32"; glow = `0 0 12px #CD7F32`; }
-    else if (myRank > 0 && myRank <= 10 && referrals >= 5) { vipLevel = `🌟 TOP ${myRank} SERVER`; wreathColor = theme.blue; glow = `0 0 10px ${theme.blue}`; }
-    else if (referrals >= 100) { vipLevel = "Huyền Thoại 👑"; wreathColor = "#E0B0FF"; glow = `0 0 15px #E0B0FF`; }
-    else if (referrals >= 50) { vipLevel = "Đối Tác VIP 💎"; wreathColor = theme.gold; glow = `0 0 12px ${theme.gold}`; }
-    else if (referrals >= 10) { vipLevel = "Đại Sứ 🥇"; wreathColor = "#C0C0C0"; glow = `0 0 10px #C0C0C0`; }
-    else if (referrals >= 3) { vipLevel = "Sứ Giả 🥈"; wreathColor = "#CD7F32"; glow = `0 0 8px #CD7F32`; }
-
-    // HÀM XỬ LÝ MUA/TRANG BỊ KHUNG VIỀN
-    const handleBuyFrame = (frameId: string, price: number) => {
-        if (userProfile.ownedFrames.includes(frameId)) {
-            setUserProfile(prev => ({ ...prev, activeFrame: frameId }));
-            alert("✅ Đã trang bị khung viền thành công!");
-            return;
-        }
-
-        if (balance < price) return alert(`⚠️ Bạn cần thêm ${price - balance} SWGT nữa để mua Khung này!`);
-        
-        if (window.confirm(`Xác nhận dùng ${price} SWGT để mua Khung viền này?`)) {
-            setBalance(prev => prev - price);
-            setUserProfile(prev => ({ 
-                ...prev, 
-                activeFrame: frameId, 
-                ownedFrames: [...prev.ownedFrames, frameId] 
-            }));
-            alert("🎉 Mua và trang bị khung viền thành công! Trông bạn ngầu hơn hẳn rồi đấy.");
-        }
-    };
+    if (myRank === 1 && referrals >= 5) { 
+        vipLevel = "🏆 TOP 1 SERVER"; wreathColor = "#F4D03F"; glow = `0 0 15px #F4D03F`; 
+    }
+    else if (myRank === 2 && referrals >= 5) { 
+        vipLevel = "🔥 TOP 2 SERVER"; wreathColor = "#C0C0C0"; glow = `0 0 12px #C0C0C0`; 
+    }
+    else if (myRank === 3 && referrals >= 5) { 
+        vipLevel = "🔥 TOP 3 SERVER"; wreathColor = "#CD7F32"; glow = `0 0 12px #CD7F32`; 
+    }
+    else if (myRank > 0 && myRank <= 10 && referrals >= 5) { 
+        vipLevel = `🌟 TOP ${myRank} SERVER`; wreathColor = theme.blue; glow = `0 0 10px ${theme.blue}`; 
+    }
+    else if (referrals >= 100) { 
+        vipLevel = "Huyền Thoại 👑"; wreathColor = "#E0B0FF"; glow = `0 0 15px #E0B0FF`; 
+    }
+    else if (referrals >= 50) { 
+        vipLevel = "Đối Tác VIP 💎"; wreathColor = theme.gold; glow = `0 0 12px ${theme.gold}`; 
+    }
+    else if (referrals >= 10) { 
+        vipLevel = "Đại Sứ 🥇"; wreathColor = "#C0C0C0"; glow = `0 0 10px #C0C0C0`; 
+    }
+    else if (referrals >= 3) { 
+        vipLevel = "Sứ Giả 🥈"; wreathColor = "#CD7F32"; glow = `0 0 8px #CD7F32`; 
+    }
 
     const handleCheckIn = () => {
         if (isCheckedInToday) return;
@@ -478,51 +450,67 @@ function App() {
         });
     };
 
-    // ==================================================
-    // GIAO DIỆN HIỂN THỊ
-    // ==================================================
-    const renderHeader = () => {
-        const myFrameStyle = getFrameStyle(userProfile.activeFrame);
-        return (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 20px', backgroundColor: theme.bg }}>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <img src="/logo.png" alt="SWC Logo" style={{ width: '45px', height: '45px', borderRadius: '50%', border: `2px solid ${theme.gold}`, marginRight: '12px', objectFit: 'cover' }} />
-                    <div>
-                        <h1 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: theme.textLight }}>CỘNG ĐỒNG</h1>
-                        <p style={{ margin: 0, fontSize: '13px', color: theme.gold, fontWeight: 'bold' }}>Đầu tư uST</p>
-                    </div>
-                </div>
-                
-                <div style={{ display: 'flex', alignItems: 'center', textAlign: 'right' }}>
-                    <div style={{ marginRight: '15px' }}>
-                        <h2 style={{ margin: 0, fontSize: '15px', color: theme.textLight, fontWeight: 'bold' }}>{userProfile.name}</h2>
-                        <p style={{ margin: 0, fontSize: '12px', color: theme.textDim, fontWeight: 'bold' }}>{militaryRank}</p>
-                    </div>
-                    
-                    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
-                        <div style={{ 
-                            position: 'relative', width: '52px', height: '52px', borderRadius: '50%', padding: '2px', backgroundColor: theme.bg, 
-                            border: myFrameStyle.border, boxShadow: myFrameStyle.shadow, animation: myFrameStyle.animation, zIndex: 1 
-                        }}>
-                            <img src={userProfile.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.name || 'U')}&background=F4D03F&color=000&bold=true`} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-                        </div>
-                        
-                        <div style={{ position: 'absolute', bottom: '-10px', zIndex: 11, display: 'flex', alignItems: 'center', backgroundColor: '#000', padding: '2px 8px', borderRadius: '12px', border: `1px solid ${wreathColor}` }}>
-                            <span style={{ color: wreathColor, fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>{vipLevel}</span>
-                        </div>
-                    </div>
+    const renderHeader = () => (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 20px', backgroundColor: theme.bg }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+                <img src="/logo.png" alt="SWC Logo" style={{ width: '45px', height: '45px', borderRadius: '50%', border: `2px solid ${theme.gold}`, marginRight: '12px', objectFit: 'cover' }} />
+                <div>
+                    <h1 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: theme.textLight }}>CỘNG ĐỒNG</h1>
+                    <p style={{ margin: 0, fontSize: '13px', color: theme.gold, fontWeight: 'bold' }}>Đầu tư uST</p>
                 </div>
             </div>
-        );
-    };
+            
+            <div style={{ display: 'flex', alignItems: 'center', textAlign: 'right' }}>
+                <div style={{ marginRight: '15px' }}>
+                    <h2 style={{ margin: 0, fontSize: '15px', color: theme.textLight, fontWeight: 'bold' }}>{userProfile.name}</h2>
+                    <p style={{ margin: 0, fontSize: '12px', color: theme.textDim, fontWeight: 'bold' }}>{militaryRank}</p>
+                </div>
+                
+                <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
+                    <svg viewBox="-5 -5 110 110" style={{ position: 'absolute', width: '140%', height: '140%', top: '-20%', left: '-20%', zIndex: 10, pointerEvents: 'none' }}>
+                        <path d="M 50 90 C 15 90, 5 50, 20 20" fill="none" stroke={wreathColor} strokeWidth="2" />
+                        <path d="M 50 90 C 85 90, 95 50, 80 20" fill="none" stroke={wreathColor} strokeWidth="2" />
+                        <path d="M 20 20 Q 30 15 25 30 Q 15 25 20 20" fill={wreathColor} /> 
+                        <path d="M 12 40 Q 25 35 20 50 Q 5 45 12 40" fill={wreathColor} />
+                        <path d="M 15 65 Q 30 55 25 70 Q 10 70 15 65" fill={wreathColor} />
+                        <path d="M 80 20 Q 70 15 75 30 Q 85 25 80 20" fill={wreathColor} /> 
+                        <path d="M 88 40 Q 75 35 80 50 Q 95 45 88 40" fill={wreathColor} />
+                        <path d="M 85 65 Q 70 55 75 70 Q 90 70 85 65" fill={wreathColor} />
+                    </svg>
+
+                    <div style={{ position: 'relative', width: '52px', height: '52px', borderRadius: '50%', padding: '2px', backgroundColor: theme.bg, boxShadow: glow, zIndex: 1 }}>
+                        {userProfile.photoUrl ? (
+                            <img src={userProfile.photoUrl} alt="avatar" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                        ) : (
+                            <div style={{ width: '100%', height: '100%', borderRadius: '50%', backgroundColor: theme.cardBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.gold, fontSize: '20px' }}>👤</div>
+                        )}
+                    </div>
+                    
+                    <div style={{ position: 'absolute', bottom: '-10px', zIndex: 11, display: 'flex', alignItems: 'center', backgroundColor: '#000', padding: '2px 8px', borderRadius: '12px', border: `1px solid ${wreathColor}`, boxShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                        <span style={{ color: wreathColor, fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                            {vipLevel}
+                        </span>
+                    </div>
+
+                    <div style={{ position: 'absolute', top: '0px', right: '0px', width: '12px', height: '12px', backgroundColor: theme.green, borderRadius: '50%', border: `2px solid ${theme.bg}`, zIndex: 12 }}></div>
+                </div>
+            </div>
+        </div>
+    );
 
     const renderWealthBoard = () => (
         <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
             <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-                <button onClick={() => setBoardType('weekly')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${boardType === 'weekly' ? theme.gold : theme.border}`, backgroundColor: boardType === 'weekly' ? 'rgba(244, 208, 63, 0.1)' : '#000', color: boardType === 'weekly' ? theme.gold : theme.textDim, fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', transition: 'all 0.3s' }}>
+                <button
+                    onClick={() => setBoardType('weekly')}
+                    style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${boardType === 'weekly' ? theme.gold : theme.border}`, backgroundColor: boardType === 'weekly' ? 'rgba(244, 208, 63, 0.1)' : '#000', color: boardType === 'weekly' ? theme.gold : theme.textDim, fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', transition: 'all 0.3s' }}
+                >
                     🏆 TOP TUẦN
                 </button>
-                <button onClick={() => setBoardType('all')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${boardType === 'all' ? theme.gold : theme.border}`, backgroundColor: boardType === 'all' ? 'rgba(244, 208, 63, 0.1)' : '#000', color: boardType === 'all' ? theme.gold : theme.textDim, fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', transition: 'all 0.3s' }}>
+                <button
+                    onClick={() => setBoardType('all')}
+                    style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${boardType === 'all' ? theme.gold : theme.border}`, backgroundColor: boardType === 'all' ? 'rgba(244, 208, 63, 0.1)' : '#000', color: boardType === 'all' ? theme.gold : theme.textDim, fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', transition: 'all 0.3s' }}
+                >
                     🌟 TOP TỔNG
                 </button>
             </div>
@@ -537,40 +525,25 @@ function App() {
             </div>
 
             {wealthBoard.slice(0, 10).map((user, index) => {
-                let icon = "💸"; if (index === 0) icon = "👑"; else if (index === 1) icon = "💎"; else if (index === 2) icon = "🌟";
-                const isMe = user.firstName === userProfile.name.split(' ')[0];
+                let icon = "💸";
+                if (index === 0) icon = "👑";
+                else if (index === 1) icon = "💎";
+                else if (index === 2) icon = "🌟";
                 
-                const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName || 'U')}&background=${index < 3 ? 'F4D03F' : '333333'}&color=${index < 3 ? '000' : 'FFF'}&bold=true&size=128`;
-                const displayAvatar = isMe && userProfile.photoUrl ? userProfile.photoUrl : (user.photoUrl || user.photo_url || user.avatar || fallbackAvatar);
-
-                let frameStyle = { border: `2px solid ${theme.border}`, shadow: 'none', animation: 'none' };
-                if (isMe) {
-                    frameStyle = getFrameStyle(userProfile.activeFrame);
-                } else if (user.activeFrame && user.activeFrame !== 'none') {
-                    frameStyle = getFrameStyle(user.activeFrame);
-                } else {
-                    if (index === 0) frameStyle = getFrameStyle('gold');
-                    else if (index === 1) frameStyle = getFrameStyle('silver');
-                    else if (index === 2) frameStyle = getFrameStyle('bronze');
-                }
+                const isMe = user.firstName === userProfile.name.split(' ')[0];
 
                 return (
                     <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: index < wealthBoard.length - 1 ? `1px solid ${theme.border}` : 'none', backgroundColor: isMe ? 'rgba(244, 208, 63, 0.1)' : 'transparent', borderRadius: '8px', paddingLeft: isMe ? '10px' : '0', paddingRight: isMe ? '10px' : '0' }}>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <span style={{ color: theme.textDim, fontWeight: 'bold', fontSize: '14px', minWidth: '24px', marginRight: '5px' }}>{index + 1}.</span>
-                            
-                            <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '12px', overflow: 'hidden', flexShrink: 0, border: frameStyle.border, boxShadow: frameStyle.shadow, animation: frameStyle.animation }}>
-                                <img src={displayAvatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = fallbackAvatar; }} />
-                            </div>
-                            
-                            <span style={{ fontSize: '20px', marginRight: '8px' }}>{icon}</span>
-                            <span style={{ color: isMe ? theme.gold : theme.textLight, fontWeight: 'bold', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100px' }}>
+                            <span style={{ fontSize: '22px', marginRight: '10px' }}>{icon}</span>
+                            <span style={{ color: isMe ? theme.gold : theme.textLight, fontWeight: 'bold', fontSize: '15px' }}>
                                 {user.firstName} {user.lastName} {isMe && '(Bạn)'}
                             </span>
                         </div>
-                        <div style={{ color: theme.green, fontWeight: 'bold', fontSize: '15px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                            <span>{boardType === 'all' ? user.totalEarned : user.displayCount * 15} <span style={{ fontSize: '11px', color: theme.textDim, fontWeight: 'normal' }}>SWGT</span></span>
-                            {boardType === 'weekly' && <span style={{fontSize: '10px', color: theme.gold}}>({user.displayCount} người)</span>}
+                        <div style={{ color: theme.green, fontWeight: 'bold', fontSize: '16px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                            <span>{boardType === 'all' ? user.totalEarned : user.displayCount * 15} <span style={{ fontSize: '12px', color: theme.textDim, fontWeight: 'normal' }}>SWGT</span></span>
+                            {boardType === 'weekly' && <span style={{fontSize: '11px', color: theme.gold}}>({user.displayCount} người)</span>}
                         </div>
                     </div>
                 )
@@ -608,7 +581,10 @@ function App() {
                         const isClaimed = isCheckedInToday ? day <= checkInStreak : day < checkInStreak;
                         const isToday = isCheckedInToday ? day === checkInStreak : day === checkInStreak + 1;
                         
-                        let bgColor = '#000'; let textColor = theme.textDim; let borderColor = theme.border;
+                        let bgColor = '#000';
+                        let textColor = theme.textDim;
+                        let borderColor = theme.border;
+
                         if (isClaimed) { bgColor = 'rgba(52, 199, 89, 0.1)'; textColor = theme.green; borderColor = theme.green; }
                         else if (isToday) { bgColor = 'rgba(244, 208, 63, 0.1)'; textColor = theme.gold; borderColor = theme.gold; }
 
@@ -624,10 +600,16 @@ function App() {
                     })}
                 </div>
 
-                <button onClick={handleCheckIn} disabled={isCheckedInToday} style={{ width: '100%', backgroundColor: isCheckedInToday ? '#333' : theme.green, color: isCheckedInToday ? theme.textDim : '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: isCheckedInToday ? 'not-allowed' : 'pointer', fontSize: '15px', transition: 'all 0.3s' }}>
+                <button 
+                    onClick={handleCheckIn} 
+                    disabled={isCheckedInToday}
+                    style={{ width: '100%', backgroundColor: isCheckedInToday ? '#333' : theme.green, color: isCheckedInToday ? theme.textDim : '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: isCheckedInToday ? 'not-allowed' : 'pointer', fontSize: '15px', transition: 'all 0.3s' }}
+                >
                     {isCheckedInToday ? "✅ ĐÃ NHẬN HÔM NAY" : "✋ BẤM ĐIỂM DANH NGAY"}
                 </button>
-                <p style={{ margin: '10px 0 0 0', color: theme.red, fontSize: '12px', fontStyle: 'italic' }}>⚠️ Nhớ vào mỗi ngày! Nếu quên 1 ngày, chuỗi sẽ quay lại từ đầu.</p>
+                <p style={{ margin: '10px 0 0 0', color: theme.red, fontSize: '12px', fontStyle: 'italic' }}>
+                    ⚠️ Nhớ vào mỗi ngày! Nếu quên 1 ngày, chuỗi sẽ quay lại từ đầu.
+                </p>
             </div>
 
             <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.1)', border: `1px dashed ${theme.gold}`, padding: '15px', borderRadius: '10px', marginBottom: '20px' }}>
@@ -639,10 +621,9 @@ function App() {
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Cách Hoạt Động</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>📱 Bước 1: Tham gia Bot SWC</span><br/>Liên kết với @Dau_Tu_SWC_bot trên Telegram để bắt đầu.</p>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>📱 Bước 1: Tham gia Bot SWC</span><br/>Liên kết với <a href="https://t.me/Dau_Tu_SWC_bot" target="_blank" rel="noreferrer" style={{color: theme.blue, textDecoration: 'none'}}>@Dau_Tu_SWC_bot</a> trên Telegram để bắt đầu.</p>
                     <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>👥 Bước 2: Mời bạn bè</span><br/>Chia sẻ link giới thiệu và mời bạn bè tham gia cộng đồng SWC.</p>
                     <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>💰 Bước 3: Nhận SWGT</span><br/>Mỗi người bạn mời sẽ giúp bạn kiếm SWGT thưởng.</p>
-                    
                     <div style={{ backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, padding: '15px', borderRadius: '10px' }}>
                         <p style={{ margin: 0, color: theme.green, fontSize: '14px', lineHeight: '1.6' }}>
                             <span style={{fontWeight:'bold'}}>💬 MẸO: Tương tác kiếm thêm điểm</span><br/>Mỗi tin nhắn bạn chat trong Nhóm Thảo Luận (từ 10 ký tự trở lên) tự động cộng <b style={{color: theme.gold}}>+0.1 SWGT</b>. Chat càng nhiều, tiền càng nhiều!
@@ -651,10 +632,95 @@ function App() {
                 </div>
             </div>
 
-            {renderWealthBoard()}
+            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
+                <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🧠 Nạp Kiến Thức & Lan Tỏa</h2>
+                
+                <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', marginBottom: '10px', border: `1px solid ${theme.border}` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                        <div>
+                            <h4 style={{ margin: 0, color: theme.textLight, fontSize: '15px' }}>📖 Đọc bài phân tích</h4>
+                            <p style={{ margin: 0, color: theme.textDim, fontSize: '13px' }}>Đợi 60 giây (+10 SWGT)</p>
+                        </div>
+                        {tasks.readTaskDone && <span style={{ color: theme.green, fontWeight: 'bold' }}>✅ Xong</span>}
+                    </div>
+                    {!tasks.readTaskDone && (
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            {!taskStarted.read ? (
+                                <button onClick={() => startTask('read', 'https://swc.capital/', 60)} style={{ flex: 1, backgroundColor: theme.blue, color: '#fff', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>MỞ ĐỌC NGAY</button>
+                            ) : (
+                                <button onClick={() => claimTaskApp('read')} disabled={taskTimers.read > 0} style={{ flex: 1, backgroundColor: taskTimers.read > 0 ? '#333' : theme.gold, color: taskTimers.read > 0 ? theme.textDim : '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: taskTimers.read > 0 ? 'not-allowed' : 'pointer' }}>
+                                    {taskTimers.read > 0 ? `ĐỢI ${taskTimers.read}s` : 'NHẬN QUÀ'}
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
 
-            {/* BLOCK CƠ CẤU PHẦN THƯỞNG (Từ Code Cũ) */}
-            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '15px', border: `1px solid ${theme.border}` }}>
+                <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', marginBottom: '10px', border: `1px solid ${theme.border}` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                        <div>
+                            <h4 style={{ margin: 0, color: theme.textLight, fontSize: '15px' }}>▶️ Xem YouTube SWC</h4>
+                            <p style={{ margin: 0, color: theme.textDim, fontSize: '13px' }}>Đợi 6 giây (+5 SWGT)</p>
+                        </div>
+                        {tasks.youtubeTaskDone && <span style={{ color: theme.green, fontWeight: 'bold' }}>✅ Xong</span>}
+                    </div>
+                    {!tasks.youtubeTaskDone && (
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            {!taskStarted.youtube ? (
+                                <button onClick={() => startTask('youtube', 'https://www.youtube.com/c/SkyWorldCommunityVietNam/videos', 6)} style={{ flex: 1, backgroundColor: '#FF0000', color: '#fff', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>MỞ XEM NGAY</button>
+                            ) : (
+                                <button onClick={() => claimTaskApp('youtube')} disabled={taskTimers.youtube > 0} style={{ flex: 1, backgroundColor: taskTimers.youtube > 0 ? '#333' : theme.gold, color: taskTimers.youtube > 0 ? theme.textDim : '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: taskTimers.youtube > 0 ? 'not-allowed' : 'pointer' }}>
+                                    {taskTimers.youtube > 0 ? `ĐỢI ${taskTimers.youtube}s` : 'NHẬN QUÀ'}
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', marginBottom: '10px', border: `1px solid ${theme.border}` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                        <div>
+                            <h4 style={{ margin: 0, color: theme.textLight, fontSize: '15px' }}>📘 Theo dõi Fanpage</h4>
+                            <p style={{ margin: 0, color: theme.textDim, fontSize: '13px' }}>Đợi 5 giây (+5 SWGT)</p>
+                        </div>
+                        {tasks.facebookTaskDone && <span style={{ color: theme.green, fontWeight: 'bold' }}>✅ Xong</span>}
+                    </div>
+                    {!tasks.facebookTaskDone && (
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            {!taskStarted.facebook ? (
+                                <button onClick={() => startTask('facebook', 'https://www.facebook.com/swc.capital.vn', 5)} style={{ flex: 1, backgroundColor: '#1877F2', color: '#fff', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>MỞ TRANG</button>
+                            ) : (
+                                <button onClick={() => claimTaskApp('facebook')} disabled={taskTimers.facebook > 0} style={{ flex: 1, backgroundColor: taskTimers.facebook > 0 ? '#333' : theme.gold, color: taskTimers.facebook > 0 ? theme.textDim : '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: taskTimers.facebook > 0 ? 'not-allowed' : 'pointer' }}>
+                                    {taskTimers.facebook > 0 ? `ĐỢI ${taskTimers.facebook}s` : 'NHẬN QUÀ'}
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', border: `1px solid ${theme.border}` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                        <div>
+                            <h4 style={{ margin: 0, color: theme.textLight, fontSize: '15px' }}>📢 Chia sẻ dự án</h4>
+                            <p style={{ margin: 0, color: theme.textDim, fontSize: '13px' }}>Đợi 5 giây (+15 SWGT)</p>
+                        </div>
+                        {tasks.shareTaskDone && <span style={{ color: theme.green, fontWeight: 'bold' }}>✅ Xong</span>}
+                    </div>
+                    {!tasks.shareTaskDone && (
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            {!taskStarted.share ? (
+                                <button onClick={() => startTask('share', `https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}`, 5)} style={{ flex: 1, backgroundColor: '#34C759', color: '#fff', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>MỞ CHIA SẺ</button>
+                            ) : (
+                                <button onClick={() => claimTaskApp('share')} disabled={taskTimers.share > 0} style={{ flex: 1, backgroundColor: taskTimers.share > 0 ? '#333' : theme.gold, color: taskTimers.share > 0 ? theme.textDim : '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: taskTimers.share > 0 ? 'not-allowed' : 'pointer' }}>
+                                    {taskTimers.share > 0 ? `ĐỢI ${taskTimers.share}s` : 'NHẬN QUÀ'}
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '18px' }}>💎 Cơ Cấu Phần Thưởng SWGT</h2>
                 <p style={{ color: theme.textLight, fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>📌 Thành viên Thường:</p>
                 <div style={{ color: theme.textDim, fontSize: '14px', margin: '0 0 15px 0', lineHeight: '1.6' }}>
@@ -666,13 +732,40 @@ function App() {
                     <p style={{ margin: 0 }}>Tham gia Channel: <span style={{color: '#34C759'}}>+20 SWGT/người</span></p>
                     <p style={{ margin: 0 }}>Tham gia Nhóm Chat: <span style={{color: '#34C759'}}>+20 SWGT/người</span></p>
                 </div>
+                
+                <div style={{ backgroundColor: '#fef2f2', borderLeft: '4px solid #ef4444', padding: '12px', marginTop: '20px', borderRadius: '6px' }}>
+                    <h4 style={{ color: '#991b1b', fontWeight: 'bold', margin: '0 0 8px 0', fontSize: '14px' }}>
+                        ⚠️ CHÍNH SÁCH CHỐNG GIAN LẬN (RADAR 24/7)
+                    </h4>
+                    <p style={{ color: '#b91c1c', margin: 0, fontSize: '13px', lineHeight: '1.5' }}>
+                        Đối tác được mời <b>BẮT BUỘC</b> duy trì trong Group/Channel tối thiểu <b>21 ngày</b>. Nếu rời nhóm trước hạn, hệ thống sẽ tự động quét và <b>THU HỒI TOÀN BỘ SWGT & Lượt mời</b> tương ứng của bạn!
+                    </p>
+                </div>
             </div>
 
+            {renderWealthBoard()}
+
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
-                <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}><span>⚖️</span> Chính Sách Thanh Khoản</h2>
+                <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>⚖️</span> Chính Sách Thanh Khoản
+                </h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}><span style={{ fontSize: '18px' }}>🎯</span><div><p style={{ margin: 0, color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>Mức tối thiểu</p><p style={{ margin: '2px 0 0 0', color: theme.textDim, fontSize: '13px' }}>Chỉ từ <b style={{color: theme.green}}>500 SWGT</b> / Tài khoản.</p></div></div>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}><span style={{ fontSize: '18px' }}>⏳</span><div><p style={{ margin: 0, color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>Thời gian mở khóa cơ bản</p><p style={{ margin: '2px 0 0 0', color: theme.textDim, fontSize: '13px', lineHeight: '1.5' }}>Sau <b style={{color: theme.premium}}>7 ngày</b> (Premium) hoặc <b style={{color: theme.textLight}}>15 ngày</b> (Thường).</p></div></div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                        <span style={{ fontSize: '18px' }}>🎯</span>
+                        <div>
+                            <p style={{ margin: 0, color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>Mức tối thiểu</p>
+                            <p style={{ margin: '2px 0 0 0', color: theme.textDim, fontSize: '13px' }}>Chỉ từ <b style={{color: theme.green}}>500 SWGT</b> / Tài khoản.</p>
+                        </div>
+                    </div>
+                    
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                        <span style={{ fontSize: '18px' }}>⏳</span>
+                        <div>
+                            <p style={{ margin: 0, color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>Thời gian mở khóa cơ bản</p>
+                            <p style={{ margin: '2px 0 0 0', color: theme.textDim, fontSize: '13px', lineHeight: '1.5' }}>Sau <b style={{color: theme.premium}}>7 ngày</b> (Premium) hoặc <b style={{color: theme.textLight}}>15 ngày</b> (Thường) tính từ ngày tham gia.</p>
+                        </div>
+                    </div>
+
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', backgroundColor: 'rgba(244, 208, 63, 0.1)', padding: '10px', borderRadius: '8px', border: `1px solid ${theme.gold}` }}>
                         <span style={{ fontSize: '18px' }}>⚡</span>
                         <div>
@@ -680,73 +773,22 @@ function App() {
                             <p style={{ margin: '2px 0 0 0', color: theme.textLight, fontSize: '13px', lineHeight: '1.5' }}>Cán mốc <b style={{color: theme.gold}}>1500 SWGT</b> ➔ <b style={{color: theme.green}}>ĐƯỢC RÚT NGAY LẬP TỨC</b>, bỏ qua mọi thời gian chờ đợi!</p>
                         </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}><span style={{ fontSize: '18px' }}>💸</span><div><p style={{ margin: 0, color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>Quyền tự quyết</p><p style={{ margin: '2px 0 0 0', color: theme.textDim, fontSize: '13px' }}>Rút tiền linh hoạt 24/7 bất cứ lúc nào khi đủ điều kiện.</p></div></div>
+
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                        <span style={{ fontSize: '18px' }}>💸</span>
+                        <div>
+                            <p style={{ margin: 0, color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>Quyền tự quyết</p>
+                            <p style={{ margin: '2px 0 0 0', color: theme.textDim, fontSize: '13px' }}>Rút tiền linh hoạt 24/7 bất cứ lúc nào khi đủ điều kiện.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
-                <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🧠 Nạp Kiến Thức & Lan Tỏa</h2>
-                
-                <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', marginBottom: '10px', border: `1px solid ${theme.border}` }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                        <div><h4 style={{ margin: 0, color: theme.textLight, fontSize: '15px' }}>📖 Đọc bài phân tích</h4><p style={{ margin: 0, color: theme.textDim, fontSize: '13px' }}>Đợi 60 giây (+10 SWGT)</p></div>
-                        {tasks.readTaskDone && <span style={{ color: theme.green, fontWeight: 'bold' }}>✅ Xong</span>}
-                    </div>
-                    {!tasks.readTaskDone && (
-                        <div style={{ display: 'flex', gap: '10px' }}>
-                            {!taskStarted.read ? <button onClick={() => startTask('read', 'https://swc.capital/', 60)} style={{ flex: 1, backgroundColor: theme.blue, color: '#fff', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>MỞ ĐỌC NGAY</button>
-                            : <button onClick={() => claimTaskApp('read')} disabled={taskTimers.read > 0} style={{ flex: 1, backgroundColor: taskTimers.read > 0 ? '#333' : theme.gold, color: taskTimers.read > 0 ? theme.textDim : '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: taskTimers.read > 0 ? 'not-allowed' : 'pointer' }}>{taskTimers.read > 0 ? `ĐỢI ${taskTimers.read}s` : 'NHẬN QUÀ'}</button>}
-                        </div>
-                    )}
-                </div>
-
-                <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', marginBottom: '10px', border: `1px solid ${theme.border}` }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                        <div><h4 style={{ margin: 0, color: theme.textLight, fontSize: '15px' }}>▶️ Xem YouTube SWC</h4><p style={{ margin: 0, color: theme.textDim, fontSize: '13px' }}>Đợi 6 giây (+5 SWGT)</p></div>
-                        {tasks.youtubeTaskDone && <span style={{ color: theme.green, fontWeight: 'bold' }}>✅ Xong</span>}
-                    </div>
-                    {!tasks.youtubeTaskDone && (
-                        <div style={{ display: 'flex', gap: '10px' }}>
-                            {!taskStarted.youtube ? <button onClick={() => startTask('youtube', 'https://www.youtube.com/c/SkyWorldCommunityVietNam/videos', 6)} style={{ flex: 1, backgroundColor: '#FF0000', color: '#fff', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>MỞ XEM NGAY</button>
-                            : <button onClick={() => claimTaskApp('youtube')} disabled={taskTimers.youtube > 0} style={{ flex: 1, backgroundColor: taskTimers.youtube > 0 ? '#333' : theme.gold, color: taskTimers.youtube > 0 ? theme.textDim : '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: taskTimers.youtube > 0 ? 'not-allowed' : 'pointer' }}>{taskTimers.youtube > 0 ? `ĐỢI ${taskTimers.youtube}s` : 'NHẬN QUÀ'}</button>}
-                        </div>
-                    )}
-                </div>
-
-                <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', marginBottom: '10px', border: `1px solid ${theme.border}` }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                        <div><h4 style={{ margin: 0, color: theme.textLight, fontSize: '15px' }}>📘 Theo dõi Fanpage</h4><p style={{ margin: 0, color: theme.textDim, fontSize: '13px' }}>Đợi 5 giây (+5 SWGT)</p></div>
-                        {tasks.facebookTaskDone && <span style={{ color: theme.green, fontWeight: 'bold' }}>✅ Xong</span>}
-                    </div>
-                    {!tasks.facebookTaskDone && (
-                        <div style={{ display: 'flex', gap: '10px' }}>
-                            {!taskStarted.facebook ? <button onClick={() => startTask('facebook', 'https://www.facebook.com/swc.capital.vn', 5)} style={{ flex: 1, backgroundColor: '#1877F2', color: '#fff', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>MỞ TRANG</button>
-                            : <button onClick={() => claimTaskApp('facebook')} disabled={taskTimers.facebook > 0} style={{ flex: 1, backgroundColor: taskTimers.facebook > 0 ? '#333' : theme.gold, color: taskTimers.facebook > 0 ? theme.textDim : '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: taskTimers.facebook > 0 ? 'not-allowed' : 'pointer' }}>{taskTimers.facebook > 0 ? `ĐỢI ${taskTimers.facebook}s` : 'NHẬN QUÀ'}</button>}
-                        </div>
-                    )}
-                </div>
-
-                <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', border: `1px solid ${theme.border}` }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                        <div><h4 style={{ margin: 0, color: theme.textLight, fontSize: '15px' }}>📢 Chia sẻ dự án</h4><p style={{ margin: 0, color: theme.textDim, fontSize: '13px' }}>Đợi 5 giây (+15 SWGT)</p></div>
-                        {tasks.shareTaskDone && <span style={{ color: theme.green, fontWeight: 'bold' }}>✅ Xong</span>}
-                    </div>
-                    {!tasks.shareTaskDone && (
-                        <div style={{ display: 'flex', gap: '10px' }}>
-                            {!taskStarted.share ? <button onClick={() => startTask('share', `https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}`, 5)} style={{ flex: 1, backgroundColor: '#34C759', color: '#fff', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>MỞ CHIA SẺ</button>
-                            : <button onClick={() => claimTaskApp('share')} disabled={taskTimers.share > 0} style={{ flex: 1, backgroundColor: taskTimers.share > 0 ? '#333' : theme.gold, color: taskTimers.share > 0 ? theme.textDim : '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: taskTimers.share > 0 ? 'not-allowed' : 'pointer' }}>{taskTimers.share > 0 ? `ĐỢI ${taskTimers.share}s` : 'NHẬN QUÀ'}</button>}
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* BLOCK SẮP RA MẮT (Từ Code Cũ) */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px dashed ${theme.blue}` }}>
                 <h2 style={{ color: theme.blue, margin: '0 0 15px 0', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span>🚀</span> Sắp Ra Mắt (Coming Soon)
                 </h2>
                 <ul style={{ margin: 0, paddingLeft: '20px', color: theme.textDim, fontSize: '14px', lineHeight: '1.8' }}>
-                    <li><b>Vòng Quay Nhân Phẩm:</b> Dùng SWGT để quay thưởng Token/USDT hằng ngày.</li>
                     <li><b>Staking SWGT:</b> Gửi tiết kiệm SWGT nhận lãi suất qua đêm.</li>
                     <li><b>Đua Top Tháng:</b> Giải thưởng hiện vật cực khủng cho Top 3 người dẫn đầu bảng vàng.</li>
                 </ul>
@@ -755,8 +797,16 @@ function App() {
     );
 
     const renderRewards = () => {
-        let nextTarget = 3; let nextReward = "+10 SWGT";
-        for (let m of MILESTONE_LIST) { if (referrals < m.req) { nextTarget = m.req; nextReward = `+${m.reward} SWGT`; break; } }
+        let nextTarget = 3;
+        let nextReward = "+10 SWGT";
+        for (let m of MILESTONE_LIST) {
+            if (referrals < m.req) {
+                nextTarget = m.req;
+                nextReward = `+${m.reward} SWGT`;
+                break;
+            }
+        }
+        
         let progressPercent = Math.min((referrals / nextTarget) * 100, 100);
         if (referrals >= 500) progressPercent = 100;
 
@@ -773,7 +823,46 @@ function App() {
                         <span style={{fontWeight:'bold'}}>⚡ ĐẶC QUYỀN VIP:</span> Cày đạt mốc <b>1500 SWGT</b> sẽ được <b style={{color: '#fff'}}>MỞ KHÓA RÚT TIỀN NGAY LẬP TỨC</b>, không cần chờ đợi thời gian đếm ngược!
                     </p>
                 </div>
-                
+
+                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
+                    <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>🎟️ Nhập Mã Quà Tặng (Giftcode)</h3>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <input 
+                            value={giftCodeInput} 
+                            onChange={(e) => setGiftCodeInput(e.target.value)} 
+                            placeholder="Nhập mã săn được từ Group..." 
+                            style={{ flex: 1, padding: '14px', borderRadius: '10px', border: `1px solid ${theme.green}`, backgroundColor: '#000', color: theme.gold, boxSizing: 'border-box', fontSize: '14px', textTransform: 'uppercase' }} 
+                        />
+                        <button onClick={handleClaimGiftCode} style={{ backgroundColor: theme.green, color: '#fff', padding: '0 20px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', cursor: 'pointer' }}>
+                            NHẬN
+                        </button>
+                    </div>
+                </div>
+
+                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
+                    <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>🔗 Công cụ lan tỏa</h3>
+                    <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '8px', color: theme.gold, fontSize: '15px', wordBreak: 'break-all', marginBottom: '15px', border: `1px dashed ${theme.border}` }}>
+                        https://t.me/Dau_Tu_SWC_bot?start={userId || 'ref'}
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button onClick={handleCopyLink} style={{ flex: 1, backgroundColor: theme.gold, color: '#000', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', cursor: 'pointer', textAlign: 'center' }}>
+                            📋 COPY LINK
+                        </button>
+                        <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ flex: 1, backgroundColor: '#5E92F3', color: '#fff', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', textAlign: 'center', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            ✈️ GỬI BẠN BÈ
+                        </a>
+                    </div>
+                </div>
+
+                <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fde047', padding: '12px', marginBottom: '20px', borderRadius: '6px' }}>
+                    <h4 style={{ color: '#b45309', fontWeight: 'bold', margin: '0 0 5px 0', fontSize: '13px' }}>
+                        ⏳ SỰ KIỆN HALVING SẮP DIỄN RA!
+                    </h4>
+                    <p style={{ color: '#854d0e', margin: 0, fontSize: '12px', lineHeight: '1.5' }}>
+                        Khi Cộng đồng cán mốc <b>1.000 người</b>, phần thưởng tại các mốc: <b>Mốc 10, 50, 120, 200, 350 và 500</b> sẽ tự động <b>GIẢM XUỐNG</b> để bảo chứng độ khan hiếm cho SWGT. Hãy nhận thưởng ngay hôm nay trước khi quá muộn!
+                    </p>
+                </div>
+
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🚀 9 CỘT MỐC THƯỞNG NÓNG</h3>
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '10px' }}>
@@ -794,7 +883,9 @@ function App() {
                         {MILESTONE_LIST.map((m) => {
                             const isClaimed = milestones[m.key];
                             const canClaim = referrals >= m.req && !isClaimed;
-                            let icon = '🔒'; if (isClaimed) icon = '✅'; else if (canClaim) icon = '🎁';
+                            let icon = '🔒';
+                            if (isClaimed) icon = '✅';
+                            else if (canClaim) icon = '🎁';
                             
                             const isHalvingMilestone = [10, 50, 120, 200, 350, 500].includes(m.req);
                             
@@ -802,9 +893,16 @@ function App() {
                                 <div key={m.req} style={{ minWidth: '110px', backgroundColor: '#000', borderRadius: '10px', padding: '15px 10px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
                                     <div style={{ fontSize: '24px', marginBottom: '8px' }}>{icon}</div>
                                     <p style={{ color: theme.textLight, fontSize: '13px', fontWeight: 'bold', margin: '0 0 2px 0' }}>Mốc {m.req}</p>
+                                    
                                     <p style={{ color: theme.blue, fontSize: '11px', fontWeight: 'bold', margin: '0 0 5px 0' }}>{m.rank}</p>
-                                    <p style={{ color: theme.gold, fontSize: '12px', margin: '0 0 10px 0' }}>+{m.reward}{isHalvingMilestone ? '*' : ''}</p>
-                                    <button onClick={() => handleClaimMilestone(m.req)} disabled={!canClaim} style={{ width: '100%', backgroundColor: isClaimed ? '#333' : (canClaim ? theme.green : '#333'), color: isClaimed ? theme.textDim : (canClaim ? '#fff' : theme.textDim), border: 'none', padding: '8px 0', borderRadius: '6px', fontWeight: 'bold', fontSize: '12px', cursor: canClaim ? 'pointer' : 'not-allowed' }}>
+                                    
+                                    <p style={{ color: theme.gold, fontSize: '12px', margin: '0 0 10px 0' }}>
+                                        +{m.reward}{isHalvingMilestone ? '*' : ''}
+                                    </p>
+                                    <button 
+                                        onClick={() => handleClaimMilestone(m.req)} 
+                                        disabled={!canClaim}
+                                        style={{ width: '100%', backgroundColor: isClaimed ? '#333' : (canClaim ? theme.green : '#333'), color: isClaimed ? theme.textDim : (canClaim ? '#fff' : theme.textDim), border: 'none', padding: '8px 0', borderRadius: '6px', fontWeight: 'bold', fontSize: '12px', cursor: canClaim ? 'pointer' : 'not-allowed' }}>
                                         {isClaimed ? 'ĐÃ NHẬN' : 'NHẬN'}
                                     </button>
                                 </div>
@@ -813,63 +911,18 @@ function App() {
                     </div>
                 </div>
 
-                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
-                    <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>🎟️ Nhập Mã Quà Tặng (Giftcode)</h3>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        <input value={giftCodeInput} onChange={(e) => setGiftCodeInput(e.target.value)} placeholder="Nhập mã săn được từ Group..." style={{ flex: 1, padding: '14px', borderRadius: '10px', border: `1px solid ${theme.green}`, backgroundColor: '#000', color: theme.gold, boxSizing: 'border-box', fontSize: '14px', textTransform: 'uppercase' }} />
-                        <button onClick={handleClaimGiftCode} style={{ backgroundColor: theme.green, color: '#fff', padding: '0 20px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', cursor: 'pointer' }}>NHẬN</button>
-                    </div>
-                </div>
-
-                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
-                    <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>🔗 Công cụ lan tỏa</h3>
-                    <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '8px', color: theme.gold, fontSize: '15px', wordBreak: 'break-all', marginBottom: '15px', border: `1px dashed ${theme.border}` }}>
-                        https://t.me/Dau_Tu_SWC_bot?start={userId || 'ref'}
-                    </div>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        <button onClick={handleCopyLink} style={{ flex: 1, backgroundColor: theme.gold, color: '#000', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', cursor: 'pointer', textAlign: 'center' }}>📋 COPY LINK</button>
-                        <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ flex: 1, backgroundColor: '#5E92F3', color: '#fff', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', textAlign: 'center', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✈️ GỬI BẠN BÈ</a>
-                    </div>
-                </div>
-
-                <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fde047', padding: '12px', marginBottom: '20px', borderRadius: '6px' }}>
-                    <h4 style={{ color: '#b45309', fontWeight: 'bold', margin: '0 0 5px 0', fontSize: '13px' }}>⏳ SỰ KIỆN HALVING SẮP DIỄN RA!</h4>
-                    <p style={{ color: '#854d0e', margin: 0, fontSize: '12px', lineHeight: '1.5' }}>Khi Cộng đồng cán mốc <b>1.000 người</b>, phần thưởng tại các mốc sẽ tự động <b>GIẢM XUỐNG</b>. Hãy nhận thưởng ngay hôm nay!</p>
-                </div>
-
-                {/* BẢNG VÀNG GIỚI THIỆU (Từ Code Cũ) */}
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🤝 BẢNG VÀNG GIỚI THIỆU</h3>
-                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '15px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
-                    {displayBoard.slice(0, 10).map((user, index) => {
-                        let medal = "🏅"; 
-                        if (index === 0) medal = "🥇";
-                        else if (index === 1) medal = "🥈";
-                        else if (index === 2) medal = "🥉";
-                        return (
-                            <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: index < displayBoard.length - 1 ? `1px solid ${theme.border}` : 'none' }}>
-                                <div style={{ display: 'flex', alignItems: 'center' }}>
-                                    <span style={{ color: theme.textDim, fontWeight: 'bold', fontSize: '14px', minWidth: '24px', marginRight: '5px' }}>{index + 1}.</span>
-                                    <span style={{ fontSize: '22px', marginRight: '10px' }}>{medal}</span>
-                                    <div style={{display:'flex', flexDirection:'column', gap: '3px'}}>
-                                        <span style={{ color: theme.textLight, fontWeight: 'bold', fontSize: '15px' }}>{user.firstName} {user.lastName}</span>
-                                        <span style={{ color: theme.blue, fontSize: '11px', fontWeight: 'bold' }}>{getMilitaryRank(user.referralCount)}</span>
-                                    </div>
-                                </div>
-                                <div style={{ color: theme.gold, fontWeight: 'bold', fontSize: '16px' }}>
-                                    {user.referralCount} <span style={{ fontSize: '12px', color: theme.textDim, fontWeight: 'normal' }}>người</span>
-                                </div>
-                            </div>
-                        )
-                    })}
-                    <div style={{ textAlign: 'center', paddingTop: '15px', borderTop: `1px dashed ${theme.gold}`, marginTop: '10px' }}>
-                        <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', textDecoration: 'none', boxSizing: 'border-box' }}>
-                            ✈️ CHIA SẺ LINK ĐỂ ĐUA TOP NGAY
-                        </a>
-                    </div>
+                {renderWealthBoard()}
+
+                <div style={{ textAlign: 'center', paddingTop: '5px', marginBottom: '25px' }}>
+                    <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', textDecoration: 'none', boxSizing: 'border-box' }}>
+                        ✈️ CHIA SẺ LINK ĐỂ ĐUA TOP NGAY
+                    </a>
                 </div>
 
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>💎 KHO ĐẶC QUYỀN VIP</h3>
                 <p style={{ color: theme.textDim, fontSize: '14px', marginBottom: '15px' }}>Hãy để lại số lượng Token</p>
+                
                 <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '15px', marginBottom: '15px', border: `1px solid ${theme.border}`}}>
                     <h4 style={{margin: '0 0 8px 0', color: '#5E92F3', fontSize: '16px'}}>☕ Cà Phê Chiến Lược : 6000</h4>
                     <p style={{fontSize: '14px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Thảo luận danh mục trực tiếp cùng Admin Ucity.</p>
@@ -892,208 +945,182 @@ function App() {
     };
 
     // ==================================================
-    // CỬA HÀNG KHUNG VIỀN AVATAR (SHOP)
-    // ==================================================
-    const renderShop = () => (
-        <div style={{ padding: '0 20px 20px 20px', paddingBottom: '100px' }}>
-            <div style={{ textAlign: 'center', marginBottom: '25px' }}>
-                <div style={{ fontSize: '45px', marginBottom: '5px' }}>🛍️</div>
-                <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '22px', fontWeight: '900' }}>Cửa Hàng Avatar</h2>
-                <p style={{ color: theme.textDim, fontSize: '14px', margin: 0 }}>Số dư: <b style={{color: theme.green}}>{balance} SWGT</b></p>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                {AVATAR_FRAMES.map((frame) => {
-                    const isOwned = userProfile.ownedFrames.includes(frame.id);
-                    const isActive = userProfile.activeFrame === frame.id;
-                    
-                    return (
-                        <div key={frame.id} style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '15px', textAlign: 'center', border: `1px solid ${isActive ? theme.green : theme.border}`, position: 'relative' }}>
-                            {isActive && <div style={{ position: 'absolute', top: '-10px', right: '-10px', fontSize: '20px' }}>✅</div>}
-                            
-                            <div style={{ 
-                                width: '60px', height: '60px', borderRadius: '50%', margin: '0 auto 15px auto', 
-                                border: frame.border, boxShadow: frame.shadow, animation: frame.animation || 'none', padding: '2px', backgroundColor: '#333'
-                            }}>
-                                <img src={userProfile.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.name || 'U')}&background=F4D03F&color=000`} alt="preview" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-                            </div>
-                            
-                            <h4 style={{ margin: '0 0 5px 0', color: theme.textLight, fontSize: '14px' }}>{frame.name}</h4>
-                            
-                            {frame.price === -1 ? (
-                                <p style={{ margin: '0 0 10px 0', color: '#00FFFF', fontSize: '12px', fontWeight: 'bold' }}>{frame.desc}</p>
-                            ) : (
-                                <p style={{ margin: '0 0 10px 0', color: theme.gold, fontSize: '13px', fontWeight: 'bold' }}>{frame.price} SWGT</p>
-                            )}
-
-                            <button 
-                                onClick={() => handleBuyFrame(frame.id, frame.price)}
-                                disabled={isActive || (frame.price === -1 && !isOwned)}
-                                style={{ 
-                                    width: '100%', padding: '8px', borderRadius: '8px', border: 'none', fontWeight: 'bold', fontSize: '12px',
-                                    backgroundColor: isActive ? '#333' : isOwned ? theme.blue : (frame.price === -1 ? '#444' : theme.gold),
-                                    color: isActive ? theme.textDim : isOwned ? '#fff' : (frame.price === -1 ? theme.textDim : '#000'),
-                                    cursor: isActive || (frame.price === -1 && !isOwned) ? 'not-allowed' : 'pointer'
-                                }}
-                            >
-                                {isActive ? 'ĐANG DÙNG' : isOwned ? 'TRANG BỊ' : (frame.price === -1 ? 'QUAY GACHA' : 'MUA NGAY')}
-                            </button>
-                        </div>
-                    );
-                })}
-            </div>
-        </div>
-    );
-
-    // ==================================================
-    // GIẢI TRÍ: RƯƠNG BÍ ẨN (THAO TÚNG TÂM LÝ 3.0)
+    // GIẢI TRÍ (ĐÃ CẬP NHẬT TRỌNG SỐ VÀ HIỆU ỨNG TEXT NGƯỜI TRÚNG)
     // ==================================================
     const renderGameZone = () => {
 
-        const handlePickChest = (index: number) => {
-            if (balance < 20) return alert("⚠️ Bạn cần ít nhất 20 SWGT để mua Búa Đập Rương!");
+        const wheelSlices = [
+            { label: '0 SWGT', value: 0, color: '#333333' },     // Ô số 1: Xịt (Xám xịt, tối màu)
+            { label: '500 SWGT', value: 500, color: '#F4D03F' }, // Ô số 2: JACKPOT (Vàng rực rỡ, đập vào mắt)
+            { label: '0 SWGT', value: 0, color: '#444444' },     // Ô số 3: Xịt (Xám) -> TẠO HIỆU ỨNG SUÝT TRÚNG
+            { label: '20 SWGT', value: 20, color: '#E0B0FF' },   // Ô số 4: Hòa vốn (Tím nhạt)
+            { label: '5 SWGT', value: 5, color: '#5E92F3' },     // Ô số 5: Thua ít (Xanh dương)
+            { label: '100 SWGT', value: 100, color: '#FF3B30' }, // Ô số 6: Thắng Lớn thứ 2 (Đỏ rực)
+            { label: '10 SWGT', value: 10, color: '#34C759' },   // Ô số 7: Thua ít (Xanh lá)
+            { label: '50 SWGT', value: 50, color: '#E67E22' }    // Ô số 8: Thắng vừa (Cam)
+        ];
+
+        // HÀM XỬ LÝ QUAY (UPDATE: ĐÃ TÍCH HỢP HIỆU ỨNG SUÝT TRÚNG - NEAR MISS)
+        const executeSpin = (rewardValue: number, newBalance: number) => {
+            let targetIndex = -1;
+            let randomOffset = 22.5; // Góc mặc định giữa ô
+
+            if (rewardValue === 0) {
+                // 😈 NHÀ CÁI ĐỘT NHẬP: Ép kịch bản rơi vào 2 ô Xịt kẹp sát ô 500 (Ô số 0 và Ô số 2)
+                const nearMissIndexes = [0, 2];
+                targetIndex = nearMissIndexes[Math.floor(Math.random() * nearMissIndexes.length)];
+                
+                // 😈 Ép kim dừng sát vạch kẻ (Chệch 2-3 độ so với ô 500 để tạo ảo giác "vừa trượt mất")
+                if (targetIndex === 0) {
+                    randomOffset = Math.floor(Math.random() * 3) + 2; // Rớt sát mép trái ô 500
+                } else {
+                    randomOffset = 45 - (Math.floor(Math.random() * 3) + 2); // Rớt sát mép phải ô 500
+                }
+            } else {
+                // Các giải khác quay rơi vào giữa ô bình thường
+                const possibleIndexes = wheelSlices.map((s, i) => s.value === rewardValue ? i : -1).filter(i => i !== -1);
+                targetIndex = possibleIndexes[Math.floor(Math.random() * possibleIndexes.length)];
+                randomOffset = Math.floor(Math.random() * 25) + 10; 
+            }
+            
+            const sliceAngle = 360 / 8;
+            const targetAbsoluteAngle = 360 - (targetIndex * sliceAngle) - randomOffset;
+            
+            // Tăng số vòng xoáy lên 8 vòng để kéo dài thời gian lơ lửng, lết bánh
+            const currentSpins = Math.floor(wheelRotation / 360);
+            const finalRotation = (currentSpins + 8) * 360 + targetAbsoluteAngle;
+
+            setWheelRotation(finalRotation);
+
+            // Kéo dài thời gian đợi lên 8s để khớp với vòng quay slow-motion
+            setTimeout(() => {
+                setIsSpinning(false);
+                setBalance(newBalance);
+                setSpinEarned(prev => prev + rewardValue); 
+                
+                const playerName = userProfile.name || 'Bạn';
+                if (rewardValue === 0) {
+                    setSpinResultMsg(`Ahhh! ${playerName} chệch một tí nữa là nổ hũ 500. Quay lại phục thù nào!`);
+                    
+                    // 😈 NHÀ CÁI BỒI THÊM ĐÒN: Đợi 1.5 giây sau khi hiện thông báo "Suýt trúng" thì bật Pop-up khiêu khích
+                    setTimeout(() => setShowRevengePopup(true), 1500);
+                }
+                else if (rewardValue >= 50) setSpinResultMsg(`🎉 BÙM!!! CHÚC MỪNG ${playerName.toUpperCase()} TRÚNG ${rewardValue} SWGT! NHÂN PHẨM CỰC CAO!`);
+                else setSpinResultMsg(`Tuyệt vời! ${playerName} nhận được +${rewardValue} SWGT.`);
+            }, 8000); // 8 giây
+        };
+
+        const handleSpin = () => {
+            if (balance < 20) return alert("⚠️ Bạn cần ít nhất 20 SWGT để mua vé quay!");
             if (isSpinning) return;
 
             setIsSpinning(true);
             setSpinResultMsg('');
 
-            const newCount = spinCount + 1;
-            setSpinCount(newCount);
-
-            // 1. XÁC ĐỊNH PHẦN THƯỞNG
-            let actualReward = 0;
-            
-            if (newCount >= MAX_PITY) {
-                actualReward = 500;
-                setSpinCount(0);
-            } else {
+            fetch(`${BACKEND_URL}/api/spin-wheel`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    executeSpin(data.reward, data.newBalance);
+                } else {
+                    setIsSpinning(false);
+                    alert(data.message);
+                }
+            })
+            .catch(err => {
+                console.error("Lỗi kết nối Server. Kích hoạt quay mô phỏng (Fallback):", err);
+                
+                // LOGIC CHIA LẠI TỶ LỆ TRÚNG (SIẾT CHẶT X10 LẦN)
                 const weights = [
-                    { reward: 0, chance: 45 },      // 45% Than đá (0đ)
-                    { reward: 5, chance: 35 },      // 35% Rương Gỗ 
-                    { reward: 10, chance: 12 },     // 12% Rương Bạc 
-                    { reward: 20, chance: 5 },      // 5% Hoà vốn
-                    { reward: 50, chance: 1.5 },    // 1.5% Lãi vừa
-                    { reward: -2, chance: 1.5 }     // 1.5% Mảnh Khung
+                    { reward: 0, chance: 60 },      // 60% xịt (Tăng độ khó)
+                    { reward: 5, chance: 25 },      // 25% được 5 SWGT
+                    { reward: 10, chance: 10 },     // 10% được 10 SWGT
+                    { reward: 20, chance: 4 },      // 4% hoàn vốn 20 SWGT
+                    { reward: 50, chance: 0.89 },   // 0.89% được 50 SWGT
+                    { reward: 100, chance: 0.1 },   // 0.1% trúng 100 SWGT
+                    { reward: 500, chance: 0.01 }   // 0.01% cực khó nổ 500 SWGT
                 ];
 
                 let rand = Math.random() * 100;
+                let randomReward = 0;
                 let cumulative = 0;
                 for (let w of weights) {
                     cumulative += w.chance;
-                    if (rand <= cumulative) { actualReward = w.reward; break; }
-                }
-            }
-
-            // 2. TẠO BÀN CỜ ẢO GIÁC "SUÝT TRÚNG"
-            let pool = [0, 0, 5, 5, 10, 20]; 
-            
-            if (actualReward !== 500) pool.push(500); else pool.push(0);
-            if (actualReward !== -2) pool.push(-2); else pool.push(50);
-            
-            pool = pool.sort(() => Math.random() - 0.5);
-
-            let newBoard = Array(9).fill(null);
-            let poolIndex = 0;
-            for(let i=0; i<9; i++) {
-                if (i === index) {
-                    newBoard[i] = { isOpened: true, reward: actualReward, isMine: true };
-                } else {
-                    newBoard[i] = { isOpened: false, reward: pool[poolIndex], isMine: false };
-                    poolIndex++;
-                }
-            }
-
-            setChestBoard(newBoard);
-
-            // 3. Lật ngửa rương sau 1 giây
-            setTimeout(() => {
-                const revealedBoard = newBoard.map(c => ({ ...c, isOpened: true }));
-                setChestBoard(revealedBoard);
-                
-                setTimeout(() => {
-                    const finalReward = actualReward === -2 ? 0 : actualReward;
-                    setBalance(prev => prev - 20 + finalReward);
-                    
-                    const playerName = userProfile.name.split(' ')[0] || 'Bạn';
-                    
-                    if (actualReward === -2) {
-                        if (!userProfile.ownedFrames.includes('light')) {
-                            setUserProfile(prev => ({ ...prev, ownedFrames: [...prev.ownedFrames, 'light'] }));
-                        }
-                        setSpinResultMsg('🎉 BÙM! Trúng Mảnh Khung Ánh Sáng siêu hiếm!');
-                    } else if (actualReward === 0) {
-                        setSpinResultMsg(`Trời ơi ${playerName}! Rương 500 nằm ngay bên kia kìa!`);
-                        setTimeout(() => setShowRevengePopup(true), 1500);
-                    } else if (actualReward === 500) {
-                        setSpinResultMsg(`🏆 ĐẠI CÁT ĐẠI LỢI! NỔ HŨ 500 SWGT!`);
-                        setSpinEarned(prev => prev + 500);
-                    } else {
-                        setSpinResultMsg(`Thu về +${actualReward} SWGT. Đập phát nữa nổ hũ to hơn nào!`);
-                        setSpinEarned(prev => prev + actualReward);
+                    if (rand <= cumulative) {
+                        randomReward = w.reward;
+                        break;
                     }
-                    
-                    setIsSpinning(false);
-                    setTimeout(() => setChestBoard(Array(9).fill({ isOpened: false, reward: null, isMine: false })), 2500);
-                }, 1500); 
-            }, 1000);
+                }
+                
+                executeSpin(randomReward, balance - 20 + randomReward);
+            });
         };
 
         return (
             <div style={{ padding: '0 20px 20px 20px', paddingBottom: '100px', textAlign: 'center' }}>
-                <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '24px', fontWeight: '900' }}>🗝️ Chọn Rương Bí Ẩn</h2>
-                <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 15px 0' }}>Mua 1 Búa lật rương: <b style={{color: theme.red}}>20 SWGT</b></p>
+                <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '24px', fontWeight: '900' }}>🎰 Vòng Quay Nhân Phẩm</h2>
+                <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 15px 0' }}>Phí quay: <b style={{color: theme.red}}>20 SWGT</b> / lượt</p>
 
-                <div style={{ backgroundColor: '#000', borderRadius: '10px', padding: '12px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                        <span style={{ fontSize: '12px', color: theme.textLight, fontWeight: 'bold' }}>⚡ Năng lượng Nổ Hũ</span>
-                        <span style={{ fontSize: '12px', color: theme.gold, fontWeight: 'bold' }}>{spinCount} / {MAX_PITY}</span>
-                    </div>
-                    <div style={{ width: '100%', height: '10px', backgroundColor: '#222', borderRadius: '5px', overflow: 'hidden' }}>
-                        <div style={{ width: `${(spinCount / MAX_PITY) * 100}%`, height: '100%', backgroundColor: theme.gold, transition: 'width 0.3s' }}></div>
-                    </div>
-                    <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: theme.textDim, fontStyle: 'italic' }}>
-                        Chỉ còn <b>{MAX_PITY - spinCount}</b> búa nữa <b style={{color: theme.green}}>CHẮC CHẮN</b> rớt Rương Kim Cương 500 SWGT.
-                    </p>
+                {/* BOX HIỂN THỊ SỐ TIỀN VỪA TRÚNG */}
+                <div style={{ backgroundColor: '#000', borderRadius: '12px', padding: '15px', marginBottom: '20px', border: `1px solid ${theme.green}`, display: 'inline-block', minWidth: '60%', boxShadow: '0 0 10px rgba(52, 199, 89, 0.2)' }}>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '13px', fontWeight: 'bold' }}>🎁 Bạn vừa kiếm được:</p>
+                    <h3 style={{ margin: '5px 0 0 0', color: theme.green, fontSize: '26px', fontWeight: '900' }}>
+                        +{spinEarned} <span style={{fontSize: '14px', fontWeight: 'normal'}}>SWGT</span>
+                    </h3>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', maxWidth: '320px', margin: '0 auto', marginBottom: '20px' }}>
-                    {chestBoard.map((chest, i) => {
-                        let content = '📦'; let textColor = '#fff'; let bgItem = theme.gold;
+                {/* KHU VỰC CHỮ NGƯỜI TRÚNG ẢO */}
+                <div style={{ height: '40px', marginBottom: '25px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{
+                        opacity: showWinner ? 1 : 0,
+                        transform: showWinner ? 'translateY(0)' : 'translateY(10px)',
+                        transition: 'all 0.5s ease-in-out',
+                        backgroundColor: 'rgba(244, 208, 63, 0.1)',
+                        border: `1px dashed ${theme.gold}`,
+                        padding: '8px 15px',
+                        borderRadius: '20px',
+                        color: theme.textLight,
+                        fontSize: '13px',
+                        fontWeight: 'bold',
+                        whiteSpace: 'nowrap',
+                        maxWidth: '100%',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                    }}>
+                        {currentWinner}
+                    </div>
+                </div>
 
-                        if (chest.isOpened) {
-                            bgItem = '#1A1A1A';
-                            if (chest.reward === 500) { content = '💎 500'; textColor = theme.gold; }
-                            else if (chest.reward === -2) { content = '🧩 Khung'; textColor = '#00FFFF'; }
-                            else if (chest.reward > 0) { content = `💰 +${chest.reward}`; textColor = theme.green; }
-                            else { content = '💣 Xịt'; textColor = theme.red; }
-                        }
-
-                        return (
-                            <div 
-                                key={i} 
-                                onClick={() => !chest.isOpened && handlePickChest(i)}
-                                style={{ 
-                                    aspectRatio: '1', backgroundColor: bgItem, borderRadius: '15px', 
-                                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
-                                    fontSize: chest.isOpened ? '16px' : '40px', fontWeight: '900', color: textColor,
-                                    cursor: isSpinning ? 'not-allowed' : 'pointer',
-                                    border: chest.isMine ? `3px solid ${theme.green}` : `2px solid ${chest.isOpened ? '#333' : '#b49010'}`,
-                                    boxShadow: chest.isMine ? '0 0 15px rgba(52, 199, 89, 0.6)' : (chest.isOpened ? 'none' : '0 4px 0 #b49010'),
-                                    transition: 'all 0.3s ease',
-                                    opacity: chest.isOpened && !chest.isMine ? 0.6 : 1
-                                }}
-                            >
-                                {content}
+                <div style={{ position: 'relative', width: '280px', height: '280px', margin: '0 auto', marginBottom: '30px' }}>
+                    <div style={{ position: 'absolute', top: '-15px', left: '50%', transform: 'translateX(-50%)', width: '0', height: '0', borderLeft: '15px solid transparent', borderRight: '15px solid transparent', borderTop: `25px solid ${theme.red}`, zIndex: 10 }}></div>
+                    <div style={{ 
+                        width: '100%', height: '100%', borderRadius: '50%', border: `5px solid ${theme.gold}`, boxShadow: '0 0 20px rgba(244, 208, 63, 0.4)',
+                        /* UPDATE MÀU THEO THIẾT KẾ MỚI CỦA MÂM QUAY */
+                        background: `conic-gradient(#333333 0deg 45deg, #F4D03F 45deg 90deg, #444444 90deg 135deg, #E0B0FF 135deg 180deg, #5E92F3 180deg 225deg, #FF3B30 225deg 270deg, #34C759 270deg 315deg, #E67E22 315deg 360deg)`,
+                        transform: `rotate(${wheelRotation}deg)`, 
+                        /* UPDATE HIỆU ỨNG SLOW-MOTION: Chậm dần đều cực gắt ở cuối */
+                        transition: 'transform 8s cubic-bezier(0.15, 0.85, 0.05, 1)' 
+                    }}>
+                        {wheelSlices.map((slice, i) => (
+                            <div key={i} style={{ position: 'absolute', top: 0, left: '50%', transform: `translateX(-50%) rotate(${i * 45 + 22.5}deg)`, transformOrigin: '50% 140px', width: '60px', textAlign: 'center', paddingTop: '15px', color: '#fff', fontWeight: 'bold', fontSize: '14px', textShadow: '1px 1px 2px #000', zIndex: 2 }}>
+                                {slice.label}
                             </div>
-                        );
-                    })}
+                        ))}
+                    </div>
+                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '40px', height: '40px', backgroundColor: theme.cardBg, borderRadius: '50%', border: `3px solid ${theme.gold}`, zIndex: 5 }}></div>
                 </div>
 
-                <div style={{ minHeight: '40px', marginBottom: '20px', padding: '10px', backgroundColor: 'rgba(244, 208, 63, 0.1)', borderRadius: '10px' }}>
-                    <p style={{ color: spinResultMsg.includes('500') || spinResultMsg.includes('Trời ơi') ? theme.textLight : theme.green, fontSize: '14px', fontWeight: 'bold', margin: 0 }}>
-                        {spinResultMsg || '👇 Chạm vào 1 rương bất kỳ để mở!'}
-                    </p>
+                <div style={{ minHeight: '40px', marginBottom: '20px' }}>
+                    <p style={{ color: spinResultMsg.includes('500') || spinResultMsg.includes('0') ? theme.textLight : theme.green, fontSize: '15px', fontWeight: 'bold', margin: 0 }}>{spinResultMsg}</p>
                 </div>
+
+                <button onClick={handleSpin} disabled={isSpinning} style={{ width: '100%', backgroundColor: isSpinning ? '#333' : theme.gold, color: isSpinning ? theme.textDim : '#000', padding: '16px', borderRadius: '12px', fontWeight: '900', border: 'none', fontSize: '18px', cursor: isSpinning ? 'not-allowed' : 'pointer', boxShadow: isSpinning ? 'none' : '0 6px 0 #b49010' }}>
+                    {isSpinning ? '⏳ ĐANG QUAY...' : '🎯 QUAY NGAY (-20 SWGT)'}
+                </button>
             </div>
         );
     };
@@ -1109,7 +1136,14 @@ function App() {
                     {balance} <span style={{fontSize: '24px', fontWeight: 'normal'}}>SWGT</span>
                 </h1>
                 
-                <input type="number" placeholder="Nhập số SWGT muốn rút..." value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)} style={{ width: '100%', padding: '14px', borderRadius: '10px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '15px', fontSize: '15px', textAlign: 'center' }} />
+                <input 
+                    type="number" 
+                    placeholder="Nhập số SWGT muốn rút..." 
+                    value={withdrawAmount}
+                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                    style={{ width: '100%', padding: '14px', borderRadius: '10px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '15px', fontSize: '15px', textAlign: 'center' }}
+                />
+
                 <button onClick={handleWithdraw} style={{ width: '100%', backgroundColor: balance >= 300 ? theme.green : '#333', color: balance >= 300 ? '#fff' : theme.textDim, padding: '16px', borderRadius: '12px', fontWeight: 'bold', border: 'none', fontSize: '16px', cursor: balance >= 300 ? 'pointer' : 'not-allowed', boxShadow: balance >= 300 ? '0 4px 15px rgba(52, 199, 89, 0.3)' : 'none' }}>
                     {balance >= 300 ? '💸 XÁC NHẬN RÚT TIỀN' : '🔒 CẦN TỐI THIỂU 500 SWGT'}
                 </button>
@@ -1139,8 +1173,12 @@ function App() {
                 <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⚙️ Thiết lập thanh toán</h3>
                 
                 <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                    <button onClick={() => setWithdrawMethod('gate')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${withdrawMethod === 'gate' ? theme.green : theme.border}`, backgroundColor: withdrawMethod === 'gate' ? 'rgba(52, 199, 89, 0.1)' : '#000', color: withdrawMethod === 'gate' ? theme.green : theme.textDim, fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', transition: 'all 0.3s' }}>Gate.io (Miễn phí)</button>
-                    <button onClick={() => setWithdrawMethod('erc20')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${withdrawMethod === 'erc20' ? theme.red : theme.border}`, backgroundColor: withdrawMethod === 'erc20' ? 'rgba(255, 59, 48, 0.1)' : '#000', color: withdrawMethod === 'erc20' ? theme.red : theme.textDim, fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', transition: 'all 0.3s' }}>Ví ERC20 (-70 SWGT)</button>
+                    <button onClick={() => setWithdrawMethod('gate')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${withdrawMethod === 'gate' ? theme.green : theme.border}`, backgroundColor: withdrawMethod === 'gate' ? 'rgba(52, 199, 89, 0.1)' : '#000', color: withdrawMethod === 'gate' ? theme.green : theme.textDim, fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', transition: 'all 0.3s' }}>
+                        Gate.io (Miễn phí)
+                    </button>
+                    <button onClick={() => setWithdrawMethod('erc20')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${withdrawMethod === 'erc20' ? theme.red : theme.border}`, backgroundColor: withdrawMethod === 'erc20' ? 'rgba(255, 59, 48, 0.1)' : '#000', color: withdrawMethod === 'erc20' ? theme.red : theme.textDim, fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', transition: 'all 0.3s' }}>
+                        Ví ERC20 (-70 SWGT)
+                    </button>
                 </div>
 
                 {withdrawMethod === 'gate' && (
@@ -1154,13 +1192,17 @@ function App() {
                             </ol>
                             <div style={{ marginTop: '15px', textAlign: 'center' }}>
                                 <img src="/gate-guide.jpg" alt="Hướng dẫn Gatecode" style={{ width: '100%', borderRadius: '8px', border: `1px solid ${theme.border}`, display: 'block' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                                <button onClick={() => window.open('https://telegra.ph/H%C6%B0%E1%BB%9Bng-d%E1%BA%ABn-%C4%91%C4%83ng-k%C3%BD--t%E1%BA%A1o-m%E1%BB%9Bi-t%C3%A0i-kho%E1%BA%A3n-Gateio-to%C3%A0n-t%E1%BA%ADp-02-22', '_blank')} style={{ width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '12px', borderRadius: '8px', fontWeight: 'bold', border: 'none', fontSize: '13px', cursor: 'pointer', marginTop: '15px' }}>📖 HƯỚNG DẪN TẠO VÍ GATE.IO</button>
+                                <button onClick={() => window.open('https://telegra.ph/H%C6%B0%E1%BB%9Bng-d%E1%BA%ABn-%C4%91%C4%83ng-k%C3%BD--t%E1%BA%A1o-m%E1%BB%9Bi-t%C3%A0i-kho%E1%BA%A3n-Gateio-to%C3%A0n-t%E1%BA%ADp-02-22', '_blank')} style={{ width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '12px', borderRadius: '8px', fontWeight: 'bold', border: 'none', fontSize: '13px', cursor: 'pointer', marginTop: '15px' }}>
+                                    📖 HƯỚNG DẪN TẠO VÍ GATE.IO
+                                </button>
                             </div>
                         </div>
+
                         <p style={{ color: theme.textLight, fontSize: '14px', fontWeight: 'bold', margin: '0 0 10px 0' }}>Bổ sung thông tin (Tùy chọn):</p>
                         <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="1. Họ tên" style={{ width: '100%', padding: '14px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '10px', fontSize: '14px' }} />
                         <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="2. Gmail" style={{ width: '100%', padding: '14px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '10px', fontSize: '14px' }} />
                         <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="3. Số điện thoại" style={{ width: '100%', padding: '14px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '15px', fontSize: '14px' }} />
+
                         <p style={{ color: theme.textLight, fontSize: '14px', fontWeight: 'bold', margin: '0 0 10px 0' }}>Mã nhận tiền (Bắt buộc):</p>
                         <input value={gatecode} onChange={(e) => setGatecode(e.target.value)} placeholder="Dán Gatecode / UID Gate.io tại đây..." style={{ width: '100%', padding: '14px', borderRadius: '8px', border: `1px solid ${theme.green}`, backgroundColor: '#000', color: theme.gold, boxSizing: 'border-box', marginBottom: '15px', fontSize: '14px' }} />
                     </div>
@@ -1185,69 +1227,83 @@ function App() {
     );
 
     return (
-        <div style={{ backgroundColor: theme.bg, minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '90px', boxSizing: 'border-box', position: 'relative' }}>
+        <div style={{ backgroundColor: theme.bg, minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '90px', boxSizing: 'border-box' }}>
             <style>{`
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+                /* 😈 HIỆU ỨNG CHỚP ĐỎ KÍCH THÍCH SỰ TỨC GIẬN */
                 @keyframes pulseRed { 0% { box-shadow: 0 0 10px #FF3B30; } 50% { box-shadow: 0 0 35px #FF3B30; } 100% { box-shadow: 0 0 10px #FF3B30; } }
-                @keyframes slideDownUp { 0% { top: -50px; opacity: 0; } 15% { top: 20px; opacity: 1; } 85% { top: 20px; opacity: 1; } 100% { top: -50px; opacity: 0; } }
                 ::-webkit-scrollbar { height: 6px; }
                 ::-webkit-scrollbar-track { background: #1C1C1E; border-radius: 10px; }
                 ::-webkit-scrollbar-thumb { background: #F4D03F; border-radius: 10px; }
             `}</style>
             
-            {/* THANH THÔNG BÁO NỔI (TICKER) AI CŨNG THÍCH */}
-            {showWinner && (
-                <div style={{
-                    position: 'fixed', left: '50%', transform: 'translateX(-50%)',
-                    backgroundColor: 'rgba(0,0,0,0.85)', color: theme.gold, padding: '10px 20px',
-                    borderRadius: '25px', zIndex: 9999, fontSize: '13px', fontWeight: 'bold',
-                    border: `1px solid ${theme.gold}`, boxShadow: '0 4px 15px rgba(244,208,63,0.3)',
-                    animation: 'slideDownUp 3.5s ease-in-out forwards', whiteSpace: 'nowrap',
-                    pointerEvents: 'none'
-                }}>
-                    {currentWinner}
-                </div>
-            )}
-
             {renderHeader()}
             
             <div style={{ marginTop: '10px' }}>
                 {activeTab === 'home' && renderHome()}
                 {activeTab === 'rewards' && renderRewards()}
                 {activeTab === 'game' && renderGameZone()}
-                {activeTab === 'shop' && renderShop()}
                 {activeTab === 'wallet' && renderWallet()}
             </div>
 
-            {/* THANH ĐIỀU HƯỚNG DƯỚI ĐÁY CHUẨN 5 NÚT */}
+            {/* THANH ĐIỀU HƯỚNG DƯỚI ĐÁY */}
             <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: theme.cardBg, borderTop: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-around', padding: '15px 0', paddingBottom: 'calc(15px + env(safe-area-inset-bottom))', zIndex: 100 }}>
-                <div onClick={() => setActiveTab('home')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'home' ? theme.gold : theme.textDim, width: '20%', cursor: 'pointer', transition: 'color 0.3s' }}>
-                    <div style={{ fontSize: '22px', marginBottom: '6px' }}>🏠</div><span style={{ fontSize: '11px', fontWeight: 'bold' }}>TRANG CHỦ</span>
+                <div onClick={() => setActiveTab('home')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'home' ? theme.gold : theme.textDim, width: '25%', cursor: 'pointer' }}>
+                    <div style={{ fontSize: '24px', marginBottom: '6px' }}>🏠</div>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>TRANG CHỦ</span>
                 </div>
-                <div onClick={() => setActiveTab('rewards')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'rewards' ? theme.gold : theme.textDim, width: '20%', cursor: 'pointer', transition: 'color 0.3s' }}>
-                    <div style={{ fontSize: '22px', marginBottom: '6px' }}>🎁</div><span style={{ fontSize: '11px', fontWeight: 'bold' }}>THU NHẬP</span>
+                <div onClick={() => setActiveTab('rewards')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'rewards' ? theme.gold : theme.textDim, width: '25%', cursor: 'pointer' }}>
+                    <div style={{ fontSize: '24px', marginBottom: '6px' }}>🎁</div>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>THU NHẬP</span>
                 </div>
-                <div onClick={() => setActiveTab('game')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'game' ? theme.gold : theme.textDim, width: '20%', cursor: 'pointer', transition: 'color 0.3s' }}>
-                    <div style={{ fontSize: '22px', marginBottom: '6px' }}>🎰</div><span style={{ fontSize: '11px', fontWeight: 'bold' }}>RƯƠNG MÙ</span>
+                <div onClick={() => setActiveTab('game')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'game' ? theme.gold : theme.textDim, width: '25%', cursor: 'pointer' }}>
+                    <div style={{ fontSize: '24px', marginBottom: '6px' }}>🎰</div>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>QUAY SWGT</span>
                 </div>
-                <div onClick={() => setActiveTab('shop')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'shop' ? theme.gold : theme.textDim, width: '20%', cursor: 'pointer', transition: 'color 0.3s' }}>
-                    <div style={{ fontSize: '22px', marginBottom: '6px' }}>🛍️</div><span style={{ fontSize: '11px', fontWeight: 'bold' }}>CỬA HÀNG</span>
-                </div>
-                <div onClick={() => setActiveTab('wallet')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'wallet' ? theme.gold : theme.textDim, width: '20%', cursor: 'pointer', transition: 'color 0.3s' }}>
-                    <div style={{ fontSize: '22px', marginBottom: '6px' }}>👛</div><span style={{ fontSize: '11px', fontWeight: 'bold' }}>VÍ</span>
+                <div onClick={() => setActiveTab('wallet')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'wallet' ? theme.gold : theme.textDim, width: '25%', cursor: 'pointer' }}>
+                    <div style={{ fontSize: '24px', marginBottom: '6px' }}>👛</div>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold' }}>VÍ</span>
                 </div>
             </div>
 
-            {/* BẢNG POP-UP KHIÊU KHÍCH PHỤC THÙ */}
+            {/* ================================================== */}
+            {/* 😈 BẢNG POP-UP KHIÊU KHÍCH PHỤC THÙ (NHÀ CÁI THAO TÚNG) */}
+            {/* ================================================== */}
             {showRevengePopup && (
-                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
-                    <div style={{ backgroundColor: theme.cardBg, border: `2px solid ${theme.red}`, borderRadius: '15px', padding: '25px', textAlign: 'center', animation: 'pulseRed 1.2s infinite', maxWidth: '350px' }}>
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.85)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    zIndex: 9999, padding: '20px'
+                }}>
+                    <div style={{
+                        backgroundColor: theme.cardBg, border: `2px solid ${theme.red}`,
+                        borderRadius: '15px', padding: '25px', textAlign: 'center',
+                        animation: 'pulseRed 1.2s infinite'
+                    }}>
                         <div style={{ fontSize: '50px', marginBottom: '10px' }}>🤬</div>
-                        <h2 style={{ color: theme.textLight, margin: '0 0 10px 0', fontSize: '20px', fontWeight: '900', textTransform: 'uppercase' }}>CAY CHƯA? ĐẬP LẠI NGAY!</h2>
-                        <p style={{ color: theme.textDim, fontSize: '14px', marginBottom: '25px', lineHeight: '1.5' }}>Trời ơi, rương 500 SWGT nằm ngay sát bên cạnh! Thanh năng lượng sắp đầy rồi, nạp thêm tiền và đập cho bằng được!</p>
+                        <h2 style={{ color: theme.textLight, margin: '0 0 10px 0', fontSize: '20px', fontWeight: '900', textTransform: 'uppercase' }}>
+                            CAY CHƯA? CHỈ 1 LY NỮA LÀ NỔ HŨ 500!
+                        </h2>
+                        <p style={{ color: theme.textDim, fontSize: '14px', marginBottom: '25px', lineHeight: '1.5' }}>
+                            Dừng lại bây giờ là hèn! Vòng quay đang cực nóng, tỷ lệ nổ hũ đang ở mức cao nhất. <b style={{color: theme.red}}>Nạp thêm SWGT và lấy lại những gì đã mất!</b>
+                        </p>
                         <div style={{ display: 'flex', gap: '10px' }}>
-                            <button onClick={() => setShowRevengePopup(false)} style={{ flex: 1, padding: '14px', borderRadius: '10px', backgroundColor: '#333', color: theme.textDim, border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>Bỏ Cuộc</button>
-                            <button onClick={() => { setShowRevengePopup(false); setActiveTab('wallet'); }} style={{ flex: 2, padding: '14px', borderRadius: '10px', backgroundColor: theme.red, color: '#fff', border: 'none', fontWeight: '900', cursor: 'pointer', boxShadow: `0 4px 15px rgba(255, 59, 48, 0.4)` }}>💸 NẠP TIỀN ĐẬP TIẾP</button>
+                            <button 
+                                onClick={() => setShowRevengePopup(false)}
+                                style={{ flex: 1, padding: '14px', borderRadius: '10px', backgroundColor: '#333', color: theme.textDim, border: 'none', fontWeight: 'bold', cursor: 'pointer' }}
+                            >
+                                Bỏ Cuộc
+                            </button>
+                            <button 
+                                onClick={() => {
+                                    setShowRevengePopup(false);
+                                    setActiveTab('wallet'); // 😈 Điều hướng ngay lập tức sang tab Ví để nạp tiền
+                                }}
+                                style={{ flex: 1, padding: '14px', borderRadius: '10px', backgroundColor: theme.red, color: '#fff', border: 'none', fontWeight: '900', cursor: 'pointer', boxShadow: `0 4px 15px rgba(255, 59, 48, 0.4)` }}
+                            >
+                                🔪 PHỤC THÙ NGAY
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1257,3 +1313,5 @@ function App() {
 }
 
 export default App;
+
+
