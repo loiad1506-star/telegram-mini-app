@@ -251,16 +251,16 @@ function App() {
 
     let displayBoard = [...leaderboard];
     const dummyUsers = [
-        { firstName: 'Vũ', lastName: 'Dũng', referralCount: 65 },
-        { firstName: 'Mai', lastName: 'Thiều Thị', referralCount: 60 },
-        { firstName: 'LINH', lastName: 'NGUYEN', referralCount: 47 },
-        { firstName: 'Minh', lastName: 'Ngọc Hoàng', referralCount: 33 },
-        { firstName: 'PHƯƠNG', lastName: 'ANH PHÙNG', referralCount: 27 },
-        { firstName: 'Nông', lastName: 'Mao', referralCount: 12 },
-        { firstName: 'Support', lastName: '', referralCount: 11 },
-        { firstName: 'OSAKA', lastName: 'CHAU HUYNH', referralCount: 10 },
-        { firstName: 'Trinh', lastName: 'Lê', referralCount: 9 },
-        { firstName: 'Lý', lastName: 'Hà', referralCount: 8 }
+        { firstName: 'Vũ', lastName: 'Dũng', referralCount: 65, photoUrl: '' },
+        { firstName: 'Mai', lastName: 'Thiều Thị', referralCount: 60, photoUrl: '' },
+        { firstName: 'LINH', lastName: 'NGUYEN', referralCount: 47, photoUrl: '' },
+        { firstName: 'Minh', lastName: 'Ngọc Hoàng', referralCount: 33, photoUrl: '' },
+        { firstName: 'PHƯƠNG', lastName: 'ANH PHÙNG', referralCount: 27, photoUrl: '' },
+        { firstName: 'Nông', lastName: 'Mao', referralCount: 12, photoUrl: '' },
+        { firstName: 'Support', lastName: '', referralCount: 11, photoUrl: '' },
+        { firstName: 'OSAKA', lastName: 'CHAU HUYNH', referralCount: 10, photoUrl: '' },
+        { firstName: 'Trinh', lastName: 'Lê', referralCount: 9, photoUrl: '' },
+        { firstName: 'Lý', lastName: 'Hà', referralCount: 8, photoUrl: '' }
     ];
     
     if (displayBoard.length < 10) {
@@ -498,6 +498,7 @@ function App() {
         </div>
     );
 
+    // BẢNG XẾP HẠNG ĐÃ ĐƯỢC CẬP NHẬT GIAO DIỆN HIỂN THỊ AVATAR
     const renderWealthBoard = () => (
         <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
             <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
@@ -531,19 +532,34 @@ function App() {
                 else if (index === 2) icon = "🌟";
                 
                 const isMe = user.firstName === userProfile.name.split(' ')[0];
+                
+                // Lấy Avatar: Nếu là bạn thì ưu tiên lấy avatar profile, còn lại lấy của user (nếu có API trả về)
+                const displayAvatar = isMe && userProfile.photoUrl ? userProfile.photoUrl : user.photoUrl;
 
                 return (
                     <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: index < wealthBoard.length - 1 ? `1px solid ${theme.border}` : 'none', backgroundColor: isMe ? 'rgba(244, 208, 63, 0.1)' : 'transparent', borderRadius: '8px', paddingLeft: isMe ? '10px' : '0', paddingRight: isMe ? '10px' : '0' }}>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <span style={{ color: theme.textDim, fontWeight: 'bold', fontSize: '14px', minWidth: '24px', marginRight: '5px' }}>{index + 1}.</span>
-                            <span style={{ fontSize: '22px', marginRight: '10px' }}>{icon}</span>
-                            <span style={{ color: isMe ? theme.gold : theme.textLight, fontWeight: 'bold', fontSize: '15px' }}>
+                            
+                            {/* --- MỚI: HIỂN THỊ AVATAR HOẶC CHỮ CÁI ĐẦU TIÊN TÊN --- */}
+                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '10px', overflow: 'hidden', border: `1px solid ${isMe ? theme.gold : theme.border}`, flexShrink: 0 }}>
+                                {displayAvatar ? (
+                                    <img src={displayAvatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
+                                ) : (
+                                    <span style={{ color: theme.textLight, fontSize: '13px', fontWeight: 'bold' }}>
+                                        {user.firstName ? user.firstName.charAt(0).toUpperCase() : 'U'}
+                                    </span>
+                                )}
+                            </div>
+                            
+                            <span style={{ fontSize: '20px', marginRight: '8px' }}>{icon}</span>
+                            <span style={{ color: isMe ? theme.gold : theme.textLight, fontWeight: 'bold', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100px' }}>
                                 {user.firstName} {user.lastName} {isMe && '(Bạn)'}
                             </span>
                         </div>
-                        <div style={{ color: theme.green, fontWeight: 'bold', fontSize: '16px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                            <span>{boardType === 'all' ? user.totalEarned : user.displayCount * 15} <span style={{ fontSize: '12px', color: theme.textDim, fontWeight: 'normal' }}>SWGT</span></span>
-                            {boardType === 'weekly' && <span style={{fontSize: '11px', color: theme.gold}}>({user.displayCount} người)</span>}
+                        <div style={{ color: theme.green, fontWeight: 'bold', fontSize: '15px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                            <span>{boardType === 'all' ? user.totalEarned : user.displayCount * 15} <span style={{ fontSize: '11px', color: theme.textDim, fontWeight: 'normal' }}>SWGT</span></span>
+                            {boardType === 'weekly' && <span style={{fontSize: '10px', color: theme.gold}}>({user.displayCount} người)</span>}
                         </div>
                     </div>
                 )
@@ -633,6 +649,71 @@ function App() {
             </div>
 
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
+                <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '18px' }}>💎 Cơ Cấu Phần Thưởng SWGT</h2>
+                <p style={{ color: theme.textLight, fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>📌 Thành viên Thường:</p>
+                <div style={{ color: theme.textDim, fontSize: '14px', margin: '0 0 15px 0', lineHeight: '1.6' }}>
+                    <p style={{ margin: 0 }}>Tham gia Channel: <span style={{color: '#34C759'}}>+10 SWGT/người</span></p>
+                    <p style={{ margin: 0 }}>Tham gia Nhóm Chat: <span style={{color: '#34C759'}}>+10 SWGT/người</span></p>
+                </div>
+                <p style={{ color: theme.premium, fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>⭐ Thành Viên Premium (+100%):</p>
+                <div style={{ color: theme.textDim, fontSize: '14px', margin: '0 0 10px 0', lineHeight: '1.6' }}>
+                    <p style={{ margin: 0 }}>Tham gia Channel: <span style={{color: '#34C759'}}>+20 SWGT/người</span></p>
+                    <p style={{ margin: 0 }}>Tham gia Nhóm Chat: <span style={{color: '#34C759'}}>+20 SWGT/người</span></p>
+                </div>
+                
+                <div style={{ backgroundColor: '#fef2f2', borderLeft: '4px solid #ef4444', padding: '12px', marginTop: '20px', borderRadius: '6px' }}>
+                    <h4 style={{ color: '#991b1b', fontWeight: 'bold', margin: '0 0 8px 0', fontSize: '14px' }}>
+                        ⚠️ CHÍNH SÁCH CHỐNG GIAN LẬN (RADAR 24/7)
+                    </h4>
+                    <p style={{ color: '#b91c1c', margin: 0, fontSize: '13px', lineHeight: '1.5' }}>
+                        Đối tác được mời <b>BẮT BUỘC</b> duy trì trong Group/Channel tối thiểu <b>21 ngày</b>. Nếu rời nhóm trước hạn, hệ thống sẽ tự động quét và <b>THU HỒI TOÀN BỘ SWGT & Lượt mời</b> tương ứng của bạn!
+                    </p>
+                </div>
+            </div>
+
+            {renderWealthBoard()}
+
+            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
+                <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>⚖️</span> Chính Sách Thanh Khoản
+                </h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                        <span style={{ fontSize: '18px' }}>🎯</span>
+                        <div>
+                            <p style={{ margin: 0, color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>Mức tối thiểu</p>
+                            <p style={{ margin: '2px 0 0 0', color: theme.textDim, fontSize: '13px' }}>Chỉ từ <b style={{color: theme.green}}>500 SWGT</b> / Tài khoản.</p>
+                        </div>
+                    </div>
+                    
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                        <span style={{ fontSize: '18px' }}>⏳</span>
+                        <div>
+                            <p style={{ margin: 0, color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>Thời gian mở khóa cơ bản</p>
+                            <p style={{ margin: '2px 0 0 0', color: theme.textDim, fontSize: '13px', lineHeight: '1.5' }}>Sau <b style={{color: theme.premium}}>7 ngày</b> (Premium) hoặc <b style={{color: theme.textLight}}>15 ngày</b> (Thường) tính từ ngày tham gia.</p>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', backgroundColor: 'rgba(244, 208, 63, 0.1)', padding: '10px', borderRadius: '8px', border: `1px solid ${theme.gold}` }}>
+                        <span style={{ fontSize: '18px' }}>⚡</span>
+                        <div>
+                            <p style={{ margin: 0, color: theme.gold, fontSize: '14px', fontWeight: 'bold' }}>Đặc quyền vượt rào (Fast-track)</p>
+                            <p style={{ margin: '2px 0 0 0', color: theme.textLight, fontSize: '13px', lineHeight: '1.5' }}>Cán mốc <b style={{color: theme.gold}}>1500 SWGT</b> ➔ <b style={{color: theme.green}}>ĐƯỢC RÚT NGAY LẬP TỨC</b>, bỏ qua mọi thời gian chờ đợi!</p>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                        <span style={{ fontSize: '18px' }}>💸</span>
+                        <div>
+                            <p style={{ margin: 0, color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>Quyền tự quyết</p>
+                            <p style={{ margin: '2px 0 0 0', color: theme.textDim, fontSize: '13px' }}>Rút tiền linh hoạt 24/7 bất cứ lúc nào khi đủ điều kiện.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* BLOCK NẠP KIẾN THỨC ĐÃ ĐƯỢC CHUYỂN XUỐNG DƯỚI ĐÂY */}
+            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🧠 Nạp Kiến Thức & Lan Tỏa</h2>
                 
                 <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', marginBottom: '10px', border: `1px solid ${theme.border}` }}>
@@ -719,70 +800,7 @@ function App() {
                     )}
                 </div>
             </div>
-
-            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
-                <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '18px' }}>💎 Cơ Cấu Phần Thưởng SWGT</h2>
-                <p style={{ color: theme.textLight, fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>📌 Thành viên Thường:</p>
-                <div style={{ color: theme.textDim, fontSize: '14px', margin: '0 0 15px 0', lineHeight: '1.6' }}>
-                    <p style={{ margin: 0 }}>Tham gia Channel: <span style={{color: '#34C759'}}>+10 SWGT/người</span></p>
-                    <p style={{ margin: 0 }}>Tham gia Nhóm Chat: <span style={{color: '#34C759'}}>+10 SWGT/người</span></p>
-                </div>
-                <p style={{ color: theme.premium, fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>⭐ Thành Viên Premium (+100%):</p>
-                <div style={{ color: theme.textDim, fontSize: '14px', margin: '0 0 10px 0', lineHeight: '1.6' }}>
-                    <p style={{ margin: 0 }}>Tham gia Channel: <span style={{color: '#34C759'}}>+20 SWGT/người</span></p>
-                    <p style={{ margin: 0 }}>Tham gia Nhóm Chat: <span style={{color: '#34C759'}}>+20 SWGT/người</span></p>
-                </div>
-                
-                <div style={{ backgroundColor: '#fef2f2', borderLeft: '4px solid #ef4444', padding: '12px', marginTop: '20px', borderRadius: '6px' }}>
-                    <h4 style={{ color: '#991b1b', fontWeight: 'bold', margin: '0 0 8px 0', fontSize: '14px' }}>
-                        ⚠️ CHÍNH SÁCH CHỐNG GIAN LẬN (RADAR 24/7)
-                    </h4>
-                    <p style={{ color: '#b91c1c', margin: 0, fontSize: '13px', lineHeight: '1.5' }}>
-                        Đối tác được mời <b>BẮT BUỘC</b> duy trì trong Group/Channel tối thiểu <b>21 ngày</b>. Nếu rời nhóm trước hạn, hệ thống sẽ tự động quét và <b>THU HỒI TOÀN BỘ SWGT & Lượt mời</b> tương ứng của bạn!
-                    </p>
-                </div>
-            </div>
-
-            {renderWealthBoard()}
-
-            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
-                <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>⚖️</span> Chính Sách Thanh Khoản
-                </h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                        <span style={{ fontSize: '18px' }}>🎯</span>
-                        <div>
-                            <p style={{ margin: 0, color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>Mức tối thiểu</p>
-                            <p style={{ margin: '2px 0 0 0', color: theme.textDim, fontSize: '13px' }}>Chỉ từ <b style={{color: theme.green}}>500 SWGT</b> / Tài khoản.</p>
-                        </div>
-                    </div>
-                    
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                        <span style={{ fontSize: '18px' }}>⏳</span>
-                        <div>
-                            <p style={{ margin: 0, color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>Thời gian mở khóa cơ bản</p>
-                            <p style={{ margin: '2px 0 0 0', color: theme.textDim, fontSize: '13px', lineHeight: '1.5' }}>Sau <b style={{color: theme.premium}}>7 ngày</b> (Premium) hoặc <b style={{color: theme.textLight}}>15 ngày</b> (Thường) tính từ ngày tham gia.</p>
-                        </div>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', backgroundColor: 'rgba(244, 208, 63, 0.1)', padding: '10px', borderRadius: '8px', border: `1px solid ${theme.gold}` }}>
-                        <span style={{ fontSize: '18px' }}>⚡</span>
-                        <div>
-                            <p style={{ margin: 0, color: theme.gold, fontSize: '14px', fontWeight: 'bold' }}>Đặc quyền vượt rào (Fast-track)</p>
-                            <p style={{ margin: '2px 0 0 0', color: theme.textLight, fontSize: '13px', lineHeight: '1.5' }}>Cán mốc <b style={{color: theme.gold}}>1500 SWGT</b> ➔ <b style={{color: theme.green}}>ĐƯỢC RÚT NGAY LẬP TỨC</b>, bỏ qua mọi thời gian chờ đợi!</p>
-                        </div>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                        <span style={{ fontSize: '18px' }}>💸</span>
-                        <div>
-                            <p style={{ margin: 0, color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>Quyền tự quyết</p>
-                            <p style={{ margin: '2px 0 0 0', color: theme.textDim, fontSize: '13px' }}>Rút tiền linh hoạt 24/7 bất cứ lúc nào khi đủ điều kiện.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            {/* KẾT THÚC BLOCK NẠP KIẾN THỨC */}
 
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px dashed ${theme.blue}` }}>
                 <h2 style={{ color: theme.blue, margin: '0 0 15px 0', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
