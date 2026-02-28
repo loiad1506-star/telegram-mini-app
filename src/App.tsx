@@ -63,7 +63,9 @@ function App() {
     const [isSpinning, setIsSpinning] = useState(false);
     const [chestBoard, setChestBoard] = useState(Array(9).fill({ isOpened: false, reward: null, isMine: false }));
     const [spinResultMsg, setSpinResultMsg] = useState('');
+    const [spinEarned, setSpinEarned] = useState(0);
     
+    // 😈 Thanh năng lượng bảo hiểm nổ hũ (Pity System) - Giữ nguyên mốc 30
     const [spinCount, setSpinCount] = useState(0); 
     const MAX_PITY = 30; 
 
@@ -122,7 +124,7 @@ function App() {
         const generateFakeWinners = () => {
             const ho = ['Nguyễn', 'Trần', 'Lê', 'Phạm', 'Hoàng', 'Huỳnh', 'Phan', 'Vũ', 'Võ', 'Đặng'];
             const ten = ['Anh', 'Dũng', 'Linh', 'Hùng', 'Tuấn', 'Ngọc', 'Trang', 'Thảo', 'Tâm', 'Phương'];
-            const actions = ['vừa bốc trúng 50 SWGT', 'đập rương nổ hũ 100 SWGT', 'vừa bốc trúng 20 SWGT', 'mở hụt rương 500 đầy tiếc nuối', 'bốc trúng rương 500 SWGT', 'đập rương 10 SWGT', 'vừa bốc trúng Khung Ánh Sáng ✨'];
+            const actions = ['vừa mở trúng 50 SWGT', 'đập rương nổ hũ 100 SWGT', 'vừa bốc trúng 20 SWGT', 'mở hụt rương 500 đầy tiếc nuối', 'bốc trúng rương 500 SWGT', 'đập rương 10 SWGT', 'vừa bốc trúng Khung Ánh Sáng ✨'];
             const icons = ['🎁', '💎', '🚀', '💰', '📦', '⚡', '🖼️'];
 
             let arr = [];
@@ -443,6 +445,9 @@ function App() {
         });
     };
 
+    // ==================================================
+    // KHỐI RENDER: HEADER (CÓ AVATAR & QUÂN HÀM ĐƯỢC FIX VIỀN)
+    // ==================================================
     const renderHeader = () => {
         const myFrameStyle = getFrameStyle(userProfile.activeFrame);
         return (
@@ -454,15 +459,22 @@ function App() {
                         <p style={{ margin: 0, fontSize: '13px', color: theme.gold, fontWeight: 'bold' }}>Đầu tư uST</p>
                     </div>
                 </div>
+                
                 <div style={{ display: 'flex', alignItems: 'center', textAlign: 'right' }}>
                     <div style={{ marginRight: '15px' }}>
                         <h2 style={{ margin: 0, fontSize: '15px', color: theme.textLight, fontWeight: 'bold' }}>{userProfile.name}</h2>
                         <p style={{ margin: 0, fontSize: '12px', color: theme.textDim, fontWeight: 'bold' }}>{militaryRank}</p>
                     </div>
+                    
                     <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
-                        <div style={{ position: 'relative', width: '52px', height: '52px', borderRadius: '50%', padding: '2px', backgroundColor: theme.bg, border: myFrameStyle.border, boxShadow: myFrameStyle.shadow, animation: myFrameStyle.animation, zIndex: 1 }}>
+                        
+                        <div style={{ 
+                            position: 'relative', width: '52px', height: '52px', borderRadius: '50%', padding: '2px', backgroundColor: theme.bg, 
+                            border: myFrameStyle.border, boxShadow: myFrameStyle.shadow, animation: myFrameStyle.animation, zIndex: 1 
+                        }}>
                             <img src={userProfile.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.name || 'U')}&background=F4D03F&color=000&bold=true`} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
                         </div>
+                        
                         <div style={{ position: 'absolute', bottom: '-10px', zIndex: 11, display: 'flex', alignItems: 'center', backgroundColor: '#000', padding: '2px 8px', borderRadius: '12px', border: `1px solid ${wreathColor}` }}>
                             <span style={{ color: wreathColor, fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>{vipLevel}</span>
                         </div>
@@ -472,6 +484,9 @@ function App() {
         );
     };
 
+    // ==================================================
+    // KHỐI RENDER: BẢNG TỔNG TÀI SẢN VÀ TOP TUẦN (CÓ AVATAR)
+    // ==================================================
     const renderWealthBoard = () => (
         <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
             <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
@@ -495,13 +510,16 @@ function App() {
             {wealthBoard.slice(0, 10).map((user, index) => {
                 let icon = "💸"; if (index === 0) icon = "👑"; else if (index === 1) icon = "💎"; else if (index === 2) icon = "🌟";
                 const isMe = user.firstName === (userProfile.name || '').split(' ')[0];
+                
                 const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName || 'U')}&background=${index < 3 ? 'F4D03F' : '333333'}&color=${index < 3 ? '000' : 'FFF'}&bold=true&size=128`;
                 const displayAvatar = isMe && userProfile.photoUrl ? userProfile.photoUrl : (user.photoUrl || user.photo_url || user.avatar || fallbackAvatar);
 
                 let frameStyle = { border: `2px solid ${theme.border}`, shadow: 'none', animation: 'none' };
-                if (isMe) frameStyle = getFrameStyle(userProfile.activeFrame);
-                else if (user.activeFrame && user.activeFrame !== 'none') frameStyle = getFrameStyle(user.activeFrame);
-                else {
+                if (isMe) {
+                    frameStyle = getFrameStyle(userProfile.activeFrame);
+                } else if (user.activeFrame && user.activeFrame !== 'none') {
+                    frameStyle = getFrameStyle(user.activeFrame);
+                } else {
                     if (index === 0) frameStyle = getFrameStyle('gold');
                     else if (index === 1) frameStyle = getFrameStyle('silver');
                     else if (index === 2) frameStyle = getFrameStyle('bronze');
@@ -511,17 +529,20 @@ function App() {
                     <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: index < wealthBoard.length - 1 ? `1px solid ${theme.border}` : 'none', backgroundColor: isMe ? 'rgba(244, 208, 63, 0.1)' : 'transparent', borderRadius: '8px', paddingLeft: isMe ? '10px' : '0', paddingRight: isMe ? '10px' : '0' }}>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <span style={{ color: theme.textDim, fontWeight: 'bold', fontSize: '14px', minWidth: '24px', marginRight: '5px' }}>{index + 1}.</span>
+                            
                             <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '12px', overflow: 'hidden', flexShrink: 0, border: frameStyle.border, boxShadow: frameStyle.shadow, animation: frameStyle.animation }}>
                                 <img src={displayAvatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = fallbackAvatar; }} />
                             </div>
+                            
                             <span style={{ fontSize: '20px', marginRight: '8px' }}>{icon}</span>
                             <span style={{ color: isMe ? theme.gold : theme.textLight, fontWeight: 'bold', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100px' }}>
                                 {user.firstName} {user.lastName} {isMe && '(Bạn)'}
                             </span>
                         </div>
+                        {/* THAY ĐỔI: HIỂN THỊ ĐỦ CẢ SWGT VÀ SỐ NGƯỜI NHƯ YÊU CẦU */}
                         <div style={{ color: theme.green, fontWeight: 'bold', fontSize: '15px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                             <span>{boardType === 'all' ? user.totalEarned : user.displayCount * 15} <span style={{ fontSize: '11px', color: theme.textDim, fontWeight: 'normal' }}>SWGT</span></span>
-                            {boardType === 'weekly' && <span style={{fontSize: '10px', color: theme.gold}}>({user.displayCount} người)</span>}
+                            <span style={{fontSize: '11px', color: theme.gold}}>({user.displayCount} người)</span>
                         </div>
                     </div>
                 )
@@ -529,6 +550,9 @@ function App() {
         </div>
     );
 
+    // ==================================================
+    // TRANG CHỦ
+    // ==================================================
     const renderHome = () => (
         <div style={{ padding: '0 20px 20px 20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', marginBottom: '20px' }}>
@@ -553,10 +577,12 @@ function App() {
                     <h3 style={{ margin: 0, color: '#fff', fontSize: '16px' }}>📅 Điểm Danh Hàng Ngày</h3>
                     <span style={{ color: theme.gold, fontSize: '13px', fontWeight: 'bold' }}>🔥 Chuỗi: {checkInStreak}/7</span>
                 </div>
+                
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', overflowX: 'auto', paddingBottom: '5px' }}>
                     {[1, 2, 3, 4, 5, 6, 7].map((day, idx) => {
                         const isClaimed = isCheckedInToday ? day <= checkInStreak : day < checkInStreak;
                         const isToday = isCheckedInToday ? day === checkInStreak : day === checkInStreak + 1;
+                        
                         let bgColor = '#000'; let textColor = theme.textDim; let borderColor = theme.border;
                         if (isClaimed) { bgColor = 'rgba(52, 199, 89, 0.1)'; textColor = theme.green; borderColor = theme.green; }
                         else if (isToday) { bgColor = 'rgba(244, 208, 63, 0.1)'; textColor = theme.gold; borderColor = theme.gold; }
@@ -570,6 +596,7 @@ function App() {
                         );
                     })}
                 </div>
+
                 <button onClick={handleCheckIn} disabled={isCheckedInToday} style={{ width: '100%', backgroundColor: isCheckedInToday ? '#333' : theme.green, color: isCheckedInToday ? theme.textDim : '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: isCheckedInToday ? 'not-allowed' : 'pointer', fontSize: '15px', transition: 'all 0.3s' }}>
                     {isCheckedInToday ? "✅ ĐÃ NHẬN HÔM NAY" : "✋ BẤM ĐIỂM DANH NGAY"}
                 </button>
@@ -596,16 +623,33 @@ function App() {
                 </div>
             </div>
 
+            {/* BẢNG ĐẠI GIA (CÓ AVATAR) */}
             {renderWealthBoard()}
 
+            {/* BỔ SUNG LẠI: CHÍNH SÁCH THANH KHOẢN THEO YÊU CẦU */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}><span>⚖️</span> Chính Sách Thanh Khoản</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}><span style={{ fontSize: '18px' }}>🎯</span><div><p style={{ margin: 0, color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>Mức tối thiểu</p><p style={{ margin: '2px 0 0 0', color: theme.textDim, fontSize: '13px' }}>Chỉ từ <b style={{color: theme.green}}>500 SWGT</b> / Tài khoản.</p></div></div>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}><span style={{ fontSize: '18px' }}>⏳</span><div><p style={{ margin: 0, color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>Thời gian mở khóa cơ bản</p><p style={{ margin: '2px 0 0 0', color: theme.textDim, fontSize: '13px', lineHeight: '1.5' }}>Sau <b style={{color: theme.premium}}>7 ngày</b> (Premium) hoặc <b style={{color: theme.textLight}}>15 ngày</b> (Thường).</p></div></div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}><span style={{ fontSize: '18px' }}>⏳</span><div><p style={{ margin: 0, color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>Thời gian mở khóa cơ bản</p><p style={{ margin: '2px 0 0 0', color: theme.textDim, fontSize: '13px', lineHeight: '1.5' }}>Sau <b style={{color: theme.premium}}>7 ngày</b> (Premium) hoặc <b style={{color: theme.textLight}}>15 ngày</b> (Thường) tính từ ngày tham gia.</p></div></div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', backgroundColor: 'rgba(244, 208, 63, 0.1)', padding: '10px', borderRadius: '8px', border: `1px solid ${theme.gold}` }}>
+                        <span style={{ fontSize: '18px' }}>⚡</span>
+                        <div>
+                            <p style={{ margin: 0, color: theme.gold, fontSize: '14px', fontWeight: 'bold' }}>Đặc quyền vượt rào (Fast-track)</p>
+                            <p style={{ margin: '2px 0 0 0', color: theme.textLight, fontSize: '13px', lineHeight: '1.5' }}>Cán mốc <b style={{color: theme.gold}}>1500 SWGT</b> ➔ <b style={{color: theme.green}}>ĐƯỢC RÚT NGAY LẬP TỨC</b>, bỏ qua mọi thời gian chờ đợi!</p>
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                        <span style={{ fontSize: '18px' }}>💸</span>
+                        <div>
+                            <p style={{ margin: 0, color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>Quyền tự quyết</p>
+                            <p style={{ margin: '2px 0 0 0', color: theme.textDim, fontSize: '13px' }}>Rút tiền linh hoạt 24/7 bất cứ lúc nào khi đủ điều kiện.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
+            {/* KHU VỰC NẠP KIẾN THỨC NẰM CUỐI */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🧠 Nạp Kiến Thức & Lan Tỏa</h2>
                 
@@ -664,15 +708,13 @@ function App() {
 
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px dashed ${theme.blue}` }}>
                 <h2 style={{ color: theme.blue, margin: '0 0 15px 0', fontSize: '16px' }}>🚀 Sắp Ra Mắt (Coming Soon)</h2>
-                <ul style={{ margin: 0, paddingLeft: '20px', color: theme.textDim, fontSize: '14px', lineHeight: '1.8' }}>
-                    <li><b>Vòng Quay Nhân Phẩm:</b> Dùng SWGT để quay thưởng Token/USDT hằng ngày.</li>
-                    <li><b>Staking SWGT:</b> Gửi tiết kiệm SWGT nhận lãi suất qua đêm.</li>
-                    <li><b>Đua Top Tháng:</b> Giải thưởng hiện vật cực khủng cho Top 3 người dẫn đầu bảng vàng.</li>
-                </ul>
             </div>
         </div>
     );
 
+    // ==================================================
+    // TAB: PHẦN THƯỞNG (THU NHẬP)
+    // ==================================================
     const renderRewards = () => {
         let nextTarget = 3; let nextReward = "+10 SWGT";
         for (let m of MILESTONE_LIST) { if (referrals < m.req) { nextTarget = m.req; nextReward = `+${m.reward} SWGT`; break; } }
@@ -751,34 +793,9 @@ function App() {
                 </div>
 
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🤝 BẢNG VÀNG GIỚI THIỆU</h3>
-                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '15px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
-                    {displayBoard.slice(0, 10).map((user, index) => {
-                        let medal = "🏅"; 
-                        if (index === 0) medal = "🥇";
-                        else if (index === 1) medal = "🥈";
-                        else if (index === 2) medal = "🥉";
-                        return (
-                            <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: index < displayBoard.length - 1 ? `1px solid ${theme.border}` : 'none' }}>
-                                <div style={{ display: 'flex', alignItems: 'center' }}>
-                                    <span style={{ color: theme.textDim, fontWeight: 'bold', fontSize: '14px', minWidth: '24px', marginRight: '5px' }}>{index + 1}.</span>
-                                    <span style={{ fontSize: '22px', marginRight: '10px' }}>{medal}</span>
-                                    <div style={{display:'flex', flexDirection:'column', gap: '3px'}}>
-                                        <span style={{ color: theme.textLight, fontWeight: 'bold', fontSize: '15px' }}>{user.firstName} {user.lastName}</span>
-                                        <span style={{ color: theme.blue, fontSize: '11px', fontWeight: 'bold' }}>{getMilitaryRank(user.referralCount)}</span>
-                                    </div>
-                                </div>
-                                <div style={{ color: theme.gold, fontWeight: 'bold', fontSize: '16px' }}>
-                                    {user.referralCount} <span style={{ fontSize: '12px', color: theme.textDim, fontWeight: 'normal' }}>người</span>
-                                </div>
-                            </div>
-                        )
-                    })}
-                    <div style={{ textAlign: 'center', paddingTop: '15px', borderTop: `1px dashed ${theme.gold}`, marginTop: '10px' }}>
-                        <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', textDecoration: 'none', boxSizing: 'border-box' }}>
-                            ✈️ CHIA SẺ LINK ĐỂ ĐUA TOP NGAY
-                        </a>
-                    </div>
-                </div>
+                
+                {/* HIỂN THỊ CHUNG 1 BẢNG XẾP HẠNG CÓ CẢ AVATAR CỰC XỊN */}
+                {renderWealthBoard()}
 
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>💎 KHO ĐẶC QUYỀN VIP</h3>
                 <p style={{ color: theme.textDim, fontSize: '14px', marginBottom: '15px' }}>Hãy để lại số lượng Token</p>
@@ -870,7 +887,7 @@ function App() {
             setIsSpinning(true);
             setSpinResultMsg('');
 
-            // Liên kết gọi API tới Server (đảm bảo số dư đồng bộ)
+            // Liên kết gọi API tới Server
             fetch(`${BACKEND_URL}/api/spin-wheel`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -887,7 +904,6 @@ function App() {
             })
             .catch(err => {
                 console.error("Lỗi:", err);
-                // Nếu Server lỗi, giả lập kết quả xịt/hoà vốn ở Frontend để game không chết
                 let fallbackReward = Math.random() > 0.8 ? 5 : 0;
                 processGachaBoard(index, fallbackReward, balance - 20 + fallbackReward);
             });
@@ -896,16 +912,13 @@ function App() {
         const processGachaBoard = (index, actualReward, newBalance) => {
             setSpinCount(prev => prev >= MAX_PITY ? 0 : prev + 1);
 
-            // TẠO BÀN CỜ ẢO GIÁC "SUÝT TRÚNG"
             let pool = [0, 0, 5, 5, 10, 20]; 
             
-            // Chim mồi 500 luôn xuất hiện chọc tức người chơi
             if (actualReward !== 500) pool.push(500); else pool.push(0);
             
-            // Giả lập rớt mảnh Khung (Nếu Backend trả về 0, thi thoảng Frontend tráo thành mảnh khung để an ủi)
             let finalRewardVisual = actualReward;
             if (actualReward === 0 && Math.random() < 0.15) {
-                finalRewardVisual = -2; // -2 là Mảnh Khung
+                finalRewardVisual = -2; // Tráo thành Mảnh Khung nếu xịt
             }
 
             if (finalRewardVisual !== -2) pool.push(-2); else pool.push(50);
@@ -924,7 +937,6 @@ function App() {
 
             setChestBoard(newBoard);
 
-            // Lật ngửa rương sau 1 giây
             setTimeout(() => {
                 const revealedBoard = newBoard.map(c => ({ ...c, isOpened: true }));
                 setChestBoard(revealedBoard);
@@ -941,7 +953,7 @@ function App() {
                     else if (finalRewardVisual <= 50) { boxType = 'silver'; boxLabel = '🎁 RƯƠNG BẠC'; }
                     else { boxType = 'gold'; boxLabel = '💎 RƯƠNG KIM CƯƠNG'; }
 
-                    setBoxModal({ show: true, type: boxType, label: boxLabel, reward: finalRewardVisual, status: 'closed', isFrame: finalRewardVisual === -2, frameType: 'light' });
+                    setBoxModal({ show: true, type: boxType, label: boxLabel, reward: finalRewardVisual, status: 'closed', isFrame: finalRewardVisual === -2 });
 
                     if (finalRewardVisual === -2) {
                         if (!userProfile.ownedFrames.includes('light')) {
@@ -1056,7 +1068,7 @@ function App() {
                                         <>
                                             <h2 style={{ color: '#00FFFF', fontSize: '22px', margin: '0 0 10px 0', fontWeight: '900' }}>NHẬN: KHUNG ÁNH SÁNG!</h2>
                                             <div style={{ width: '60px', height: '60px', borderRadius: '50%', margin: '0 auto 20px auto', border: getFrameStyle('light').border, boxShadow: getFrameStyle('light').shadow, padding: '2px', backgroundColor: '#333' }}>
-                                                <img src={userProfile.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.name || 'U')}&background=F4D03F&color=000&bold=true`} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                                                <img src={userProfile.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.name || 'U')}&background=F4D03F&color=000&bold=true`} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
                                             </div>
                                             <p style={{ color: theme.textDim, fontSize: '14px', marginBottom: '25px' }}>Siêu hiếm! Hãy vào Cửa hàng để trang bị ngay.</p>
                                         </>
