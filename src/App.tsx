@@ -206,7 +206,6 @@ function App() {
         displayBoard.sort((a, b) => b.referralCount - a.referralCount);
     }
 
-    // Xử lý logic chia số ảo cho Tab "Top Tuần"
     const currentBoard = displayBoard.map(u => ({
         ...u, 
         displayCount: boardType === 'weekly' ? Math.ceil(u.referralCount / 3) : u.referralCount
@@ -442,30 +441,16 @@ function App() {
     // ==================================================
     const renderWealthBoard = () => (
         <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
-            <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
                 <button
                     onClick={() => setBoardType('weekly')}
-                    style={{ 
-                        flex: 1, padding: '12px', borderRadius: '10px', 
-                        border: `2px solid ${boardType === 'weekly' ? theme.gold : theme.border}`, 
-                        backgroundColor: boardType === 'weekly' ? 'rgba(244, 208, 63, 0.15)' : '#1C1C1E', 
-                        color: boardType === 'weekly' ? theme.gold : theme.textDim, 
-                        fontWeight: '900', fontSize: '14px', cursor: 'pointer', transition: 'all 0.3s',
-                        boxShadow: boardType === 'weekly' ? `0 0 15px rgba(244, 208, 63, 0.3)` : 'none'
-                    }}
+                    style={{ flex: 1, padding: '12px', borderRadius: '10px', border: `1px solid ${boardType === 'weekly' ? theme.gold : theme.border}`, backgroundColor: boardType === 'weekly' ? 'rgba(244, 208, 63, 0.15)' : '#000', color: boardType === 'weekly' ? theme.gold : theme.textDim, fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', transition: 'all 0.3s', boxShadow: boardType === 'weekly' ? `0 0 12px rgba(244, 208, 63, 0.4)` : 'none' }}
                 >
                     🏆 TOP TUẦN
                 </button>
                 <button
                     onClick={() => setBoardType('all')}
-                    style={{ 
-                        flex: 1, padding: '12px', borderRadius: '10px', 
-                        border: `2px solid ${boardType === 'all' ? theme.gold : theme.border}`, 
-                        backgroundColor: boardType === 'all' ? 'rgba(244, 208, 63, 0.15)' : '#1C1C1E', 
-                        color: boardType === 'all' ? theme.gold : theme.textDim, 
-                        fontWeight: '900', fontSize: '14px', cursor: 'pointer', transition: 'all 0.3s',
-                        boxShadow: boardType === 'all' ? `0 0 15px rgba(244, 208, 63, 0.3)` : 'none'
-                    }}
+                    style={{ flex: 1, padding: '12px', borderRadius: '10px', border: `1px solid ${boardType === 'all' ? theme.gold : theme.border}`, backgroundColor: boardType === 'all' ? 'rgba(244, 208, 63, 0.15)' : '#000', color: boardType === 'all' ? theme.gold : theme.textDim, fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', transition: 'all 0.3s', boxShadow: boardType === 'all' ? `0 0 12px rgba(244, 208, 63, 0.4)` : 'none' }}
                 >
                     🌟 TOP TỔNG
                 </button>
@@ -482,35 +467,37 @@ function App() {
 
             {wealthBoard.slice(0, 10).map((user, index) => {
                 let icon = "💸";
-                let topColor = theme.textDim;
-                let topBg = "transparent";
-                let topBorder = "transparent";
-
-                if (index === 0) { icon = "👑"; topColor = theme.gold; topBg = 'rgba(244, 208, 63, 0.1)'; topBorder = theme.gold; }
-                else if (index === 1) { icon = "💎"; topColor = '#C0C0C0'; topBg = 'rgba(192, 192, 192, 0.1)'; topBorder = '#C0C0C0'; }
-                else if (index === 2) { icon = "🌟"; topColor = '#CD7F32'; topBg = 'rgba(205, 127, 50, 0.1)'; topBorder = '#CD7F32'; }
-                else { topBorder = theme.border; }
+                let userGlow = "none";
+                let rankColor = theme.textDim;
+                
+                if (index === 0) { icon = "👑"; rankColor = theme.gold; userGlow = '0 0 10px rgba(244, 208, 63, 0.2)'; }
+                else if (index === 1) { icon = "💎"; rankColor = '#C0C0C0'; userGlow = '0 0 10px rgba(192, 192, 192, 0.2)'; }
+                else if (index === 2) { icon = "🌟"; rankColor = '#CD7F32'; userGlow = '0 0 10px rgba(205, 127, 50, 0.2)'; }
                 
                 const isMe = user.firstName === userProfile.name.split(' ')[0];
-                const rankTitle = getMilitaryRank(user.referralCount);
+                const userMilitaryRank = getMilitaryRank(user.referralCount);
 
                 return (
-                    <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 10px', borderBottom: index < wealthBoard.length - 1 ? `1px solid ${theme.border}` : 'none', backgroundColor: isMe ? 'rgba(244, 208, 63, 0.05)' : 'transparent', borderRadius: '8px', marginBottom: '4px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '45px', marginRight: '12px', backgroundColor: topBg, border: `1px solid ${topBorder}`, borderRadius: '6px', padding: '4px' }}>
-                                <span style={{ fontSize: '10px', fontWeight: 'bold', color: topColor }}>TOP {index + 1}</span>
-                                <span style={{ fontSize: '18px', marginTop: '2px' }}>{icon}</span>
+                    <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 10px', borderBottom: index < wealthBoard.length - 1 ? `1px solid ${theme.border}` : 'none', backgroundColor: isMe ? 'rgba(244, 208, 63, 0.1)' : 'transparent', borderRadius: '8px', marginBottom: '5px', boxShadow: userGlow }}>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <div style={{ minWidth: '40px', textAlign: 'center', marginRight: '10px', fontSize: '26px' }}>
+                                {icon}
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                <span style={{ color: isMe ? theme.gold : theme.textLight, fontWeight: 'bold', fontSize: '15px' }}>
-                                    {user.firstName} {user.lastName} {isMe && <span style={{fontSize: '11px', color: theme.gold, fontWeight: 'normal'}}> (Bạn)</span>}
+                                <span style={{ color: rankColor, fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                    TOP {index + 1} SERVER
                                 </span>
-                                <span style={{ color: theme.textDim, fontSize: '12px', marginTop: '2px' }}>{rankTitle}</span>
+                                <span style={{ color: isMe ? theme.gold : theme.textLight, fontWeight: 'bold', fontSize: '15px', marginTop: '2px' }}>
+                                    {user.firstName} {user.lastName} {isMe && '(Bạn)'}
+                                </span>
+                                <span style={{ color: theme.textDim, fontSize: '12px', marginTop: '2px' }}>
+                                    {userMilitaryRank}
+                                </span>
                             </div>
                         </div>
                         <div style={{ color: theme.green, fontWeight: 'bold', fontSize: '16px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                             <span>{boardType === 'all' ? user.totalEarned : user.displayCount * 15} <span style={{ fontSize: '12px', color: theme.textDim, fontWeight: 'normal' }}>SWGT</span></span>
-                            {boardType === 'weekly' && <span style={{fontSize: '11px', color: theme.gold}}>({user.displayCount} người)</span>}
+                            {boardType === 'weekly' && <span style={{fontSize: '11px', color: theme.gold}}>({user.displayCount} ref)</span>}
                         </div>
                     </div>
                 )
@@ -604,7 +591,7 @@ function App() {
                 </div>
             </div>
 
-            {/* Cơ cấu phần thưởng */}
+            {/* Các thông tin phụ (Cơ cấu phần thưởng) */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '18px' }}>💎 Cơ Cấu Phần Thưởng SWGT</h2>
                 <p style={{ color: theme.textLight, fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>📌 Thành viên Thường:</p>
@@ -629,7 +616,7 @@ function App() {
                 </div>
             </div>
 
-            {/* Bảng Đại Gia (Top Tuần / Top Tổng) */}
+            {/* 3. Bảng Đại Gia (Top Tuần / Top Tổng) */}
             {renderWealthBoard()}
 
             {/* Chính sách thanh khoản */}
@@ -672,7 +659,7 @@ function App() {
                 </div>
             </div>
 
-            {/* 3. Nạp Kiến Thức & Lan Tỏa (Đã được chuyển xuống đây) */}
+            {/* 4. Nạp Kiến Thức & Lan Tỏa */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🧠 Nạp Kiến Thức & Lan Tỏa</h2>
                 
@@ -761,7 +748,7 @@ function App() {
                 </div>
             </div>
 
-            {/* 5. Sắp Ra Mắt */}
+            {/* 5. Sắp Ra Mắt (Đẩy xuống cuối cùng) */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px dashed ${theme.blue}` }}>
                 <h2 style={{ color: theme.blue, margin: '0 0 15px 0', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span>🚀</span> Sắp Ra Mắt (Coming Soon)
@@ -833,7 +820,7 @@ function App() {
                     </div>
                 </div>
 
-                {/* KHỐI CẢNH BÁO FOMO HALVING ĐƯỢC CHÈN VÀO ĐÂY */}
+                {/* KHỐI CẢNH BÁO FOMO HALVING */}
                 <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fde047', padding: '12px', marginBottom: '20px', borderRadius: '6px' }}>
                     <h4 style={{ color: '#b45309', fontWeight: 'bold', margin: '0 0 5px 0', fontSize: '13px' }}>
                         ⏳ SỰ KIỆN HALVING SẮP DIỄN RA!
@@ -843,7 +830,7 @@ function App() {
                     </p>
                 </div>
 
-                <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🚀 9 CỘT MỐC THƯỞNG NÓNG (KHI GROUP ĐẠT 1000 NGƯỜI)</h3>
+                <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🚀 9 CỘT MỐC THƯỞNG NÓNG</h3>
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '10px' }}>
                         <div>
@@ -867,18 +854,29 @@ function App() {
                             if (isClaimed) icon = '✅';
                             else if (canClaim) icon = '🎁';
                             
+                            // LOGIC: Đánh dấu sao (*) cho các mốc bị cắt giảm (Halving)
                             const isHalvingMilestone = [10, 50, 120, 200, 350, 500].includes(m.req);
                             
                             return (
-                                <div key={m.req} style={{ minWidth: '110px', backgroundColor: '#000', borderRadius: '10px', padding: '15px 10px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
+                                <div key={m.req} style={{ minWidth: '120px', backgroundColor: '#000', borderRadius: '10px', padding: '15px 10px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
                                     <div style={{ fontSize: '24px', marginBottom: '8px' }}>{icon}</div>
                                     <p style={{ color: theme.textLight, fontSize: '13px', fontWeight: 'bold', margin: '0 0 2px 0' }}>Mốc {m.req}</p>
                                     
                                     <p style={{ color: theme.blue, fontSize: '11px', fontWeight: 'bold', margin: '0 0 5px 0' }}>{m.rank}</p>
                                     
-                                    <p style={{ color: theme.gold, fontSize: '12px', margin: '0 0 10px 0' }}>
-                                        +{m.reward}{isHalvingMilestone ? '*' : ''}
-                                    </p>
+                                    {isHalvingMilestone ? (
+                                        <div style={{ margin: '0 0 10px 0' }}>
+                                            <p style={{ color: theme.gold, fontSize: '12px', margin: '0 0 2px 0' }}>+{m.reward} SWGT</p>
+                                            <p style={{ color: theme.red, fontSize: '10px', margin: 0, fontStyle: 'italic' }}>
+                                                Giảm -50% khi đủ 1000 Mem
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <p style={{ color: theme.gold, fontSize: '12px', margin: '0 0 10px 0' }}>
+                                            +{m.reward} SWGT
+                                        </p>
+                                    )}
+
                                     <button 
                                         onClick={() => handleClaimMilestone(m.req)} 
                                         disabled={!canClaim}
@@ -891,8 +889,8 @@ function App() {
                     </div>
                 </div>
 
-                <h3 style={{color: theme.gold, borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '18px', textAlign: 'center', fontWeight: '900'}}>🤝 BẢNG VÀNG GIỚI THIỆU</h3>
-                {/* Gọi lại hàm renderWealthBoard ở đây để sử dụng chung Top Tuần & Top Tổng */}
+                <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px', textAlign: 'center'}}>🤝 BẢNG VÀNG GIỚI THIỆU</h3>
+                {/* Thay thế bảng cũ bằng Bảng Đại Gia có chứa Tab Top Tuần cực xịn */}
                 {renderWealthBoard()}
 
                 <div style={{ textAlign: 'center', paddingTop: '5px', marginBottom: '25px' }}>
