@@ -65,6 +65,9 @@ function App() {
     const [currentWinner, setCurrentWinner] = useState('');
     const [showWinner, setShowWinner] = useState(false);
 
+    // 😈 Thêm State cho Pop-up Phục thù
+    const [showRevengePopup, setShowRevengePopup] = useState(false);
+
     const BACKEND_URL = 'https://swc-bot-brain.onrender.com';
 
     const theme = {
@@ -996,7 +999,12 @@ function App() {
                 setSpinEarned(prev => prev + rewardValue); 
                 
                 const playerName = userProfile.name || 'Bạn';
-                if (rewardValue === 0) setSpinResultMsg(`Ahhh! ${playerName} chệch một tí nữa là nổ hũ 500. Quay lại phục thù nào!`);
+                if (rewardValue === 0) {
+                    setSpinResultMsg(`Ahhh! ${playerName} chệch một tí nữa là nổ hũ 500. Quay lại phục thù nào!`);
+                    
+                    // 😈 NHÀ CÁI BỒI THÊM ĐÒN: Đợi 1.5 giây sau khi hiện thông báo "Suýt trúng" thì bật Pop-up khiêu khích
+                    setTimeout(() => setShowRevengePopup(true), 1500);
+                }
                 else if (rewardValue >= 50) setSpinResultMsg(`🎉 BÙM!!! CHÚC MỪNG ${playerName.toUpperCase()} TRÚNG ${rewardValue} SWGT! NHÂN PHẨM CỰC CAO!`);
                 else setSpinResultMsg(`Tuyệt vời! ${playerName} nhận được +${rewardValue} SWGT.`);
             }, 8000); // 8 giây
@@ -1222,6 +1230,8 @@ function App() {
         <div style={{ backgroundColor: theme.bg, minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '90px', boxSizing: 'border-box' }}>
             <style>{`
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+                /* 😈 HIỆU ỨNG CHỚP ĐỎ KÍCH THÍCH SỰ TỨC GIẬN */
+                @keyframes pulseRed { 0% { box-shadow: 0 0 10px #FF3B30; } 50% { box-shadow: 0 0 35px #FF3B30; } 100% { box-shadow: 0 0 10px #FF3B30; } }
                 ::-webkit-scrollbar { height: 6px; }
                 ::-webkit-scrollbar-track { background: #1C1C1E; border-radius: 10px; }
                 ::-webkit-scrollbar-thumb { background: #F4D03F; border-radius: 10px; }
@@ -1255,6 +1265,49 @@ function App() {
                     <span style={{ fontSize: '13px', fontWeight: 'bold' }}>VÍ</span>
                 </div>
             </div>
+
+            {/* ================================================== */}
+            {/* 😈 BẢNG POP-UP KHIÊU KHÍCH PHỤC THÙ (NHÀ CÁI THAO TÚNG) */}
+            {/* ================================================== */}
+            {showRevengePopup && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.85)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    zIndex: 9999, padding: '20px'
+                }}>
+                    <div style={{
+                        backgroundColor: theme.cardBg, border: `2px solid ${theme.red}`,
+                        borderRadius: '15px', padding: '25px', textAlign: 'center',
+                        animation: 'pulseRed 1.2s infinite'
+                    }}>
+                        <div style={{ fontSize: '50px', marginBottom: '10px' }}>🤬</div>
+                        <h2 style={{ color: theme.textLight, margin: '0 0 10px 0', fontSize: '20px', fontWeight: '900', textTransform: 'uppercase' }}>
+                            CAY CHƯA? CHỈ 1 LY NỮA LÀ NỔ HŨ 500!
+                        </h2>
+                        <p style={{ color: theme.textDim, fontSize: '14px', marginBottom: '25px', lineHeight: '1.5' }}>
+                            Dừng lại bây giờ là hèn! Vòng quay đang cực nóng, tỷ lệ nổ hũ đang ở mức cao nhất. <b style={{color: theme.red}}>Nạp thêm SWGT và lấy lại những gì đã mất!</b>
+                        </p>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <button 
+                                onClick={() => setShowRevengePopup(false)}
+                                style={{ flex: 1, padding: '14px', borderRadius: '10px', backgroundColor: '#333', color: theme.textDim, border: 'none', fontWeight: 'bold', cursor: 'pointer' }}
+                            >
+                                Bỏ Cuộc
+                            </button>
+                            <button 
+                                onClick={() => {
+                                    setShowRevengePopup(false);
+                                    setActiveTab('wallet'); // 😈 Điều hướng ngay lập tức sang tab Ví để nạp tiền
+                                }}
+                                style={{ flex: 1, padding: '14px', borderRadius: '10px', backgroundColor: theme.red, color: '#fff', border: 'none', fontWeight: '900', cursor: 'pointer', boxShadow: `0 4px 15px rgba(255, 59, 48, 0.4)` }}
+                            >
+                                🔪 PHỤC THÙ NGAY
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
