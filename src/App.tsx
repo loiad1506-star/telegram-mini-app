@@ -67,16 +67,17 @@ function App() {
         premium: '#E0B0FF' 
     };
 
+    // ĐÃ THAY ĐỔI LẠI SỐ LƯỢNG THƯỞNG THEO CƠ CHẾ HALVING
     const MILESTONE_LIST = [
         { req: 3, reward: 10, key: 'milestone3', rank: 'Đại Úy 🎖️' },
-        { req: 10, reward: 25, key: 'milestone10', rank: 'Thiếu Tá 🎖️' },
+        { req: 10, reward: 15, key: 'milestone10', rank: 'Thiếu Tá 🎖️' }, // Đã giảm
         { req: 20, reward: 40, key: 'milestone20', rank: 'Trung Tá 🎖️' },
-        { req: 50, reward: 100, key: 'milestone50', rank: 'Thượng Tá 🎖️' },
+        { req: 50, reward: 60, key: 'milestone50', rank: 'Thượng Tá 🎖️' }, // Đã giảm
         { req: 80, reward: 150, key: 'milestone80', rank: 'Đại Tá 🎖️' },
-        { req: 120, reward: 250, key: 'milestone120', rank: 'Thiếu Tướng 🌟' },
-        { req: 200, reward: 425, key: 'milestone200', rank: 'Trung Tướng 🌟🌟' },
-        { req: 350, reward: 800, key: 'milestone350', rank: 'Thượng Tướng 🌟🌟🌟' },
-        { req: 500, reward: 1200, key: 'milestone500', rank: 'Đại Tướng 🌟🌟🌟🌟' }
+        { req: 120, reward: 150, key: 'milestone120', rank: 'Thiếu Tướng 🌟' }, // Đã giảm
+        { req: 200, reward: 250, key: 'milestone200', rank: 'Trung Tướng 🌟🌟' }, // Đã giảm
+        { req: 350, reward: 400, key: 'milestone350', rank: 'Thượng Tướng 🌟🌟🌟' }, // Đã giảm
+        { req: 500, reward: 600, key: 'milestone500', rank: 'Đại Tướng 🌟🌟🌟🌟' } // Đã giảm
     ];
 
     const STREAK_REWARDS = [0.5, 1.5, 3, 3.5, 5, 7, 9];
@@ -387,12 +388,11 @@ function App() {
     };
 
     // ==================================================
-    // RENDER HEADER (Có viền Rồng Lửa / Ánh Sáng)
+    // RENDER HEADER (Khớp chuẩn xác viền Rồng Lửa / Ánh Sáng)
     // ==================================================
     const renderHeader = () => {
-        // Dựa vào UID chẵn/lẻ để phân bổ hiệu ứng cho mọi người
         const isFireEffect = (Number(userId || 1) % 2) !== 0; 
-        const effectColor = isFireEffect ? '#FF3B30' : '#00FFFF'; // Đỏ Rồng Lửa / Xanh Ánh Sáng
+        const effectColor = isFireEffect ? '#FF3B30' : '#00FFFF'; 
         const pulseAnim = isFireEffect ? 'pulseGlowRed 2s infinite' : 'pulseGlowCyan 2s infinite';
 
         return (
@@ -412,50 +412,39 @@ function App() {
                     </div>
                     
                     <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
-                        {/* Vòng lá vương miện VIP (Giữ nguyên) */}
-                        <svg viewBox="-5 -5 110 110" style={{ position: 'absolute', width: '140%', height: '140%', top: '-20%', left: '-20%', zIndex: 10, pointerEvents: 'none' }}>
-                            <path d="M 50 90 C 15 90, 5 50, 20 20" fill="none" stroke={wreathColor} strokeWidth="2" />
-                            <path d="M 50 90 C 85 90, 95 50, 80 20" fill="none" stroke={wreathColor} strokeWidth="2" />
-                            <path d="M 20 20 Q 30 15 25 30 Q 15 25 20 20" fill={wreathColor} /> 
-                            <path d="M 12 40 Q 25 35 20 50 Q 5 45 12 40" fill={wreathColor} />
-                            <path d="M 15 65 Q 30 55 25 70 Q 10 70 15 65" fill={wreathColor} />
-                            <path d="M 80 20 Q 70 15 75 30 Q 85 25 80 20" fill={wreathColor} /> 
-                            <path d="M 88 40 Q 75 35 80 50 Q 95 45 88 40" fill={wreathColor} />
-                            <path d="M 85 65 Q 70 55 75 70 Q 90 70 85 65" fill={wreathColor} />
-                        </svg>
-
-                        {/* AVATAR WRAPPER VỚI VIỀN RỒNG LỬA / ÁNH SÁNG */}
-                        <div style={{ position: 'relative', width: '52px', height: '52px', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+                        
+                        {/* Wrapper ôm Avatar và vòng quay */}
+                        <div style={{ position: 'relative', width: '56px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
                             
-                            {/* Khung viền nét đứt nhấp nháy, xoay vòng */}
+                            {/* Khung viền đứt nét nhấp nháy, xoay vòng khít với avatar */}
                             <div style={{
                                 position: 'absolute',
-                                top: '-4px', left: '-4px', right: '-4px', bottom: '-4px',
+                                top: 0, left: 0, right: 0, bottom: 0,
                                 borderRadius: '50%',
-                                border: `2px dashed ${effectColor}`,
-                                animation: `spin 4s linear infinite, ${pulseAnim}`,
+                                border: `3px dashed ${effectColor}`,
+                                animation: `spin 5s linear infinite, ${pulseAnim}`,
                                 zIndex: 0
                             }}></div>
 
-                            {/* Ảnh Avatar */}
-                            <div style={{ width: '100%', height: '100%', borderRadius: '50%', padding: '2px', backgroundColor: theme.bg, zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                            {/* Lớp nền Avatar bên trong */}
+                            <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: theme.bg, zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: `2px solid ${theme.bg}` }}>
                                 {userProfile.photoUrl ? (
                                     <img src={userProfile.photoUrl} alt="avatar" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
                                 ) : (
                                     <div style={{ width: '100%', height: '100%', borderRadius: '50%', backgroundColor: theme.cardBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.gold, fontSize: '20px' }}>👤</div>
                                 )}
                             </div>
+                            
+                            {/* Chấm xanh trạng thái Online */}
+                            <div style={{ position: 'absolute', top: '2px', right: '2px', width: '12px', height: '12px', backgroundColor: theme.green, borderRadius: '50%', border: `2px solid ${theme.bg}`, zIndex: 12 }}></div>
                         </div>
                         
-                        {/* Nhãn xếp hạng bên dưới */}
-                        <div style={{ position: 'absolute', bottom: '-10px', zIndex: 11, display: 'flex', alignItems: 'center', backgroundColor: '#000', padding: '2px 8px', borderRadius: '12px', border: `1px solid ${wreathColor}`, boxShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                        {/* Nhãn xếp hạng bên dưới, dời xuống để không cấn vòng xoay */}
+                        <div style={{ position: 'relative', marginTop: '-8px', zIndex: 11, display: 'flex', alignItems: 'center', backgroundColor: '#000', padding: '3px 10px', borderRadius: '12px', border: `1px solid ${wreathColor}`, boxShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
                             <span style={{ color: wreathColor, fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                                 {vipLevel}
                             </span>
                         </div>
-
-                        {/* Chấm xanh trạng thái Online */}
-                        <div style={{ position: 'absolute', top: '0px', right: '0px', width: '12px', height: '12px', backgroundColor: theme.green, borderRadius: '50%', border: `2px solid ${theme.bg}`, zIndex: 12 }}></div>
                     </div>
                 </div>
             </div>
@@ -473,7 +462,8 @@ function App() {
                         backgroundColor: boardType === 'weekly' ? 'rgba(244, 208, 63, 0.15)' : '#1C1C1E', 
                         color: boardType === 'weekly' ? theme.gold : theme.textDim, 
                         fontWeight: '900', fontSize: '14px', cursor: 'pointer', transition: 'all 0.3s',
-                        boxShadow: boardType === 'weekly' ? `0 0 15px rgba(244, 208, 63, 0.3)` : 'none'
+                        boxShadow: boardType === 'weekly' ? `0 0 15px rgba(244, 208, 63, 0.3)` : 'none',
+                        transform: boardType === 'weekly' ? 'scale(1.02)' : 'scale(1)'
                     }}
                 >
                     🏆 TOP TUẦN
@@ -486,7 +476,8 @@ function App() {
                         backgroundColor: boardType === 'all' ? 'rgba(244, 208, 63, 0.15)' : '#1C1C1E', 
                         color: boardType === 'all' ? theme.gold : theme.textDim, 
                         fontWeight: '900', fontSize: '14px', cursor: 'pointer', transition: 'all 0.3s',
-                        boxShadow: boardType === 'all' ? `0 0 15px rgba(244, 208, 63, 0.3)` : 'none'
+                        boxShadow: boardType === 'all' ? `0 0 15px rgba(244, 208, 63, 0.3)` : 'none',
+                        transform: boardType === 'all' ? 'scale(1.02)' : 'scale(1)'
                     }}
                 >
                     🌟 TOP TỔNG
@@ -1037,7 +1028,6 @@ function App() {
 
     return (
         <div style={{ backgroundColor: theme.bg, minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '90px', boxSizing: 'border-box' }}>
-            {/* THÊM 3 KEYFRAME MỚI CHO VIỀN RỒNG LỬA / ÁNH SÁNG */}
             <style>{`
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
                 ::-webkit-scrollbar { height: 6px; }
@@ -1064,18 +1054,60 @@ function App() {
                 {activeTab === 'wallet' && renderWallet()}
             </div>
 
+            {/* TAB BOTTOM VỚI HIỆU ỨNG ĐỘNG BẬC NHẤT */}
             <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: theme.cardBg, borderTop: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-around', padding: '15px 0', paddingBottom: 'calc(15px + env(safe-area-inset-bottom))', zIndex: 100 }}>
-                <div onClick={() => setActiveTab('home')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'home' ? theme.gold : theme.textDim, width: '33%', cursor: 'pointer' }}>
-                    <div style={{ fontSize: '26px', marginBottom: '6px' }}>🏠</div>
-                    <span style={{ fontSize: '15px', fontWeight: 'bold' }}>Trang chủ</span>
+                <div 
+                    onClick={() => setActiveTab('home')} 
+                    style={{ 
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', 
+                        color: activeTab === 'home' ? theme.gold : theme.textDim, 
+                        width: '33%', cursor: 'pointer',
+                        transform: activeTab === 'home' ? 'translateY(-5px) scale(1.1)' : 'translateY(0) scale(1)',
+                        transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                    }}
+                >
+                    <div style={{ 
+                        fontSize: '24px', marginBottom: '4px',
+                        textShadow: activeTab === 'home' ? `0 0 15px ${theme.gold}` : 'none',
+                        filter: activeTab === 'home' ? 'grayscale(0%)' : 'grayscale(100%)'
+                    }}>🏠</div>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold', opacity: activeTab === 'home' ? 1 : 0.7 }}>Trang chủ</span>
                 </div>
-                <div onClick={() => setActiveTab('rewards')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'rewards' ? theme.gold : theme.textDim, width: '33%', cursor: 'pointer' }}>
-                    <div style={{ fontSize: '26px', marginBottom: '6px' }}>🎁</div>
-                    <span style={{ fontSize: '15px', fontWeight: 'bold' }}>Phần thưởng</span>
+                
+                <div 
+                    onClick={() => setActiveTab('rewards')} 
+                    style={{ 
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', 
+                        color: activeTab === 'rewards' ? theme.gold : theme.textDim, 
+                        width: '33%', cursor: 'pointer',
+                        transform: activeTab === 'rewards' ? 'translateY(-5px) scale(1.1)' : 'translateY(0) scale(1)',
+                        transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                    }}
+                >
+                    <div style={{ 
+                        fontSize: '24px', marginBottom: '4px',
+                        textShadow: activeTab === 'rewards' ? `0 0 15px ${theme.gold}` : 'none',
+                        filter: activeTab === 'rewards' ? 'grayscale(0%)' : 'grayscale(100%)'
+                    }}>🎁</div>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold', opacity: activeTab === 'rewards' ? 1 : 0.7 }}>Phần thưởng</span>
                 </div>
-                <div onClick={() => setActiveTab('wallet')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: activeTab === 'wallet' ? theme.gold : theme.textDim, width: '33%', cursor: 'pointer' }}>
-                    <div style={{ fontSize: '26px', marginBottom: '6px' }}>👛</div>
-                    <span style={{ fontSize: '15px', fontWeight: 'bold' }}>Ví</span>
+                
+                <div 
+                    onClick={() => setActiveTab('wallet')} 
+                    style={{ 
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', 
+                        color: activeTab === 'wallet' ? theme.gold : theme.textDim, 
+                        width: '33%', cursor: 'pointer',
+                        transform: activeTab === 'wallet' ? 'translateY(-5px) scale(1.1)' : 'translateY(0) scale(1)',
+                        transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                    }}
+                >
+                    <div style={{ 
+                        fontSize: '24px', marginBottom: '4px',
+                        textShadow: activeTab === 'wallet' ? `0 0 15px ${theme.gold}` : 'none',
+                        filter: activeTab === 'wallet' ? 'grayscale(0%)' : 'grayscale(100%)'
+                    }}>👛</div>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold', opacity: activeTab === 'wallet' ? 1 : 0.7 }}>Ví</span>
                 </div>
             </div>
         </div>
