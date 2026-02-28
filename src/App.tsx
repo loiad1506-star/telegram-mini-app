@@ -251,7 +251,7 @@ function App() {
 
     let displayBoard = [...leaderboard];
     
-    // CẬP NHẬT: Thêm Avatar giả lập cho các tài khoản ảo để bảng xếp hạng trông xịn xò hơn
+    // Mồi nhử: Các dummy user có Avatar thật siêu nét
     const dummyUsers = [
         { firstName: 'Vũ', lastName: 'Dũng', referralCount: 65, photoUrl: 'https://i.pravatar.cc/150?img=11' },
         { firstName: 'Mai', lastName: 'Thiều Thị', referralCount: 60, photoUrl: 'https://i.pravatar.cc/150?img=5' },
@@ -500,7 +500,9 @@ function App() {
         </div>
     );
 
-    // BẢNG XẾP HẠNG ĐÃ ĐƯỢC CẬP NHẬT GIAO DIỆN HIỂN THỊ AVATAR
+    // ==================================================
+    // KHU VỰC BẢNG XẾP HẠNG ĐÃ ĐƯỢC CHUẨN HOÁ HIỂN THỊ AVATAR TRÒN CỰC ĐẸP
+    // ==================================================
     const renderWealthBoard = () => (
         <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
             <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
@@ -535,25 +537,35 @@ function App() {
                 
                 const isMe = user.firstName === userProfile.name.split(' ')[0];
                 
-                // Lấy Avatar: Quét lần lượt các trường thông tin trả về (photoUrl, photo_url, avatar)
-                const displayAvatar = isMe && userProfile.photoUrl 
+                // NẾU LÀ ACCOUNT CỦA CHÍNH MÌNH: Ưu tiên lấy Avatar từ Telegram
+                // NẾU LÀ NGƯỜI KHÁC: Quét cạn kiệt mọi biến chứa ảnh từ Backend trả về
+                let displayAvatar = isMe && userProfile.photoUrl 
                     ? userProfile.photoUrl 
-                    : (user.photoUrl || user.photo_url || user.avatar);
+                    : (user.photoUrl || user.photo_url || user.avatar || user.picture);
+
+                // THUẬT TOÁN BỌC LÓT: NẾU BACKEND KHÔNG TRẢ VỀ ẢNH -> TỰ ĐỘNG TẠO AVATAR XỊN BẰNG TÊN NGƯỜI DÙNG
+                if (!displayAvatar) {
+                    const avatarName = encodeURIComponent(`${user.firstName || ''} ${user.lastName || ''}`.trim() || 'U');
+                    displayAvatar = `https://ui-avatars.com/api/?name=${avatarName}&background=random&color=fff&size=128&bold=true`;
+                }
 
                 return (
                     <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: index < wealthBoard.length - 1 ? `1px solid ${theme.border}` : 'none', backgroundColor: isMe ? 'rgba(244, 208, 63, 0.1)' : 'transparent', borderRadius: '8px', paddingLeft: isMe ? '10px' : '0', paddingRight: isMe ? '10px' : '0' }}>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <span style={{ color: theme.textDim, fontWeight: 'bold', fontSize: '14px', minWidth: '24px', marginRight: '5px' }}>{index + 1}.</span>
                             
-                            {/* --- KHU VỰC HIỂN THỊ AVATAR --- */}
-                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '10px', overflow: 'hidden', border: `1px solid ${isMe ? theme.gold : theme.border}`, flexShrink: 0 }}>
-                                {displayAvatar ? (
-                                    <img src={displayAvatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} referrerPolicy="no-referrer" />
-                                ) : (
-                                    <span style={{ color: theme.textLight, fontSize: '13px', fontWeight: 'bold' }}>
-                                        {user.firstName ? user.firstName.charAt(0).toUpperCase() : 'U'}
-                                    </span>
-                                )}
+                            {/* --- COMPONENT HIỂN THỊ AVATAR (ÉP HIỂN THỊ HÌNH ẢNH 100%) --- */}
+                            <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '12px', overflow: 'hidden', border: `2px solid ${isMe ? theme.gold : theme.border}`, flexShrink: 0, boxShadow: isMe ? `0 0 8px ${theme.gold}` : 'none' }}>
+                                <img 
+                                    src={displayAvatar} 
+                                    alt="avatar" 
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                                    referrerPolicy="no-referrer" 
+                                    onError={(e) => { 
+                                        e.currentTarget.onerror = null; 
+                                        e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName || 'U')}&background=333&color=fff`; 
+                                    }} 
+                                />
                             </div>
                             
                             <span style={{ fontSize: '20px', marginRight: '8px' }}>{icon}</span>
@@ -716,7 +728,7 @@ function App() {
                 </div>
             </div>
 
-            {/* KHU VỰC NẠP KIẾN THỨC ĐÃ CHUYỂN XUỐNG DƯỚI */}
+            {/* BLOCK NẠP KIẾN THỨC ĐÃ ĐƯỢC CHUYỂN XUỐNG DƯỚI ĐÂY */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🧠 Nạp Kiến Thức & Lan Tỏa</h2>
                 
@@ -804,6 +816,7 @@ function App() {
                     )}
                 </div>
             </div>
+            {/* KẾT THÚC BLOCK NẠP KIẾN THỨC */}
 
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px dashed ${theme.blue}` }}>
                 <h2 style={{ color: theme.blue, margin: '0 0 15px 0', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1319,7 +1332,7 @@ function App() {
                             <button 
                                 onClick={() => {
                                     setShowRevengePopup(false);
-                                    setActiveTab('wallet'); // 😈 Điều hướng ngay lập tức sang tab Ví để nạp tiền
+                                    setActiveTab('wallet'); 
                                 }}
                                 style={{ flex: 1, padding: '14px', borderRadius: '10px', backgroundColor: theme.red, color: '#fff', border: 'none', fontWeight: '900', cursor: 'pointer', boxShadow: `0 4px 15px rgba(255, 59, 48, 0.4)` }}
                             >
