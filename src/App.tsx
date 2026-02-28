@@ -63,13 +63,10 @@ function App() {
     const [isSpinning, setIsSpinning] = useState(false);
     const [chestBoard, setChestBoard] = useState(Array(9).fill({ isOpened: false, reward: null, isMine: false }));
     const [spinResultMsg, setSpinResultMsg] = useState('');
-    const [spinEarned, setSpinEarned] = useState(0);
-    
-    // 😈 Thanh năng lượng bảo hiểm nổ hũ (Pity System) - Giữ nguyên mốc 30
     const [spinCount, setSpinCount] = useState(0); 
     const MAX_PITY = 30; 
-
     const [boxModal, setBoxModal] = useState({ show: false, type: '', label: '', reward: 0, status: 'closed', isFrame: false });
+    const [spinEarned, setSpinEarned] = useState(0);
 
     const [winnersList, setWinnersList] = useState<string[]>([]);
     const [currentWinner, setCurrentWinner] = useState('');
@@ -193,7 +190,7 @@ function App() {
                 if (data.lastCheckInDate) setLastCheckIn(data.lastCheckInDate);
                 setCheckInStreak(data.checkInStreak || 0);
 
-                // NẠP DỮ LIỆU KHUNG VIỀN TỪ SERVER KHI KHỞI ĐỘNG APP
+                // LƯU Ý ĐỂ GIỮ KHUNG VIỀN KHÔNG BỊ MẤT KHI TẢI LẠI TRANG
                 if (data.activeFrame || data.ownedFrames) {
                     setUserProfile(prev => ({ 
                         ...prev, 
@@ -273,16 +270,16 @@ function App() {
 
     let displayBoard = [...leaderboard];
     const dummyUsers = [
-        { firstName: 'Vũ', lastName: 'Dũng', referralCount: 65, photoUrl: 'https://i.pravatar.cc/150?img=11', activeFrame: 'dragon' },
-        { firstName: 'Mai', lastName: 'Thiều Thị', referralCount: 60, photoUrl: 'https://i.pravatar.cc/150?img=5', activeFrame: 'gold' },
-        { firstName: 'LINH', lastName: 'NGUYEN', referralCount: 47, photoUrl: 'https://i.pravatar.cc/150?img=9', activeFrame: 'silver' },
-        { firstName: 'Minh', lastName: 'Ngọc Hoàng', referralCount: 33, photoUrl: 'https://i.pravatar.cc/150?img=12', activeFrame: 'bronze' },
-        { firstName: 'PHƯƠNG', lastName: 'ANH PHÙNG', referralCount: 27, photoUrl: 'https://i.pravatar.cc/150?img=20', activeFrame: 'none' },
-        { firstName: 'Nông', lastName: 'Mao', referralCount: 12, photoUrl: 'https://i.pravatar.cc/150?img=33', activeFrame: 'none' },
-        { firstName: 'Support', lastName: '', referralCount: 11, photoUrl: 'https://i.pravatar.cc/150?img=41', activeFrame: 'none' },
-        { firstName: 'OSAKA', lastName: 'CHAU HUYNH', referralCount: 10, photoUrl: 'https://i.pravatar.cc/150?img=32', activeFrame: 'none' },
-        { firstName: 'Trinh', lastName: 'Lê', referralCount: 9, photoUrl: 'https://i.pravatar.cc/150?img=44', activeFrame: 'none' },
-        { firstName: 'Lý', lastName: 'Hà', referralCount: 8, photoUrl: 'https://i.pravatar.cc/150?img=47', activeFrame: 'none' }
+        { firstName: 'Vũ', lastName: 'Dũng', referralCount: 65, photoUrl: '', activeFrame: 'dragon' },
+        { firstName: 'Mai', lastName: 'Thiều Thị', referralCount: 60, photoUrl: '', activeFrame: 'gold' },
+        { firstName: 'LINH', lastName: 'NGUYEN', referralCount: 47, photoUrl: '', activeFrame: 'silver' },
+        { firstName: 'Minh', lastName: 'Ngọc Hoàng', referralCount: 33, photoUrl: '', activeFrame: 'bronze' },
+        { firstName: 'PHƯƠNG', lastName: 'ANH PHÙNG', referralCount: 27, photoUrl: '', activeFrame: 'none' },
+        { firstName: 'Nông', lastName: 'Mao', referralCount: 12, photoUrl: '', activeFrame: 'none' },
+        { firstName: 'Support', lastName: '', referralCount: 11, photoUrl: '', activeFrame: 'none' },
+        { firstName: 'OSAKA', lastName: 'CHAU HUYNH', referralCount: 10, photoUrl: '', activeFrame: 'none' },
+        { firstName: 'Trinh', lastName: 'Lê', referralCount: 9, photoUrl: '', activeFrame: 'none' },
+        { firstName: 'Lý', lastName: 'Hà', referralCount: 8, photoUrl: '', activeFrame: 'none' }
     ];
     
     if (displayBoard.length < 10) {
@@ -324,35 +321,25 @@ function App() {
     else if (referrals >= 10) { vipLevel = "Đại Sứ 🥇"; wreathColor = "#C0C0C0"; }
     else if (referrals >= 3) { vipLevel = "Sứ Giả 🥈"; wreathColor = "#CD7F32"; }
 
-    // ==========================================
-    // HÀM XỬ LÝ MUA/TRANG BỊ KHUNG VIỀN (ĐÃ FIX API)
-    // ==========================================
+    // HÀM XỬ LÝ MUA/TRANG BỊ KHUNG VIỀN CÓ LIÊN KẾT BACKEND
     const handleBuyFrame = (frameId, price) => {
-        const isOwned = userProfile.ownedFrames.includes(frameId);
-        
-        // NẾU ĐÃ SỞ HỮU TRƯỚC ĐÓ -> CHỈ GỌI API TRANG BỊ LÊN NGƯỜI (TỐN 0 ĐỒNG)
-        if (isOwned) {
+        if (userProfile.ownedFrames.includes(frameId)) {
+            // Mặc khung đang có không tốn tiền
             fetch(`${BACKEND_URL}/api/redeem`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, itemName: frameId, cost: 0 })
-            }).then(res => res.json()).then(data => {
-                if(data.success) {
-                    setUserProfile(prev => ({ ...prev, activeFrame: frameId }));
-                    alert("✅ Đã trang bị khung viền thành công!");
-                }
-            }).catch(() => alert("⚠️ Lỗi kết nối máy chủ!"));
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, itemName: frameId, cost: 0 })
+            }).then(() => {
+                setUserProfile(prev => ({ ...prev, activeFrame: frameId }));
+                alert("✅ Đã trang bị khung viền thành công!");
+            });
             return;
         }
 
-        // NẾU CHƯA SỞ HỮU -> KIỂM TRA TIỀN VÀ MUA
         if (balance < price) return alert(`⚠️ Bạn cần thêm ${price - balance} SWGT nữa để mua Khung này!`);
         
         if (window.confirm(`Xác nhận dùng ${price} SWGT để mua Khung viền này?`)) {
+            // Gửi lệnh trừ tiền lên máy chủ
             fetch(`${BACKEND_URL}/api/redeem`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, itemName: frameId, cost: price })
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, itemName: frameId, cost: price })
             }).then(res => res.json()).then(data => {
                 if(data.success) {
                     setBalance(data.balance);
@@ -363,7 +350,7 @@ function App() {
                     }));
                     alert("🎉 Mua và trang bị khung viền thành công! Trông bạn ngầu hơn hẳn rồi đấy.");
                 } else {
-                    alert("❌ Lỗi xử lý: " + data.message);
+                    alert("❌ Lỗi: " + data.message);
                 }
             }).catch(() => alert("⚠️ Lỗi kết nối máy chủ!"));
         }
@@ -478,7 +465,7 @@ function App() {
     };
 
     // ==================================================
-    // GIAO DIỆN HIỂN THỊ HEADER
+    // GIAO DIỆN HEADER (CÓ CHẤM ONLINE VÀ KHUNG VIỀN)
     // ==================================================
     const renderHeader = () => {
         const myFrameStyle = getFrameStyle(userProfile.activeFrame);
@@ -504,6 +491,9 @@ function App() {
                             border: myFrameStyle.border, boxShadow: myFrameStyle.shadow, animation: myFrameStyle.animation, zIndex: 1 
                         }}>
                             <img src={userProfile.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.name || 'U')}&background=F4D03F&color=000&bold=true`} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                            
+                            {/* CHẤM XANH ONLINE */}
+                            <div style={{ position: 'absolute', bottom: '2px', right: '-2px', width: '14px', height: '14px', backgroundColor: '#34C759', borderRadius: '50%', border: `2px solid ${theme.bg}`, zIndex: 10 }}></div>
                         </div>
                         
                         <div style={{ position: 'absolute', bottom: '-10px', zIndex: 11, display: 'flex', alignItems: 'center', backgroundColor: '#000', padding: '2px 8px', borderRadius: '12px', border: `1px solid ${wreathColor}` }}>
@@ -516,7 +506,8 @@ function App() {
     };
 
     // ==================================================
-    // KHỐI RENDER: BẢNG TỔNG TÀI SẢN VÀ TOP TUẦN (HIỂN THỊ ĐỦ THÔNG TIN YÊU CẦU)
+    // KHỐI RENDER: BẢNG XẾP HẠNG (DÙNG CHUNG CHO TRANG CHỦ VÀ PHẦN THƯỞNG)
+    // HIỂN THỊ ĐẦY ĐỦ AVATAR, KHUNG VIỀN, SỐ SWGT VÀ SỐ NGƯỜI
     // ==================================================
     const renderWealthBoard = () => (
         <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
@@ -546,11 +537,9 @@ function App() {
                 const displayAvatar = isMe && userProfile.photoUrl ? userProfile.photoUrl : (user.photoUrl || user.photo_url || user.avatar || fallbackAvatar);
 
                 let frameStyle = { border: `2px solid ${theme.border}`, shadow: 'none', animation: 'none' };
-                if (isMe) {
-                    frameStyle = getFrameStyle(userProfile.activeFrame);
-                } else if (user.activeFrame && user.activeFrame !== 'none') {
-                    frameStyle = getFrameStyle(user.activeFrame);
-                } else {
+                if (isMe) frameStyle = getFrameStyle(userProfile.activeFrame);
+                else if (user.activeFrame && user.activeFrame !== 'none') frameStyle = getFrameStyle(user.activeFrame);
+                else {
                     if (index === 0) frameStyle = getFrameStyle('gold');
                     else if (index === 1) frameStyle = getFrameStyle('silver');
                     else if (index === 2) frameStyle = getFrameStyle('bronze');
@@ -562,7 +551,7 @@ function App() {
                             <span style={{ color: theme.textDim, fontWeight: 'bold', fontSize: '14px', minWidth: '24px', marginRight: '5px' }}>{index + 1}.</span>
                             
                             <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '12px', overflow: 'hidden', flexShrink: 0, border: frameStyle.border, boxShadow: frameStyle.shadow, animation: frameStyle.animation }}>
-                                <img src={displayAvatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = fallbackAvatar; }} />
+                                <img src={displayAvatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = fallbackAvatar; }} />
                             </div>
                             
                             <span style={{ fontSize: '20px', marginRight: '8px' }}>{icon}</span>
@@ -570,7 +559,7 @@ function App() {
                                 {user.firstName} {user.lastName} {isMe && '(Bạn)'}
                             </span>
                         </div>
-                        {/* HIỂN THỊ ĐẦY ĐỦ SWGT VÀ SỐ NGƯỜI NHƯ YÊU CẦU */}
+                        {/* HIỂN THỊ ĐẦY ĐỦ THÔNG SỐ (SWGT + SỐ NGƯỜI) */}
                         <div style={{ color: theme.green, fontWeight: 'bold', fontSize: '15px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                             <span>{boardType === 'all' ? user.totalEarned : user.displayCount * 15} <span style={{ fontSize: '11px', color: theme.textDim, fontWeight: 'normal' }}>SWGT</span></span>
                             <span style={{fontSize: '11px', color: theme.gold}}>({user.displayCount} người)</span>
@@ -657,7 +646,7 @@ function App() {
             {/* BẢNG ĐẠI GIA ĐẦY ĐỦ TIÊU ĐỀ */}
             {renderWealthBoard()}
 
-            {/* VĂN BẢN CHÍNH SÁCH THANH KHOẢN ĐẦY ĐỦ NHƯ BẢN GỐC */}
+            {/* CHÍNH SÁCH THANH KHOẢN ĐẦY ĐỦ VĂN BẢN */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}><span>⚖️</span> Chính Sách Thanh Khoản</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -680,6 +669,7 @@ function App() {
                 </div>
             </div>
 
+            {/* KHU VỰC NẠP KIẾN THỨC NẰM CUỐI TRƯỚC SẮP RA MẮT */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🧠 Nạp Kiến Thức & Lan Tỏa</h2>
                 
@@ -824,8 +814,9 @@ function App() {
                     <p style={{ color: '#854d0e', margin: 0, fontSize: '12px', lineHeight: '1.5' }}>Khi Cộng đồng cán mốc <b>1.000 người</b>, phần thưởng tại các mốc sẽ tự động <b>GIẢM XUỐNG</b>. Hãy nhận thưởng ngay hôm nay!</p>
                 </div>
 
-                {/* SỬ DỤNG LẠI BẢNG ĐẠI GIA (XẾP HẠNG CHUNG) THEO YÊU CẦU */}
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🤝 BẢNG VÀNG GIỚI THIỆU</h3>
+                
+                {/* HIỂN THỊ CHUNG BẢNG XẾP HẠNG NHƯ TAB TRANG CHỦ */}
                 {renderWealthBoard()}
 
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>💎 KHO ĐẶC QUYỀN VIP</h3>
@@ -853,7 +844,7 @@ function App() {
     };
 
     // ==================================================
-    // CỬA HÀNG KHUNG VIỀN AVATAR (SHOP) ĐÃ FIX LỖI API TẢI LẠI TRANG
+    // CỬA HÀNG KHUNG VIỀN AVATAR (SHOP)
     // ==================================================
     const renderShop = () => (
         <div style={{ padding: '0 20px 20px 20px', paddingBottom: '100px' }}>
@@ -1098,7 +1089,7 @@ function App() {
                                         <>
                                             <h2 style={{ color: '#00FFFF', fontSize: '22px', margin: '0 0 10px 0', fontWeight: '900' }}>NHẬN: KHUNG ÁNH SÁNG!</h2>
                                             <div style={{ width: '60px', height: '60px', borderRadius: '50%', margin: '0 auto 20px auto', border: getFrameStyle('light').border, boxShadow: getFrameStyle('light').shadow, padding: '2px', backgroundColor: '#333' }}>
-                                                <img src={userProfile.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.name || 'U')}&background=F4D03F&color=000&bold=true`} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
+                                                <img src={userProfile.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.name || 'U')}&background=F4D03F&color=000&bold=true`} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
                                             </div>
                                             <p style={{ color: theme.textDim, fontSize: '14px', marginBottom: '25px' }}>Siêu hiếm! Hãy vào Cửa hàng để trang bị ngay.</p>
                                         </>
