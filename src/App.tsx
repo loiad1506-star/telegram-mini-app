@@ -50,7 +50,6 @@ function App() {
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0 });
     const [isUnlocked, setIsUnlocked] = useState(false);
 
-    // STATE MỚI: Quản lý Tab Bảng xếp hạng (Tuần / Tổng)
     const [boardType, setBoardType] = useState('weekly'); 
 
     const BACKEND_URL = 'https://swc-bot-brain.onrender.com';
@@ -230,31 +229,30 @@ function App() {
 
     let vipLevel = "Tân Binh 🥉";
     let wreathColor = "#8E8E93"; 
-    let glow = "none";
 
     if (myRank === 1 && referrals >= 5) { 
-        vipLevel = "🏆 TOP 1 SERVER"; wreathColor = "#F4D03F"; glow = `0 0 15px #F4D03F`; 
+        vipLevel = "🏆 TOP 1 SERVER"; wreathColor = "#F4D03F"; 
     }
     else if (myRank === 2 && referrals >= 5) { 
-        vipLevel = "🔥 TOP 2 SERVER"; wreathColor = "#C0C0C0"; glow = `0 0 12px #C0C0C0`; 
+        vipLevel = "🔥 TOP 2 SERVER"; wreathColor = "#C0C0C0"; 
     }
     else if (myRank === 3 && referrals >= 5) { 
-        vipLevel = "🔥 TOP 3 SERVER"; wreathColor = "#CD7F32"; glow = `0 0 12px #CD7F32`; 
+        vipLevel = "🔥 TOP 3 SERVER"; wreathColor = "#CD7F32"; 
     }
     else if (myRank > 0 && myRank <= 10 && referrals >= 5) { 
-        vipLevel = `🌟 TOP ${myRank} SERVER`; wreathColor = theme.blue; glow = `0 0 10px ${theme.blue}`; 
+        vipLevel = `🌟 TOP ${myRank} SERVER`; wreathColor = theme.blue; 
     }
     else if (referrals >= 100) { 
-        vipLevel = "Huyền Thoại 👑"; wreathColor = "#E0B0FF"; glow = `0 0 15px #E0B0FF`; 
+        vipLevel = "Huyền Thoại 👑"; wreathColor = "#E0B0FF"; 
     }
     else if (referrals >= 50) { 
-        vipLevel = "Đối Tác VIP 💎"; wreathColor = theme.gold; glow = `0 0 12px ${theme.gold}`; 
+        vipLevel = "Đối Tác VIP 💎"; wreathColor = theme.gold; 
     }
     else if (referrals >= 10) { 
-        vipLevel = "Đại Sứ 🥇"; wreathColor = "#C0C0C0"; glow = `0 0 10px #C0C0C0`; 
+        vipLevel = "Đại Sứ 🥇"; wreathColor = "#C0C0C0"; 
     }
     else if (referrals >= 3) { 
-        vipLevel = "Sứ Giả 🥈"; wreathColor = "#CD7F32"; glow = `0 0 8px #CD7F32`; 
+        vipLevel = "Sứ Giả 🥈"; wreathColor = "#CD7F32"; 
     }
 
     const handleCheckIn = () => {
@@ -388,69 +386,108 @@ function App() {
         });
     };
 
-    const renderHeader = () => (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 20px', backgroundColor: theme.bg }}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-                <img src="/logo.png" alt="SWC Logo" style={{ width: '45px', height: '45px', borderRadius: '50%', border: `2px solid ${theme.gold}`, marginRight: '12px', objectFit: 'cover' }} />
-                <div>
-                    <h1 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: theme.textLight }}>CỘNG ĐỒNG</h1>
-                    <p style={{ margin: 0, fontSize: '13px', color: theme.gold, fontWeight: 'bold' }}>Đầu tư uST</p>
-                </div>
-            </div>
-            
-            <div style={{ display: 'flex', alignItems: 'center', textAlign: 'right' }}>
-                <div style={{ marginRight: '15px' }}>
-                    <h2 style={{ margin: 0, fontSize: '15px', color: theme.textLight, fontWeight: 'bold' }}>{userProfile.name}</h2>
-                    <p style={{ margin: 0, fontSize: '12px', color: theme.textDim, fontWeight: 'bold' }}>{militaryRank}</p>
+    // ==================================================
+    // RENDER HEADER (Có viền Rồng Lửa / Ánh Sáng)
+    // ==================================================
+    const renderHeader = () => {
+        // Dựa vào UID chẵn/lẻ để phân bổ hiệu ứng cho mọi người
+        const isFireEffect = (Number(userId || 1) % 2) !== 0; 
+        const effectColor = isFireEffect ? '#FF3B30' : '#00FFFF'; // Đỏ Rồng Lửa / Xanh Ánh Sáng
+        const pulseAnim = isFireEffect ? 'pulseGlowRed 2s infinite' : 'pulseGlowCyan 2s infinite';
+
+        return (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 20px', backgroundColor: theme.bg }}>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <img src="/logo.png" alt="SWC Logo" style={{ width: '45px', height: '45px', borderRadius: '50%', border: `2px solid ${theme.gold}`, marginRight: '12px', objectFit: 'cover' }} />
+                    <div>
+                        <h1 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: theme.textLight }}>CỘNG ĐỒNG</h1>
+                        <p style={{ margin: 0, fontSize: '13px', color: theme.gold, fontWeight: 'bold' }}>Đầu tư uST</p>
+                    </div>
                 </div>
                 
-                <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
-                    <svg viewBox="-5 -5 110 110" style={{ position: 'absolute', width: '140%', height: '140%', top: '-20%', left: '-20%', zIndex: 10, pointerEvents: 'none' }}>
-                        <path d="M 50 90 C 15 90, 5 50, 20 20" fill="none" stroke={wreathColor} strokeWidth="2" />
-                        <path d="M 50 90 C 85 90, 95 50, 80 20" fill="none" stroke={wreathColor} strokeWidth="2" />
-                        <path d="M 20 20 Q 30 15 25 30 Q 15 25 20 20" fill={wreathColor} /> 
-                        <path d="M 12 40 Q 25 35 20 50 Q 5 45 12 40" fill={wreathColor} />
-                        <path d="M 15 65 Q 30 55 25 70 Q 10 70 15 65" fill={wreathColor} />
-                        <path d="M 80 20 Q 70 15 75 30 Q 85 25 80 20" fill={wreathColor} /> 
-                        <path d="M 88 40 Q 75 35 80 50 Q 95 45 88 40" fill={wreathColor} />
-                        <path d="M 85 65 Q 70 55 75 70 Q 90 70 85 65" fill={wreathColor} />
-                    </svg>
-
-                    <div style={{ position: 'relative', width: '52px', height: '52px', borderRadius: '50%', padding: '2px', backgroundColor: theme.bg, boxShadow: glow, zIndex: 1 }}>
-                        {userProfile.photoUrl ? (
-                            <img src={userProfile.photoUrl} alt="avatar" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-                        ) : (
-                            <div style={{ width: '100%', height: '100%', borderRadius: '50%', backgroundColor: theme.cardBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.gold, fontSize: '20px' }}>👤</div>
-                        )}
+                <div style={{ display: 'flex', alignItems: 'center', textAlign: 'right' }}>
+                    <div style={{ marginRight: '15px' }}>
+                        <h2 style={{ margin: 0, fontSize: '15px', color: theme.textLight, fontWeight: 'bold' }}>{userProfile.name}</h2>
+                        <p style={{ margin: 0, fontSize: '12px', color: theme.textDim, fontWeight: 'bold' }}>{militaryRank}</p>
                     </div>
                     
-                    <div style={{ position: 'absolute', bottom: '-10px', zIndex: 11, display: 'flex', alignItems: 'center', backgroundColor: '#000', padding: '2px 8px', borderRadius: '12px', border: `1px solid ${wreathColor}`, boxShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
-                        <span style={{ color: wreathColor, fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
-                            {vipLevel}
-                        </span>
-                    </div>
+                    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
+                        {/* Vòng lá vương miện VIP (Giữ nguyên) */}
+                        <svg viewBox="-5 -5 110 110" style={{ position: 'absolute', width: '140%', height: '140%', top: '-20%', left: '-20%', zIndex: 10, pointerEvents: 'none' }}>
+                            <path d="M 50 90 C 15 90, 5 50, 20 20" fill="none" stroke={wreathColor} strokeWidth="2" />
+                            <path d="M 50 90 C 85 90, 95 50, 80 20" fill="none" stroke={wreathColor} strokeWidth="2" />
+                            <path d="M 20 20 Q 30 15 25 30 Q 15 25 20 20" fill={wreathColor} /> 
+                            <path d="M 12 40 Q 25 35 20 50 Q 5 45 12 40" fill={wreathColor} />
+                            <path d="M 15 65 Q 30 55 25 70 Q 10 70 15 65" fill={wreathColor} />
+                            <path d="M 80 20 Q 70 15 75 30 Q 85 25 80 20" fill={wreathColor} /> 
+                            <path d="M 88 40 Q 75 35 80 50 Q 95 45 88 40" fill={wreathColor} />
+                            <path d="M 85 65 Q 70 55 75 70 Q 90 70 85 65" fill={wreathColor} />
+                        </svg>
 
-                    <div style={{ position: 'absolute', top: '0px', right: '0px', width: '12px', height: '12px', backgroundColor: theme.green, borderRadius: '50%', border: `2px solid ${theme.bg}`, zIndex: 12 }}></div>
+                        {/* AVATAR WRAPPER VỚI VIỀN RỒNG LỬA / ÁNH SÁNG */}
+                        <div style={{ position: 'relative', width: '52px', height: '52px', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+                            
+                            {/* Khung viền nét đứt nhấp nháy, xoay vòng */}
+                            <div style={{
+                                position: 'absolute',
+                                top: '-4px', left: '-4px', right: '-4px', bottom: '-4px',
+                                borderRadius: '50%',
+                                border: `2px dashed ${effectColor}`,
+                                animation: `spin 4s linear infinite, ${pulseAnim}`,
+                                zIndex: 0
+                            }}></div>
+
+                            {/* Ảnh Avatar */}
+                            <div style={{ width: '100%', height: '100%', borderRadius: '50%', padding: '2px', backgroundColor: theme.bg, zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                                {userProfile.photoUrl ? (
+                                    <img src={userProfile.photoUrl} alt="avatar" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                                ) : (
+                                    <div style={{ width: '100%', height: '100%', borderRadius: '50%', backgroundColor: theme.cardBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.gold, fontSize: '20px' }}>👤</div>
+                                )}
+                            </div>
+                        </div>
+                        
+                        {/* Nhãn xếp hạng bên dưới */}
+                        <div style={{ position: 'absolute', bottom: '-10px', zIndex: 11, display: 'flex', alignItems: 'center', backgroundColor: '#000', padding: '2px 8px', borderRadius: '12px', border: `1px solid ${wreathColor}`, boxShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                            <span style={{ color: wreathColor, fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                                {vipLevel}
+                            </span>
+                        </div>
+
+                        {/* Chấm xanh trạng thái Online */}
+                        <div style={{ position: 'absolute', top: '0px', right: '0px', width: '12px', height: '12px', backgroundColor: theme.green, borderRadius: '50%', border: `2px solid ${theme.bg}`, zIndex: 12 }}></div>
+                    </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    }
 
-    // ==================================================
-    // KHỐI RENDER: BẢNG ĐẠI GIA (TÍCH HỢP TAB TUẦN/TỔNG)
-    // ==================================================
     const renderWealthBoard = () => (
         <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+            <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
                 <button
                     onClick={() => setBoardType('weekly')}
-                    style={{ flex: 1, padding: '12px', borderRadius: '10px', border: `1px solid ${boardType === 'weekly' ? theme.gold : theme.border}`, backgroundColor: boardType === 'weekly' ? 'rgba(244, 208, 63, 0.15)' : '#000', color: boardType === 'weekly' ? theme.gold : theme.textDim, fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', transition: 'all 0.3s', boxShadow: boardType === 'weekly' ? `0 0 12px rgba(244, 208, 63, 0.4)` : 'none' }}
+                    style={{ 
+                        flex: 1, padding: '12px', borderRadius: '10px', 
+                        border: `2px solid ${boardType === 'weekly' ? theme.gold : theme.border}`, 
+                        backgroundColor: boardType === 'weekly' ? 'rgba(244, 208, 63, 0.15)' : '#1C1C1E', 
+                        color: boardType === 'weekly' ? theme.gold : theme.textDim, 
+                        fontWeight: '900', fontSize: '14px', cursor: 'pointer', transition: 'all 0.3s',
+                        boxShadow: boardType === 'weekly' ? `0 0 15px rgba(244, 208, 63, 0.3)` : 'none'
+                    }}
                 >
                     🏆 TOP TUẦN
                 </button>
                 <button
                     onClick={() => setBoardType('all')}
-                    style={{ flex: 1, padding: '12px', borderRadius: '10px', border: `1px solid ${boardType === 'all' ? theme.gold : theme.border}`, backgroundColor: boardType === 'all' ? 'rgba(244, 208, 63, 0.15)' : '#000', color: boardType === 'all' ? theme.gold : theme.textDim, fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', transition: 'all 0.3s', boxShadow: boardType === 'all' ? `0 0 12px rgba(244, 208, 63, 0.4)` : 'none' }}
+                    style={{ 
+                        flex: 1, padding: '12px', borderRadius: '10px', 
+                        border: `2px solid ${boardType === 'all' ? theme.gold : theme.border}`, 
+                        backgroundColor: boardType === 'all' ? 'rgba(244, 208, 63, 0.15)' : '#1C1C1E', 
+                        color: boardType === 'all' ? theme.gold : theme.textDim, 
+                        fontWeight: '900', fontSize: '14px', cursor: 'pointer', transition: 'all 0.3s',
+                        boxShadow: boardType === 'all' ? `0 0 15px rgba(244, 208, 63, 0.3)` : 'none'
+                    }}
                 >
                     🌟 TOP TỔNG
                 </button>
@@ -467,37 +504,35 @@ function App() {
 
             {wealthBoard.slice(0, 10).map((user, index) => {
                 let icon = "💸";
-                let userGlow = "none";
-                let rankColor = theme.textDim;
-                
-                if (index === 0) { icon = "👑"; rankColor = theme.gold; userGlow = '0 0 10px rgba(244, 208, 63, 0.2)'; }
-                else if (index === 1) { icon = "💎"; rankColor = '#C0C0C0'; userGlow = '0 0 10px rgba(192, 192, 192, 0.2)'; }
-                else if (index === 2) { icon = "🌟"; rankColor = '#CD7F32'; userGlow = '0 0 10px rgba(205, 127, 50, 0.2)'; }
+                let topColor = theme.textDim;
+                let topBg = "transparent";
+                let topBorder = "transparent";
+
+                if (index === 0) { icon = "👑"; topColor = theme.gold; topBg = 'rgba(244, 208, 63, 0.1)'; topBorder = theme.gold; }
+                else if (index === 1) { icon = "💎"; topColor = '#C0C0C0'; topBg = 'rgba(192, 192, 192, 0.1)'; topBorder = '#C0C0C0'; }
+                else if (index === 2) { icon = "🌟"; topColor = '#CD7F32'; topBg = 'rgba(205, 127, 50, 0.1)'; topBorder = '#CD7F32'; }
+                else { topBorder = theme.border; }
                 
                 const isMe = user.firstName === userProfile.name.split(' ')[0];
-                const userMilitaryRank = getMilitaryRank(user.referralCount);
+                const rankTitle = getMilitaryRank(user.referralCount);
 
                 return (
-                    <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 10px', borderBottom: index < wealthBoard.length - 1 ? `1px solid ${theme.border}` : 'none', backgroundColor: isMe ? 'rgba(244, 208, 63, 0.1)' : 'transparent', borderRadius: '8px', marginBottom: '5px', boxShadow: userGlow }}>
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <div style={{ minWidth: '40px', textAlign: 'center', marginRight: '10px', fontSize: '26px' }}>
-                                {icon}
+                    <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 10px', borderBottom: index < wealthBoard.length - 1 ? `1px solid ${theme.border}` : 'none', backgroundColor: isMe ? 'rgba(244, 208, 63, 0.05)' : 'transparent', borderRadius: '8px', marginBottom: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '45px', marginRight: '12px', backgroundColor: topBg, border: `1px solid ${topBorder}`, borderRadius: '6px', padding: '4px' }}>
+                                <span style={{ fontSize: '10px', fontWeight: 'bold', color: topColor }}>TOP {index + 1}</span>
+                                <span style={{ fontSize: '18px', marginTop: '2px' }}>{icon}</span>
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                <span style={{ color: rankColor, fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                    TOP {index + 1} SERVER
+                                <span style={{ color: isMe ? theme.gold : theme.textLight, fontWeight: 'bold', fontSize: '15px' }}>
+                                    {user.firstName} {user.lastName} {isMe && <span style={{fontSize: '11px', color: theme.gold, fontWeight: 'normal'}}> (Bạn)</span>}
                                 </span>
-                                <span style={{ color: isMe ? theme.gold : theme.textLight, fontWeight: 'bold', fontSize: '15px', marginTop: '2px' }}>
-                                    {user.firstName} {user.lastName} {isMe && '(Bạn)'}
-                                </span>
-                                <span style={{ color: theme.textDim, fontSize: '12px', marginTop: '2px' }}>
-                                    {userMilitaryRank}
-                                </span>
+                                <span style={{ color: theme.textDim, fontSize: '12px', marginTop: '2px' }}>{rankTitle}</span>
                             </div>
                         </div>
                         <div style={{ color: theme.green, fontWeight: 'bold', fontSize: '16px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                             <span>{boardType === 'all' ? user.totalEarned : user.displayCount * 15} <span style={{ fontSize: '12px', color: theme.textDim, fontWeight: 'normal' }}>SWGT</span></span>
-                            {boardType === 'weekly' && <span style={{fontSize: '11px', color: theme.gold}}>({user.displayCount} ref)</span>}
+                            {boardType === 'weekly' && <span style={{fontSize: '11px', color: theme.gold}}>({user.displayCount} người)</span>}
                         </div>
                     </div>
                 )
@@ -505,9 +540,6 @@ function App() {
         </div>
     );
 
-    // ==================================================
-    // TRANG CHỦ
-    // ==================================================
     const renderHome = () => (
         <div style={{ padding: '0 20px 20px 20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', marginBottom: '20px' }}>
@@ -527,7 +559,6 @@ function App() {
                 </div>
             </div>
 
-            {/* 1. Điểm Danh Hàng Ngày */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', textAlign: 'center', border: `1px solid ${theme.border}`, marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                     <h3 style={{ margin: 0, color: '#fff', fontSize: '16px' }}>📅 Điểm Danh Hàng Ngày</h3>
@@ -576,7 +607,6 @@ function App() {
                 </p>
             </div>
 
-            {/* 2. Cách Hoạt Động */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Cách Hoạt Động</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -591,7 +621,6 @@ function App() {
                 </div>
             </div>
 
-            {/* Các thông tin phụ (Cơ cấu phần thưởng) */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '18px' }}>💎 Cơ Cấu Phần Thưởng SWGT</h2>
                 <p style={{ color: theme.textLight, fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>📌 Thành viên Thường:</p>
@@ -605,7 +634,6 @@ function App() {
                     <p style={{ margin: 0 }}>Tham gia Nhóm Chat: <span style={{color: '#34C759'}}>+20 SWGT/người</span></p>
                 </div>
                 
-                {/* KHỐI CẢNH BÁO ANTI-CHEAT (Luật 21 Ngày) */}
                 <div style={{ backgroundColor: '#fef2f2', borderLeft: '4px solid #ef4444', padding: '12px', marginTop: '20px', borderRadius: '6px' }}>
                     <h4 style={{ color: '#991b1b', fontWeight: 'bold', margin: '0 0 8px 0', fontSize: '14px' }}>
                         ⚠️ CHÍNH SÁCH CHỐNG GIAN LẬN (RADAR 24/7)
@@ -616,10 +644,8 @@ function App() {
                 </div>
             </div>
 
-            {/* 3. Bảng Đại Gia (Top Tuần / Top Tổng) */}
             {renderWealthBoard()}
 
-            {/* Chính sách thanh khoản */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span>⚖️</span> Chính Sách Thanh Khoản
@@ -659,7 +685,6 @@ function App() {
                 </div>
             </div>
 
-            {/* 4. Nạp Kiến Thức & Lan Tỏa */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🧠 Nạp Kiến Thức & Lan Tỏa</h2>
                 
@@ -748,7 +773,6 @@ function App() {
                 </div>
             </div>
 
-            {/* 5. Sắp Ra Mắt (Đẩy xuống cuối cùng) */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px dashed ${theme.blue}` }}>
                 <h2 style={{ color: theme.blue, margin: '0 0 15px 0', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span>🚀</span> Sắp Ra Mắt (Coming Soon)
@@ -820,7 +844,6 @@ function App() {
                     </div>
                 </div>
 
-                {/* KHỐI CẢNH BÁO FOMO HALVING */}
                 <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fde047', padding: '12px', marginBottom: '20px', borderRadius: '6px' }}>
                     <h4 style={{ color: '#b45309', fontWeight: 'bold', margin: '0 0 5px 0', fontSize: '13px' }}>
                         ⏳ SỰ KIỆN HALVING SẮP DIỄN RA!
@@ -830,7 +853,7 @@ function App() {
                     </p>
                 </div>
 
-                <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🚀 9 CỘT MỐC THƯỞNG NÓNG</h3>
+                <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🚀 9 CỘT MỐC THƯỞNG NÓNG (KHI GROUP ĐẠT 1000 NGƯỜI)</h3>
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '10px' }}>
                         <div>
@@ -854,29 +877,18 @@ function App() {
                             if (isClaimed) icon = '✅';
                             else if (canClaim) icon = '🎁';
                             
-                            // LOGIC: Đánh dấu sao (*) cho các mốc bị cắt giảm (Halving)
                             const isHalvingMilestone = [10, 50, 120, 200, 350, 500].includes(m.req);
                             
                             return (
-                                <div key={m.req} style={{ minWidth: '120px', backgroundColor: '#000', borderRadius: '10px', padding: '15px 10px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
+                                <div key={m.req} style={{ minWidth: '110px', backgroundColor: '#000', borderRadius: '10px', padding: '15px 10px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
                                     <div style={{ fontSize: '24px', marginBottom: '8px' }}>{icon}</div>
                                     <p style={{ color: theme.textLight, fontSize: '13px', fontWeight: 'bold', margin: '0 0 2px 0' }}>Mốc {m.req}</p>
                                     
                                     <p style={{ color: theme.blue, fontSize: '11px', fontWeight: 'bold', margin: '0 0 5px 0' }}>{m.rank}</p>
                                     
-                                    {isHalvingMilestone ? (
-                                        <div style={{ margin: '0 0 10px 0' }}>
-                                            <p style={{ color: theme.gold, fontSize: '12px', margin: '0 0 2px 0' }}>+{m.reward} SWGT</p>
-                                            <p style={{ color: theme.red, fontSize: '10px', margin: 0, fontStyle: 'italic' }}>
-                                                Giảm -50% khi đủ 1000 Mem
-                                            </p>
-                                        </div>
-                                    ) : (
-                                        <p style={{ color: theme.gold, fontSize: '12px', margin: '0 0 10px 0' }}>
-                                            +{m.reward} SWGT
-                                        </p>
-                                    )}
-
+                                    <p style={{ color: theme.gold, fontSize: '12px', margin: '0 0 10px 0' }}>
+                                        +{m.reward}{isHalvingMilestone ? '*' : ''}
+                                    </p>
                                     <button 
                                         onClick={() => handleClaimMilestone(m.req)} 
                                         disabled={!canClaim}
@@ -889,8 +901,7 @@ function App() {
                     </div>
                 </div>
 
-                <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px', textAlign: 'center'}}>🤝 BẢNG VÀNG GIỚI THIỆU</h3>
-                {/* Thay thế bảng cũ bằng Bảng Đại Gia có chứa Tab Top Tuần cực xịn */}
+                <h3 style={{color: theme.gold, borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '18px', textAlign: 'center', fontWeight: '900'}}>🤝 BẢNG VÀNG GIỚI THIỆU</h3>
                 {renderWealthBoard()}
 
                 <div style={{ textAlign: 'center', paddingTop: '5px', marginBottom: '25px' }}>
@@ -1026,12 +1037,26 @@ function App() {
 
     return (
         <div style={{ backgroundColor: theme.bg, minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '90px', boxSizing: 'border-box' }}>
+            {/* THÊM 3 KEYFRAME MỚI CHO VIỀN RỒNG LỬA / ÁNH SÁNG */}
             <style>{`
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
                 ::-webkit-scrollbar { height: 6px; }
                 ::-webkit-scrollbar-track { background: #1C1C1E; border-radius: 10px; }
                 ::-webkit-scrollbar-thumb { background: #F4D03F; border-radius: 10px; }
+                
+                @keyframes spin { 
+                    100% { transform: rotate(360deg); } 
+                }
+                @keyframes pulseGlowRed {
+                    0%, 100% { box-shadow: 0 0 5px #FF3B30, inset 0 0 5px #FF3B30; }
+                    50% { box-shadow: 0 0 15px #FF3B30, inset 0 0 10px #FF3B30; }
+                }
+                @keyframes pulseGlowCyan {
+                    0%, 100% { box-shadow: 0 0 5px #00FFFF, inset 0 0 5px #00FFFF; }
+                    50% { box-shadow: 0 0 15px #00FFFF, inset 0 0 10px #00FFFF; }
+                }
             `}</style>
+            
             {renderHeader()}
             <div style={{ marginTop: '10px' }}>
                 {activeTab === 'home' && renderHome()}
