@@ -47,6 +47,9 @@ function App() {
     // STATE: Quản lý hiệu ứng tiền bay lên
     const [animations, setAnimations] = useState<{id: number, text: string, x: number, y: number}[]>([]);
 
+    // Lưu lại giờ VN do server báo về (dùng để đồng bộ kiểm tra điểm danh)
+    const [serverDateVN, setServerDateVN] = useState<string>('');
+
     const BACKEND_URL = 'https://swc-bot-brain.onrender.com';
 
     const theme = {
@@ -76,7 +79,6 @@ function App() {
 
     const STREAK_REWARDS = [0.5, 1.5, 3, 3.5, 5, 7, 9];
 
-    // HÀM TRIGGER HIỆU ỨNG BAY LÊN
     const triggerFloatAnim = (reward: string | number, e: React.MouseEvent) => {
         const rect = e.currentTarget.getBoundingClientRect();
         const startX = rect.left + rect.width / 2;
@@ -140,13 +142,16 @@ function App() {
                 const joinMs = data.joinDate ? new Date(data.joinDate).getTime() : new Date("2026-02-22T00:00:00Z").getTime();
                 setUnlockDateMs(joinMs + (daysLimit * 24 * 60 * 60 * 1000));
 
-                const todayStr = new Date().toDateString();
-                const lastDaily = data.lastDailyTask ? new Date(data.lastDailyTask).toDateString() : '';
-                const lastShare = data.lastShareTask ? new Date(data.lastShareTask).toDateString() : '';
+                // Ép cứng kiểm tra theo giờ Việt Nam
+                const vnNowStr = data.serverDateVN || new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' });
+                setServerDateVN(vnNowStr);
+
+                const lastDailyStr = data.lastDailyTask ? new Date(data.lastDailyTask).toLocaleDateString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }) : '';
+                const lastShareStr = data.lastShareTask ? new Date(data.lastShareTask).toLocaleDateString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }) : '';
                 
                 setTasks({
-                    readTaskDone: lastDaily === todayStr, 
-                    shareTaskDone: lastShare === todayStr,
+                    readTaskDone: lastDailyStr === vnNowStr, 
+                    shareTaskDone: lastShareStr === vnNowStr,
                     youtubeTaskDone: data.youtubeTaskDone || false,
                     facebookTaskDone: data.facebookTaskDone || false
                 });
@@ -178,7 +183,12 @@ function App() {
             .catch(() => {});
     }, []);
 
-    const isCheckedInToday = lastCheckIn ? new Date(lastCheckIn).toDateString() === new Date().toDateString() : false;
+    // Kiểm tra điểm danh theo giờ VN
+    let isCheckedInToday = false;
+    if (lastCheckIn && serverDateVN) {
+        const lastCheckInVNStr = new Date(lastCheckIn).toLocaleDateString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' });
+        isCheckedInToday = (lastCheckInVNStr === serverDateVN);
+    }
 
     const getMilitaryRank = (count: number) => {
         if (count >= 500) return "Đại Tướng 🌟🌟🌟🌟";
@@ -276,6 +286,7 @@ function App() {
                 setCheckInStreak(data.streak);
                 triggerFloatAnim(data.reward, e); 
                 alert(`🔥 Điểm danh thành công (Chuỗi ${data.streak} ngày)!\nBạn nhận được +${data.reward} SWGT.`);
+                fetchUserData(userId); // Cập nhật lại UI lập tức
             } else { alert(data.message || "❌ Hôm nay bạn đã điểm danh rồi!"); }
         }).catch(() => alert("⚠️ Mạng chậm, vui lòng thử lại sau giây lát!"));
     };
@@ -373,7 +384,7 @@ function App() {
         window.open(url, '_blank'); 
     };
 
-    // Gọi lên Bot để nhận thưởng (Chỉ trả thưởng nếu Bot đã lưu giờ bắt đầu)
+    // GỌI BOT ĐỂ TRẢ THƯỞNG - BẮT LỖI TỪ SERVER
     const claimTaskApp = (taskType: string, e: React.MouseEvent) => {
         fetch(`${BACKEND_URL}/api/claim-app-task`, {
             method: 'POST',
@@ -388,9 +399,6 @@ function App() {
         }).catch(() => alert("⚠️ Mạng chậm, vui lòng thử lại."));
     };
 
-    // ==================================================
-    // RENDER HEADER (Khung viền ôm khít, xóa SVG rườm rà)
-    // ==================================================
     const renderHeader = () => {
         const isFireEffect = (Number(userId || 1) % 2) !== 0; 
         const effectColor = isFireEffect ? '#FF3B30' : '#00FFFF'; 
@@ -413,9 +421,7 @@ function App() {
                     </div>
                     
                     <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
-                        
                         <div style={{ position: 'relative', width: '52px', height: '52px', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-                            
                             <div style={{
                                 position: 'absolute',
                                 top: '-4px', left: '-4px', right: '-4px', bottom: '-4px',
@@ -424,7 +430,6 @@ function App() {
                                 animation: `spin 4s linear infinite, ${pulseAnim}`,
                                 zIndex: 0
                             }}></div>
-
                             <div style={{ width: '100%', height: '100%', borderRadius: '50%', padding: '2px', backgroundColor: theme.bg, zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                                 {userProfile.photoUrl ? (
                                     <img src={userProfile.photoUrl} alt="avatar" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
@@ -433,13 +438,11 @@ function App() {
                                 )}
                             </div>
                         </div>
-                        
                         <div style={{ position: 'absolute', bottom: '-10px', zIndex: 11, display: 'flex', alignItems: 'center', backgroundColor: '#000', padding: '2px 8px', borderRadius: '12px', border: `1px solid ${wreathColor}`, boxShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
                             <span style={{ color: wreathColor, fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                                 {vipLevel}
                             </span>
                         </div>
-
                         <div style={{ position: 'absolute', top: '0px', right: '-2px', width: '12px', height: '12px', backgroundColor: theme.green, borderRadius: '50%', border: `2px solid ${theme.bg}`, zIndex: 12 }}></div>
                     </div>
                 </div>
@@ -488,16 +491,11 @@ function App() {
             </div>
 
             {wealthBoard.slice(0, 10).map((user, index) => {
-                let icon = "💸";
-                let topColor = theme.textDim;
-                let topBg = "transparent";
-                let topBorder = "transparent";
-
+                let icon = "💸"; let topColor = theme.textDim; let topBg = "transparent"; let topBorder = "transparent";
                 if (index === 0) { icon = "👑"; topColor = theme.gold; topBg = 'rgba(244, 208, 63, 0.1)'; topBorder = theme.gold; }
                 else if (index === 1) { icon = "💎"; topColor = '#C0C0C0'; topBg = 'rgba(192, 192, 192, 0.1)'; topBorder = '#C0C0C0'; }
                 else if (index === 2) { icon = "🌟"; topColor = '#CD7F32'; topBg = 'rgba(205, 127, 50, 0.1)'; topBorder = '#CD7F32'; }
                 else { topBorder = theme.border; }
-                
                 const isMe = user.firstName === userProfile.name.split(' ')[0];
                 const rankTitle = getMilitaryRank(user.referralCount);
 
@@ -554,11 +552,7 @@ function App() {
                     {[1, 2, 3, 4, 5, 6, 7].map((day, idx) => {
                         const isClaimed = isCheckedInToday ? day <= checkInStreak : day < checkInStreak;
                         const isToday = isCheckedInToday ? day === checkInStreak : day === checkInStreak + 1;
-                        
-                        let bgColor = '#000';
-                        let textColor = theme.textDim;
-                        let borderColor = theme.border;
-
+                        let bgColor = '#000'; let textColor = theme.textDim; let borderColor = theme.border;
                         if (isClaimed) { bgColor = 'rgba(52, 199, 89, 0.1)'; textColor = theme.green; borderColor = theme.green; }
                         else if (isToday) { bgColor = 'rgba(244, 208, 63, 0.1)'; textColor = theme.gold; borderColor = theme.gold; }
 
@@ -660,14 +654,6 @@ function App() {
                             <p style={{ margin: '2px 0 0 0', color: theme.textLight, fontSize: '13px', lineHeight: '1.5' }}>Cán mốc <b style={{color: theme.gold}}>1500 SWGT</b> ➔ <b style={{color: theme.green}}>ĐƯỢC RÚT NGAY LẬP TỨC</b>, bỏ qua mọi thời gian chờ đợi!</p>
                         </div>
                     </div>
-
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                        <span style={{ fontSize: '18px' }}>💸</span>
-                        <div>
-                            <p style={{ margin: 0, color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>Quyền tự quyết</p>
-                            <p style={{ margin: '2px 0 0 0', color: theme.textDim, fontSize: '13px' }}>Rút tiền linh hoạt 24/7 bất cứ lúc nào khi đủ điều kiện.</p>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -754,16 +740,10 @@ function App() {
     );
 
     const renderRewards = () => {
-        let nextTarget = 3;
-        let nextReward = "+10 SWGT";
+        let nextTarget = 3; let nextReward = "+10 SWGT";
         for (let m of MILESTONE_LIST) {
-            if (referrals < m.req) {
-                nextTarget = m.req;
-                nextReward = `+${m.reward} SWGT`;
-                break;
-            }
+            if (referrals < m.req) { nextTarget = m.req; nextReward = `+${m.reward} SWGT`; break; }
         }
-        
         let progressPercent = Math.min((referrals / nextTarget) * 100, 100);
         if (referrals >= 500) progressPercent = 100;
 
@@ -848,12 +828,8 @@ function App() {
                                 <div key={m.req} style={{ minWidth: '110px', backgroundColor: '#000', borderRadius: '10px', padding: '15px 10px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
                                     <div style={{ fontSize: '24px', marginBottom: '8px' }}>{icon}</div>
                                     <p style={{ color: theme.textLight, fontSize: '13px', fontWeight: 'bold', margin: '0 0 2px 0' }}>Mốc {m.req}</p>
-                                    
                                     <p style={{ color: theme.blue, fontSize: '11px', fontWeight: 'bold', margin: '0 0 5px 0' }}>{m.rank}</p>
-                                    
-                                    <p style={{ color: theme.gold, fontSize: '13px', fontWeight: '900', margin: '0 0 10px 0' }}>
-                                        +{m.reward}
-                                    </p>
+                                    <p style={{ color: theme.gold, fontSize: '13px', fontWeight: '900', margin: '0 0 10px 0' }}>+{m.reward}</p>
                                     <button 
                                         onClick={(e) => handleClaimMilestone(m.req, m.reward, e)} 
                                         disabled={!canClaim}
@@ -1020,7 +996,7 @@ function App() {
                 }
                 @keyframes pulseGlowCyan {
                     0%, 100% { box-shadow: 0 0 5px #00FFFF, inset 0 0 5px #00FFFF; }
-                    50% { box-shadow: 0 0 15px #00FFFF, inset 0 0 10px #00FFFF; }
+                    50% { box-shadow: 0 0 15px #00FFFF, inset 0 0 10px #FF3B30; }
                 }
 
                 /* Hiệu ứng Navigation Bottom Tab động */
