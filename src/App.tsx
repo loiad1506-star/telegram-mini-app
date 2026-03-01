@@ -70,17 +70,17 @@ function App() {
         premium: '#E0B0FF' 
     };
 
-    // ĐÃ UPDATE HALVING 50% VÀO CÁC MỐC (10, 50, 120, 200, 350, 500)
+    // ĐÃ UPDATE HALVING
     const MILESTONE_LIST = [
         { req: 3, reward: 10, key: 'milestone3', rank: 'Đại Úy 🎖️' },
-        { req: 10, reward: 12.5, key: 'milestone10', rank: 'Thiếu Tá 🎖️' },
+        { req: 10, reward: 20, key: 'milestone10', rank: 'Thiếu Tá 🎖️' },
         { req: 20, reward: 40, key: 'milestone20', rank: 'Trung Tá 🎖️' },
-        { req: 50, reward: 50, key: 'milestone50', rank: 'Thượng Tá 🎖️' },
+        { req: 50, reward: 80, key: 'milestone50', rank: 'Thượng Tá 🎖️' },
         { req: 80, reward: 150, key: 'milestone80', rank: 'Đại Tá 🎖️' },
-        { req: 120, reward: 125, key: 'milestone120', rank: 'Thiếu Tướng 🌟' },
-        { req: 200, reward: 212.5, key: 'milestone200', rank: 'Trung Tướng 🌟🌟' },
-        { req: 350, reward: 400, key: 'milestone350', rank: 'Thượng Tướng 🌟🌟🌟' },
-        { req: 500, reward: 600, key: 'milestone500', rank: 'Đại Tướng 🌟🌟🌟🌟' }
+        { req: 120, reward: 200, key: 'milestone120', rank: 'Thiếu Tướng 🌟' },
+        { req: 200, reward: 300, key: 'milestone200', rank: 'Trung Tướng 🌟🌟' },
+        { req: 350, reward: 500, key: 'milestone350', rank: 'Thượng Tướng 🌟🌟🌟' },
+        { req: 500, reward: 700, key: 'milestone500', rank: 'Đại Tướng 🌟🌟🌟🌟' }
     ];
 
     const STREAK_REWARDS = [0.5, 1.5, 3, 3.5, 5, 7, 9];
@@ -228,9 +228,9 @@ function App() {
     })).sort((a, b) => b.displayCount - a.displayCount);
 
     let wealthBoard = currentBoard.slice(0, 10).map((user, index) => {
-        let estimatedTotal = (user.displayCount * 25) + 300 + (10 - index) * 50; 
+        let estimatedTotal = (user.displayCount * 15) + 300 + (10 - index) * 50; 
         if (user.displayCount === referrals && user.firstName === userProfile.name.split(' ')[0]) {
-            estimatedTotal = balance + (referrals * 25) + (checkInStreak * 5) + 50; 
+            estimatedTotal = balance + (referrals * 15) + (checkInStreak * 5) + 50; 
         }
         return { ...user, totalEarned: Math.round(estimatedTotal * 10) / 10 };
     });
@@ -283,7 +283,7 @@ function App() {
                 setBalance(data.balance);
                 setLastCheckIn(data.lastCheckInDate);
                 setCheckInStreak(data.streak);
-                triggerFloatAnim(data.reward, e); // Kích hoạt hiệu ứng tiền bay
+                triggerFloatAnim(data.reward, e); 
                 alert(`🔥 Điểm danh thành công (Chuỗi ${data.streak} ngày)!\nBạn nhận được +${data.reward} SWGT.`);
             } else { alert(data.message || "❌ Hôm nay bạn đã điểm danh rồi!"); }
         }).catch(() => alert("⚠️ Mạng chậm, vui lòng thử lại sau giây lát!"));
@@ -359,7 +359,7 @@ function App() {
             if(data.success) {
                 setBalance(data.balance);
                 setMilestones((prev: any) => ({ ...prev, [`milestone${milestoneReq}`]: true }));
-                triggerFloatAnim(reward, e); // Kích hoạt hiệu ứng tiền bay
+                triggerFloatAnim(reward, e); 
             } else { alert(data.message || "❌ Chưa đủ điều kiện nhận hoặc đã nhận rồi!"); }
         });
     };
@@ -399,7 +399,7 @@ function App() {
             if(data.success) {
                 setBalance(data.balance);
                 setTasks(prev => ({ ...prev, [`${taskType}TaskDone`]: true }));
-                triggerFloatAnim(data.reward, e); // Kích hoạt hiệu ứng tiền bay
+                triggerFloatAnim(data.reward, e); 
             } else { alert(data.message || "❌ Lỗi: Bạn thao tác quá nhanh hoặc đã nhận rồi!"); }
         });
     };
@@ -409,7 +409,7 @@ function App() {
     // ==================================================
     const renderHeader = () => {
         const isFireEffect = (Number(userId || 1) % 2) !== 0; 
-        const effectColor = isFireEffect ? '#FF3B30' : '#00FFFF'; // Đỏ Rồng Lửa / Xanh Ánh Sáng
+        const effectColor = isFireEffect ? '#FF3B30' : '#00FFFF'; 
         const pulseAnim = isFireEffect ? 'pulseGlowRed 2s infinite' : 'pulseGlowCyan 2s infinite';
 
         return (
@@ -634,10 +634,10 @@ function App() {
                     <p style={{ margin: 0 }}>Tham gia Channel: <span style={{color: '#34C759'}}>+10 SWGT/người</span></p>
                     <p style={{ margin: 0 }}>Tham gia Nhóm Chat: <span style={{color: '#34C759'}}>+10 SWGT/người</span></p>
                 </div>
-                <p style={{ color: theme.premium, fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>⭐ Thành Viên Premium (+100%):</p>
+                <p style={{ color: theme.premium, fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>⭐ Thành Viên Premium (+50%):</p>
                 <div style={{ color: theme.textDim, fontSize: '14px', margin: '0 0 10px 0', lineHeight: '1.6' }}>
-                    <p style={{ margin: 0 }}>Tham gia Channel: <span style={{color: '#34C759'}}>+20 SWGT/người</span></p>
-                    <p style={{ margin: 0 }}>Tham gia Nhóm Chat: <span style={{color: '#34C759'}}>+20 SWGT/người</span></p>
+                    <p style={{ margin: 0 }}>Tham gia Channel: <span style={{color: '#34C759'}}>+15 SWGT/người</span></p>
+                    <p style={{ margin: 0 }}>Tham gia Nhóm Chat: <span style={{color: '#34C759'}}>+15 SWGT/người</span></p>
                 </div>
                 
                 <div style={{ backgroundColor: '#fef2f2', borderLeft: '4px solid #ef4444', padding: '12px', marginTop: '20px', borderRadius: '6px' }}>
@@ -645,7 +645,8 @@ function App() {
                         ⚠️ CHÍNH SÁCH CHỐNG GIAN LẬN (RADAR 24/7)
                     </h4>
                     <p style={{ color: '#b91c1c', margin: 0, fontSize: '13px', lineHeight: '1.5' }}>
-                        Đối tác được mời <b>BẮT BUỘC</b> duy trì trong Group/Channel tối thiểu <b>21 ngày</b>. Nếu rời nhóm trước hạn, hệ thống sẽ tự động quét và <b>THU HỒI TOÀN BỘ SWGT & Lượt mời</b> tương ứng của bạn!
+                        1. Tài khoản ảo/mới tạo sẽ bị giam tiền <b>60 ngày</b>.<br/>
+                        2. Bắt buộc duy trì trong Group tối thiểu <b>21 ngày</b>. Rời nhóm = <b>THU HỒI TOÀN BỘ!</b>
                     </p>
                 </div>
             </div>
@@ -855,7 +856,7 @@ function App() {
                         ⏳ SỰ KIỆN HALVING ĐÃ KÍCH HOẠT!
                     </h4>
                     <p style={{ color: '#854d0e', margin: 0, fontSize: '12px', lineHeight: '1.5' }}>
-                        Khi Cộng đồng cán mốc <b>1.000 người</b>, phần thưởng tại các mốc: <b>Mốc 10, 50, 120, 200, 350 và 500</b> đã chính thức <b>BỊ GIẢM 50%</b> để bảo chứng độ khan hiếm cho SWGT.
+                        Khi Cộng đồng cán mốc <b>1.000 người</b>, phần thưởng tại các mốc: <b>Mốc 10, 50, 120, 200, 350 và 500</b> đã chính thức <b>BỊ GIẢM</b> để bảo chứng độ khan hiếm cho SWGT.
                     </p>
                 </div>
 
@@ -957,8 +958,8 @@ function App() {
                     style={{ width: '100%', padding: '14px', borderRadius: '10px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '15px', fontSize: '15px', textAlign: 'center' }}
                 />
 
-                <button onClick={handleWithdraw} style={{ width: '100%', backgroundColor: balance >= 300 ? theme.green : '#333', color: balance >= 300 ? '#fff' : theme.textDim, padding: '16px', borderRadius: '12px', fontWeight: 'bold', border: 'none', fontSize: '16px', cursor: balance >= 300 ? 'pointer' : 'not-allowed', boxShadow: balance >= 300 ? '0 4px 15px rgba(52, 199, 89, 0.3)' : 'none' }}>
-                    {balance >= 300 ? '💸 XÁC NHẬN RÚT TIỀN' : '🔒 CẦN TỐI THIỂU 500 SWGT'}
+                <button onClick={handleWithdraw} style={{ width: '100%', backgroundColor: balance >= 500 ? theme.green : '#333', color: balance >= 500 ? '#fff' : theme.textDim, padding: '16px', borderRadius: '12px', fontWeight: 'bold', border: 'none', fontSize: '16px', cursor: balance >= 500 ? 'pointer' : 'not-allowed', boxShadow: balance >= 500 ? '0 4px 15px rgba(52, 199, 89, 0.3)' : 'none' }}>
+                    {balance >= 500 ? '💸 XÁC NHẬN RÚT TIỀN' : '🔒 CẦN TỐI THIỂU 500 SWGT'}
                 </button>
             </div>
 
@@ -1149,4 +1150,3 @@ function App() {
 }
 
 export default App;
-
