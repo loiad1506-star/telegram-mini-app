@@ -25,14 +25,6 @@ function App() {
         facebookTaskDone: false,
         shareTaskDone: false
     });
-    
-    const [taskStarted, setTaskStarted] = useState({
-        read: false, youtube: false, facebook: false, share: false
-    });
-    
-    const [taskTimers, setTaskTimers] = useState({
-        read: 0, youtube: 0, facebook: 0, share: 0
-    });
 
     const [userId, setUserId] = useState('');
     const [userProfile, setUserProfile] = useState({
@@ -70,7 +62,6 @@ function App() {
         premium: '#E0B0FF' 
     };
 
-    // ĐÃ UPDATE HALVING
     const MILESTONE_LIST = [
         { req: 3, reward: 10, key: 'milestone3', rank: 'Đại Úy 🎖️' },
         { req: 10, reward: 20, key: 'milestone10', rank: 'Thiếu Tá 🎖️' },
@@ -377,20 +368,13 @@ function App() {
         }
     };
 
-    const startTask = (taskType: string, url: string, duration: number) => {
+    // HÀM CHỈ MỞ LINK CHIA SẺ, KHÔNG BẬT ĐỒNG HỒ NỮA
+    const startShareTask = () => {
+        const url = `https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}`;
         window.open(url, '_blank'); 
-        setTaskStarted(prev => ({ ...prev, [taskType]: true }));
-        setTaskTimers(prev => ({ ...prev, [taskType]: duration })); 
-        const interval = setInterval(() => {
-            setTaskTimers(prev => {
-                if (prev[taskType as keyof typeof prev] <= 1) { clearInterval(interval); return { ...prev, [taskType]: 0 }; }
-                return { ...prev, [taskType]: prev[taskType as keyof typeof prev] - 1 };
-            });
-        }, 1000);
     };
 
     const claimTaskApp = (taskType: string, e: React.MouseEvent) => {
-        if (taskTimers[taskType as keyof typeof taskTimers] > 0) return alert(`⏳ Vui lòng đợi ${taskTimers[taskType as keyof typeof taskTimers]} giây nữa để nhận thưởng!`);
         fetch(`${BACKEND_URL}/api/claim-app-task`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -400,7 +384,7 @@ function App() {
                 setBalance(data.balance);
                 setTasks(prev => ({ ...prev, [`${taskType}TaskDone`]: true }));
                 triggerFloatAnim(data.reward, e); 
-            } else { alert(data.message || "❌ Lỗi: Bạn thao tác quá nhanh hoặc đã nhận rồi!"); }
+            } else { alert(data.message || "⚠️ Bạn chưa hoàn thành thao tác trên Bot Telegram hoặc chưa nán lại đủ thời gian quy định!"); }
         });
     };
 
@@ -430,10 +414,8 @@ function App() {
                     
                     <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
                         
-                        {/* AVATAR WRAPPER VỚI VIỀN RỒNG LỬA / ÁNH SÁNG ĐÃ ĐƯỢC LÀM ÔM KHÍT */}
                         <div style={{ position: 'relative', width: '52px', height: '52px', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
                             
-                            {/* Khung viền nét đứt nhấp nháy, xoay vòng */}
                             <div style={{
                                 position: 'absolute',
                                 top: '-4px', left: '-4px', right: '-4px', bottom: '-4px',
@@ -443,7 +425,6 @@ function App() {
                                 zIndex: 0
                             }}></div>
 
-                            {/* Ảnh Avatar */}
                             <div style={{ width: '100%', height: '100%', borderRadius: '50%', padding: '2px', backgroundColor: theme.bg, zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                                 {userProfile.photoUrl ? (
                                     <img src={userProfile.photoUrl} alt="avatar" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
@@ -453,14 +434,12 @@ function App() {
                             </div>
                         </div>
                         
-                        {/* Nhãn xếp hạng bên dưới */}
                         <div style={{ position: 'absolute', bottom: '-10px', zIndex: 11, display: 'flex', alignItems: 'center', backgroundColor: '#000', padding: '2px 8px', borderRadius: '12px', border: `1px solid ${wreathColor}`, boxShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
                             <span style={{ color: wreathColor, fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                                 {vipLevel}
                             </span>
                         </div>
 
-                        {/* Chấm xanh trạng thái Online */}
                         <div style={{ position: 'absolute', top: '0px', right: '-2px', width: '12px', height: '12px', backgroundColor: theme.green, borderRadius: '50%', border: `2px solid ${theme.bg}`, zIndex: 12 }}></div>
                     </div>
                 </div>
@@ -692,8 +671,10 @@ function App() {
                 </div>
             </div>
 
+            {/* KHỐI NHIỆM VỤ MỚI: CHỈ HIỂN THỊ NÚT NHẬN QUÀ */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
-                <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🧠 Nạp Kiến Thức & Lan Tỏa</h2>
+                <h2 style={{ color: theme.textLight, margin: '0 0 5px 0', fontSize: '18px' }}>🧠 Nạp Kiến Thức & Lan Tỏa</h2>
+                <p style={{ color: theme.gold, fontSize: '12px', marginBottom: '15px', fontStyle: 'italic' }}>⚠️ Lưu ý: Bạn cần bấm vào Link nhiệm vụ do Bot gửi trong tin nhắn trước khi bấm Nhận Quà tại đây.</p>
                 
                 <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', marginBottom: '10px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -704,15 +685,9 @@ function App() {
                         {tasks.readTaskDone && <span style={{ color: theme.green, fontWeight: 'bold' }}>✅ Xong</span>}
                     </div>
                     {!tasks.readTaskDone && (
-                        <div style={{ display: 'flex', gap: '10px' }}>
-                            {!taskStarted.read ? (
-                                <button onClick={() => startTask('read', 'https://swc.capital/', 60)} style={{ flex: 1, backgroundColor: theme.blue, color: '#fff', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>MỞ ĐỌC NGAY</button>
-                            ) : (
-                                <button onClick={(e) => claimTaskApp('read', e)} disabled={taskTimers.read > 0} style={{ flex: 1, backgroundColor: taskTimers.read > 0 ? '#333' : theme.gold, color: taskTimers.read > 0 ? theme.textDim : '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: taskTimers.read > 0 ? 'not-allowed' : 'pointer' }}>
-                                    {taskTimers.read > 0 ? `ĐỢI ${taskTimers.read}s` : 'NHẬN QUÀ'}
-                                </button>
-                            )}
-                        </div>
+                        <button onClick={(e) => claimTaskApp('read', e)} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
+                            🎁 NHẬN QUÀ ĐỌC BÀI
+                        </button>
                     )}
                 </div>
 
@@ -725,15 +700,9 @@ function App() {
                         {tasks.youtubeTaskDone && <span style={{ color: theme.green, fontWeight: 'bold' }}>✅ Xong</span>}
                     </div>
                     {!tasks.youtubeTaskDone && (
-                        <div style={{ display: 'flex', gap: '10px' }}>
-                            {!taskStarted.youtube ? (
-                                <button onClick={() => startTask('youtube', 'https://www.youtube.com/c/SkyWorldCommunityVietNam/videos', 6)} style={{ flex: 1, backgroundColor: '#FF0000', color: '#fff', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>MỞ XEM NGAY</button>
-                            ) : (
-                                <button onClick={(e) => claimTaskApp('youtube', e)} disabled={taskTimers.youtube > 0} style={{ flex: 1, backgroundColor: taskTimers.youtube > 0 ? '#333' : theme.gold, color: taskTimers.youtube > 0 ? theme.textDim : '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: taskTimers.youtube > 0 ? 'not-allowed' : 'pointer' }}>
-                                    {taskTimers.youtube > 0 ? `ĐỢI ${taskTimers.youtube}s` : 'NHẬN QUÀ'}
-                                </button>
-                            )}
-                        </div>
+                        <button onClick={(e) => claimTaskApp('youtube', e)} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
+                            🎁 NHẬN QUÀ YOUTUBE
+                        </button>
                     )}
                 </div>
 
@@ -746,15 +715,9 @@ function App() {
                         {tasks.facebookTaskDone && <span style={{ color: theme.green, fontWeight: 'bold' }}>✅ Xong</span>}
                     </div>
                     {!tasks.facebookTaskDone && (
-                        <div style={{ display: 'flex', gap: '10px' }}>
-                            {!taskStarted.facebook ? (
-                                <button onClick={() => startTask('facebook', 'https://www.facebook.com/swc.capital.vn', 5)} style={{ flex: 1, backgroundColor: '#1877F2', color: '#fff', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>MỞ TRANG</button>
-                            ) : (
-                                <button onClick={(e) => claimTaskApp('facebook', e)} disabled={taskTimers.facebook > 0} style={{ flex: 1, backgroundColor: taskTimers.facebook > 0 ? '#333' : theme.gold, color: taskTimers.facebook > 0 ? theme.textDim : '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: taskTimers.facebook > 0 ? 'not-allowed' : 'pointer' }}>
-                                    {taskTimers.facebook > 0 ? `ĐỢI ${taskTimers.facebook}s` : 'NHẬN QUÀ'}
-                                </button>
-                            )}
-                        </div>
+                        <button onClick={(e) => claimTaskApp('facebook', e)} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
+                            🎁 NHẬN QUÀ FANPAGE
+                        </button>
                     )}
                 </div>
 
@@ -762,19 +725,16 @@ function App() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                         <div>
                             <h4 style={{ margin: 0, color: theme.textLight, fontSize: '15px' }}>📢 Chia sẻ dự án</h4>
-                            <p style={{ margin: 0, color: theme.textDim, fontSize: '13px' }}>Đợi 5 giây (+15 SWGT)</p>
+                            <p style={{ margin: 0, color: theme.textDim, fontSize: '13px' }}>Chuyển tiếp cho bạn bè (+15 SWGT)</p>
                         </div>
                         {tasks.shareTaskDone && <span style={{ color: theme.green, fontWeight: 'bold' }}>✅ Xong</span>}
                     </div>
                     {!tasks.shareTaskDone && (
                         <div style={{ display: 'flex', gap: '10px' }}>
-                            {!taskStarted.share ? (
-                                <button onClick={() => startTask('share', `https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}`, 5)} style={{ flex: 1, backgroundColor: '#34C759', color: '#fff', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>MỞ CHIA SẺ</button>
-                            ) : (
-                                <button onClick={(e) => claimTaskApp('share', e)} disabled={taskTimers.share > 0} style={{ flex: 1, backgroundColor: taskTimers.share > 0 ? '#333' : theme.gold, color: taskTimers.share > 0 ? theme.textDim : '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: taskTimers.share > 0 ? 'not-allowed' : 'pointer' }}>
-                                    {taskTimers.share > 0 ? `ĐỢI ${taskTimers.share}s` : 'NHẬN QUÀ'}
-                                </button>
-                            )}
+                            <button onClick={startShareTask} style={{ flex: 1, backgroundColor: '#34C759', color: '#fff', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>MỞ CHIA SẺ</button>
+                            <button onClick={(e) => claimTaskApp('share', e)} style={{ flex: 1, backgroundColor: theme.gold, color: '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
+                                NHẬN QUÀ
+                            </button>
                         </div>
                     )}
                 </div>
