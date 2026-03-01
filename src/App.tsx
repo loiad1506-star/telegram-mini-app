@@ -1025,4 +1025,67 @@ function App() {
                     transition: all 0.3s ease;
                 }
                 .nav-item.active .nav-icon {
-                    animation: bounceTab 0.5s cubic-bezier(0
+                    animation: bounceTab 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                    text-shadow: 0 0 15px rgba(244, 208, 63, 0.9); /* Phát sáng mờ cho icon */
+                }
+                @keyframes bounceTab {
+                    0% { transform: scale(1); }
+                    50% { transform: scale(1.25); }
+                    100% { transform: scale(1); }
+                }
+
+                /* Hiệu ứng số tiền thưởng bay lên */
+                @keyframes floatUp {
+                    0% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+                    100% { opacity: 0; transform: translate(-50%, -80px) scale(1.5); }
+                }
+                .floating-reward {
+                    position: fixed;
+                    color: #F4D03F;
+                    font-weight: 900;
+                    font-size: 24px;
+                    pointer-events: none;
+                    z-index: 9999;
+                    animation: floatUp 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+                    text-shadow: 0px 0px 8px rgba(244, 208, 63, 0.8), 0px 2px 4px rgba(0,0,0,1);
+                }
+            `}</style>
+            
+            {/* RENDER HIỆU ỨNG TIỀN BAY LÊN */}
+            {animations.map(anim => (
+                <div key={anim.id} className="floating-reward" style={{ left: anim.x, top: anim.y }}>
+                    {anim.text}
+                </div>
+            ))}
+
+            {renderHeader()}
+            <div style={{ marginTop: '10px' }}>
+                {activeTab === 'home' && renderHome()}
+                {activeTab === 'rewards' && renderRewards()}
+                {activeTab === 'wallet' && renderWallet()}
+            </div>
+
+            {/* THANH ĐIỀU HƯỚNG TÍCH HỢP CLASS ĐỘNG MỚI */}
+            <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: theme.cardBg, borderTop: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-around', padding: '15px 0', paddingBottom: 'calc(15px + env(safe-area-inset-bottom))', zIndex: 100 }}>
+                
+                <div onClick={() => setActiveTab('home')} className={`nav-item ${activeTab === 'home' ? 'active' : ''}`} style={{ color: activeTab === 'home' ? theme.gold : theme.textDim }}>
+                    <div className="nav-icon">🏠</div>
+                    <span style={{ fontSize: '14px', fontWeight: 'bold' }}>Trang chủ</span>
+                </div>
+                
+                <div onClick={() => setActiveTab('rewards')} className={`nav-item ${activeTab === 'rewards' ? 'active' : ''}`} style={{ color: activeTab === 'rewards' ? theme.gold : theme.textDim }}>
+                    <div className="nav-icon">🎁</div>
+                    <span style={{ fontSize: '14px', fontWeight: 'bold' }}>Phần thưởng</span>
+                </div>
+                
+                <div onClick={() => setActiveTab('wallet')} className={`nav-item ${activeTab === 'wallet' ? 'active' : ''}`} style={{ color: activeTab === 'wallet' ? theme.gold : theme.textDim }}>
+                    <div className="nav-icon">👛</div>
+                    <span style={{ fontSize: '14px', fontWeight: 'bold' }}>Ví</span>
+                </div>
+
+            </div>
+        </div>
+    );
+}
+
+export default App;
