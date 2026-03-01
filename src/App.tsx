@@ -44,7 +44,10 @@ function App() {
 
     const [boardType, setBoardType] = useState('weekly'); 
 
+    // STATE: Quản lý hiệu ứng tiền bay lên
     const [animations, setAnimations] = useState<{id: number, text: string, x: number, y: number}[]>([]);
+
+    // Lưu lại giờ VN do server báo về (dùng để đồng bộ kiểm tra điểm danh)
     const [serverDateVN, setServerDateVN] = useState<string>('');
 
     const BACKEND_URL = 'https://swc-bot-brain.onrender.com';
@@ -282,7 +285,7 @@ function App() {
                 setCheckInStreak(data.streak);
                 triggerFloatAnim(data.reward, e); 
                 alert(`🔥 Điểm danh thành công (Chuỗi ${data.streak} ngày)!\nBạn nhận được +${data.reward} SWGT.`);
-                fetchUserData(userId); // Cập nhật lại UI lập tức
+                fetchUserData(userId);
             } else { alert(data.message || "❌ Hôm nay bạn đã điểm danh rồi!"); }
         }).catch(() => alert("⚠️ Mạng chậm, vui lòng thử lại sau giây lát!"));
     };
@@ -660,7 +663,6 @@ function App() {
                 </div>
             </div>
 
-            {/* KHỐI NHIỆM VỤ MỚI: CHỈ HIỂN THỊ NÚT NHẬN QUÀ HOẶC ĐÃ XONG */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 5px 0', fontSize: '18px' }}>🧠 Nạp Kiến Thức & Lan Tỏa</h2>
                 <p style={{ color: theme.gold, fontSize: '12px', marginBottom: '15px', fontStyle: 'italic' }}>⚠️ Lưu ý: Bạn cần bấm vào Link nhiệm vụ do Bot gửi trong tin nhắn trước khi bấm Nhận Quà tại đây.</p>
