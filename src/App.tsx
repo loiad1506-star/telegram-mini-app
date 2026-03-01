@@ -44,10 +44,7 @@ function App() {
 
     const [boardType, setBoardType] = useState('weekly'); 
 
-    // STATE: Quản lý hiệu ứng tiền bay lên
     const [animations, setAnimations] = useState<{id: number, text: string, x: number, y: number}[]>([]);
-
-    // Lưu lại giờ VN do server báo về (dùng để đồng bộ kiểm tra điểm danh)
     const [serverDateVN, setServerDateVN] = useState<string>('');
 
     const BACKEND_URL = 'https://swc-bot-brain.onrender.com';
@@ -142,12 +139,12 @@ function App() {
                 const joinMs = data.joinDate ? new Date(data.joinDate).getTime() : new Date("2026-02-22T00:00:00Z").getTime();
                 setUnlockDateMs(joinMs + (daysLimit * 24 * 60 * 60 * 1000));
 
-                // Ép cứng kiểm tra theo giờ Việt Nam
-                const vnNowStr = data.serverDateVN || new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' });
+                // BẮT LỖI MÚI GIỜ: Tự động cộng 7 tiếng để ra ngày VN chuẩn
+                const vnNowStr = data.serverDateVN || new Date(new Date().getTime() + 7 * 3600000).toISOString().split('T')[0];
                 setServerDateVN(vnNowStr);
 
-                const lastDailyStr = data.lastDailyTask ? new Date(data.lastDailyTask).toLocaleDateString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }) : '';
-                const lastShareStr = data.lastShareTask ? new Date(data.lastShareTask).toLocaleDateString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }) : '';
+                const lastDailyStr = data.lastDailyTask ? new Date(new Date(data.lastDailyTask).getTime() + 7 * 3600000).toISOString().split('T')[0] : '';
+                const lastShareStr = data.lastShareTask ? new Date(new Date(data.lastShareTask).getTime() + 7 * 3600000).toISOString().split('T')[0] : '';
                 
                 setTasks({
                     readTaskDone: lastDailyStr === vnNowStr, 
@@ -183,10 +180,9 @@ function App() {
             .catch(() => {});
     }, []);
 
-    // Kiểm tra điểm danh theo giờ VN
     let isCheckedInToday = false;
     if (lastCheckIn && serverDateVN) {
-        const lastCheckInVNStr = new Date(lastCheckIn).toLocaleDateString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' });
+        const lastCheckInVNStr = new Date(new Date(lastCheckIn).getTime() + 7 * 3600000).toISOString().split('T')[0];
         isCheckedInToday = (lastCheckInVNStr === serverDateVN);
     }
 
@@ -384,7 +380,6 @@ function App() {
         window.open(url, '_blank'); 
     };
 
-    // GỌI BOT ĐỂ TRẢ THƯỞNG - BẮT LỖI TỪ SERVER
     const claimTaskApp = (taskType: string, e: React.MouseEvent) => {
         fetch(`${BACKEND_URL}/api/claim-app-task`, {
             method: 'POST',
@@ -654,10 +649,18 @@ function App() {
                             <p style={{ margin: '2px 0 0 0', color: theme.textLight, fontSize: '13px', lineHeight: '1.5' }}>Cán mốc <b style={{color: theme.gold}}>1500 SWGT</b> ➔ <b style={{color: theme.green}}>ĐƯỢC RÚT NGAY LẬP TỨC</b>, bỏ qua mọi thời gian chờ đợi!</p>
                         </div>
                     </div>
+
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                        <span style={{ fontSize: '18px' }}>💸</span>
+                        <div>
+                            <p style={{ margin: 0, color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>Quyền tự quyết</p>
+                            <p style={{ margin: '2px 0 0 0', color: theme.textDim, fontSize: '13px' }}>Rút tiền linh hoạt 24/7 bất cứ lúc nào khi đủ điều kiện.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* KHỐI NHIỆM VỤ MỚI: CHỈ HIỂN THỊ NÚT NHẬN QUÀ */}
+            {/* KHỐI NHIỆM VỤ MỚI: CHỈ HIỂN THỊ NÚT NHẬN QUÀ HOẶC ĐÃ XONG */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 5px 0', fontSize: '18px' }}>🧠 Nạp Kiến Thức & Lan Tỏa</h2>
                 <p style={{ color: theme.gold, fontSize: '12px', marginBottom: '15px', fontStyle: 'italic' }}>⚠️ Lưu ý: Bạn cần bấm vào Link nhiệm vụ do Bot gửi trong tin nhắn trước khi bấm Nhận Quà tại đây.</p>
@@ -996,7 +999,7 @@ function App() {
                 }
                 @keyframes pulseGlowCyan {
                     0%, 100% { box-shadow: 0 0 5px #00FFFF, inset 0 0 5px #00FFFF; }
-                    50% { box-shadow: 0 0 15px #00FFFF, inset 0 0 10px #FF3B30; }
+                    50% { box-shadow: 0 0 15px #00FFFF, inset 0 0 10px #00FFFF; }
                 }
 
                 /* Hiệu ứng Navigation Bottom Tab động */
@@ -1022,67 +1025,4 @@ function App() {
                     transition: all 0.3s ease;
                 }
                 .nav-item.active .nav-icon {
-                    animation: bounceTab 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-                    text-shadow: 0 0 15px rgba(244, 208, 63, 0.9); /* Phát sáng mờ cho icon */
-                }
-                @keyframes bounceTab {
-                    0% { transform: scale(1); }
-                    50% { transform: scale(1.25); }
-                    100% { transform: scale(1); }
-                }
-
-                /* Hiệu ứng số tiền thưởng bay lên */
-                @keyframes floatUp {
-                    0% { opacity: 1; transform: translate(-50%, 0) scale(1); }
-                    100% { opacity: 0; transform: translate(-50%, -80px) scale(1.5); }
-                }
-                .floating-reward {
-                    position: fixed;
-                    color: #F4D03F;
-                    font-weight: 900;
-                    font-size: 24px;
-                    pointer-events: none;
-                    z-index: 9999;
-                    animation: floatUp 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-                    text-shadow: 0px 0px 8px rgba(244, 208, 63, 0.8), 0px 2px 4px rgba(0,0,0,1);
-                }
-            `}</style>
-            
-            {/* RENDER HIỆU ỨNG TIỀN BAY LÊN */}
-            {animations.map(anim => (
-                <div key={anim.id} className="floating-reward" style={{ left: anim.x, top: anim.y }}>
-                    {anim.text}
-                </div>
-            ))}
-
-            {renderHeader()}
-            <div style={{ marginTop: '10px' }}>
-                {activeTab === 'home' && renderHome()}
-                {activeTab === 'rewards' && renderRewards()}
-                {activeTab === 'wallet' && renderWallet()}
-            </div>
-
-            {/* THANH ĐIỀU HƯỚNG TÍCH HỢP CLASS ĐỘNG MỚI */}
-            <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: theme.cardBg, borderTop: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-around', padding: '15px 0', paddingBottom: 'calc(15px + env(safe-area-inset-bottom))', zIndex: 100 }}>
-                
-                <div onClick={() => setActiveTab('home')} className={`nav-item ${activeTab === 'home' ? 'active' : ''}`} style={{ color: activeTab === 'home' ? theme.gold : theme.textDim }}>
-                    <div className="nav-icon">🏠</div>
-                    <span style={{ fontSize: '14px', fontWeight: 'bold' }}>Trang chủ</span>
-                </div>
-                
-                <div onClick={() => setActiveTab('rewards')} className={`nav-item ${activeTab === 'rewards' ? 'active' : ''}`} style={{ color: activeTab === 'rewards' ? theme.gold : theme.textDim }}>
-                    <div className="nav-icon">🎁</div>
-                    <span style={{ fontSize: '14px', fontWeight: 'bold' }}>Phần thưởng</span>
-                </div>
-                
-                <div onClick={() => setActiveTab('wallet')} className={`nav-item ${activeTab === 'wallet' ? 'active' : ''}`} style={{ color: activeTab === 'wallet' ? theme.gold : theme.textDim }}>
-                    <div className="nav-icon">👛</div>
-                    <span style={{ fontSize: '14px', fontWeight: 'bold' }}>Ví</span>
-                </div>
-
-            </div>
-        </div>
-    );
-}
-
-export default App;
+                    animation: bounceTab 0.5s cubic-bezier(0
