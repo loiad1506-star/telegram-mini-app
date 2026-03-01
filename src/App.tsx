@@ -368,12 +368,12 @@ function App() {
         }
     };
 
-    // HÀM CHỈ MỞ LINK CHIA SẺ, KHÔNG BẬT ĐỒNG HỒ NỮA
     const startShareTask = () => {
         const url = `https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}`;
         window.open(url, '_blank'); 
     };
 
+    // Gọi lên Bot để nhận thưởng (Chỉ trả thưởng nếu Bot đã lưu giờ bắt đầu)
     const claimTaskApp = (taskType: string, e: React.MouseEvent) => {
         fetch(`${BACKEND_URL}/api/claim-app-task`, {
             method: 'POST',
@@ -384,8 +384,8 @@ function App() {
                 setBalance(data.balance);
                 setTasks(prev => ({ ...prev, [`${taskType}TaskDone`]: true }));
                 triggerFloatAnim(data.reward, e); 
-            } else { alert(data.message || "⚠️ Bạn chưa hoàn thành thao tác trên Bot Telegram hoặc chưa nán lại đủ thời gian quy định!"); }
-        });
+            } else { alert(data.message || "⚠️ Bạn chưa thao tác trên Bot Telegram hoặc chưa nán lại đủ thời gian!"); }
+        }).catch(() => alert("⚠️ Mạng chậm, vui lòng thử lại."));
     };
 
     // ==================================================
