@@ -44,10 +44,7 @@ function App() {
 
     const [boardType, setBoardType] = useState('weekly'); 
 
-    // STATE: Quản lý hiệu ứng tiền bay lên
     const [animations, setAnimations] = useState<{id: number, text: string, x: number, y: number}[]>([]);
-
-    // Lưu lại giờ VN do server báo về (dùng để đồng bộ kiểm tra điểm danh)
     const [serverDateVN, setServerDateVN] = useState<string>('');
 
     const BACKEND_URL = 'https://swc-bot-brain.onrender.com';
@@ -79,12 +76,9 @@ function App() {
 
     const STREAK_REWARDS = [0.5, 1.5, 3, 3.5, 5, 7, 9];
 
-    const triggerFloatAnim = (reward: string | number, e: React.MouseEvent) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        const startX = rect.left + rect.width / 2;
-        const startY = rect.top;
-        const newAnim = { id: Date.now() + Math.random(), text: `+${reward} SWGT`, x: startX, y: startY };
-        
+    // FIX LỖI MẠNG CHẬM: Tách tọa độ chuột ra khỏi luồng bất đồng bộ
+    const triggerFloatAnim = (reward: string | number, x: number, y: number) => {
+        const newAnim = { id: Date.now() + Math.random(), text: `+${reward} SWGT`, x, y };
         setAnimations(prev => [...prev, newAnim]);
         setTimeout(() => {
             setAnimations(prev => prev.filter(a => a.id !== newAnim.id));
@@ -142,7 +136,6 @@ function App() {
                 const joinMs = data.joinDate ? new Date(data.joinDate).getTime() : new Date("2026-02-22T00:00:00Z").getTime();
                 setUnlockDateMs(joinMs + (daysLimit * 24 * 60 * 60 * 1000));
 
-                // BẮT LỖI MÚI GIỜ: Tự động cộng 7 tiếng để ra ngày VN chuẩn
                 const vnNowStr = data.serverDateVN || new Date(new Date().getTime() + 7 * 3600000).toISOString().split('T')[0];
                 setServerDateVN(vnNowStr);
 
@@ -274,6 +267,10 @@ function App() {
 
     const handleCheckIn = (e: React.MouseEvent) => {
         if (isCheckedInToday) return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        const floatX = rect.left + rect.width / 2;
+        const floatY = rect.top;
+
         fetch(`${BACKEND_URL}/api/checkin`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -283,9 +280,9 @@ function App() {
                 setBalance(data.balance);
                 setLastCheckIn(data.lastCheckInDate);
                 setCheckInStreak(data.streak);
-                triggerFloatAnim(data.reward, e); 
+                triggerFloatAnim(data.reward, floatX, floatY); 
                 alert(`🔥 Điểm danh thành công (Chuỗi ${data.streak} ngày)!\nBạn nhận được +${data.reward} SWGT.`);
-                fetchUserData(userId);
+                fetchUserData(userId); 
             } else { alert(data.message || "❌ Hôm nay bạn đã điểm danh rồi!"); }
         }).catch(() => alert("⚠️ Mạng chậm, vui lòng thử lại sau giây lát!"));
     };
@@ -350,6 +347,10 @@ function App() {
     };
 
     const handleClaimMilestone = (milestoneReq: number, reward: number, e: React.MouseEvent) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const floatX = rect.left + rect.width / 2;
+        const floatY = rect.top;
+
         fetch(`${BACKEND_URL}/api/claim-milestone`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -360,7 +361,7 @@ function App() {
             if(data.success) {
                 setBalance(data.balance);
                 setMilestones((prev: any) => ({ ...prev, [`milestone${milestoneReq}`]: true }));
-                triggerFloatAnim(reward, e); 
+                triggerFloatAnim(reward, floatX, floatY); 
             } else { alert(data.message || "❌ Chưa đủ điều kiện nhận hoặc đã nhận rồi!"); }
         });
     };
@@ -378,12 +379,12 @@ function App() {
         }
     };
 
-    const startShareTask = () => {
-        const url = `https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}`;
-        window.open(url, '_blank'); 
-    };
-
+    // GỌI BOT ĐỂ TRẢ THƯỞNG - ĐÃ FIX LỖI MẠNG CHẬM
     const claimTaskApp = (taskType: string, e: React.MouseEvent) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const floatX = rect.left + rect.width / 2;
+        const floatY = rect.top;
+
         fetch(`${BACKEND_URL}/api/claim-app-task`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -392,8 +393,8 @@ function App() {
             if(data.success) {
                 setBalance(data.balance);
                 setTasks(prev => ({ ...prev, [`${taskType}TaskDone`]: true }));
-                triggerFloatAnim(data.reward, e); 
-            } else { alert(data.message || "⚠️ Bạn chưa thao tác trên Bot Telegram hoặc chưa nán lại đủ thời gian!"); }
+                triggerFloatAnim(data.reward, floatX, floatY); 
+            } else { alert(data.message || "⚠️ Bạn chưa hoàn thành thao tác trên Bot Telegram hoặc chưa nán lại đủ thời gian!"); }
         }).catch(() => alert("⚠️ Mạng chậm, vui lòng thử lại."));
     };
 
@@ -652,17 +653,10 @@ function App() {
                             <p style={{ margin: '2px 0 0 0', color: theme.textLight, fontSize: '13px', lineHeight: '1.5' }}>Cán mốc <b style={{color: theme.gold}}>1500 SWGT</b> ➔ <b style={{color: theme.green}}>ĐƯỢC RÚT NGAY LẬP TỨC</b>, bỏ qua mọi thời gian chờ đợi!</p>
                         </div>
                     </div>
-
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                        <span style={{ fontSize: '18px' }}>💸</span>
-                        <div>
-                            <p style={{ margin: 0, color: theme.textLight, fontSize: '14px', fontWeight: 'bold' }}>Quyền tự quyết</p>
-                            <p style={{ margin: '2px 0 0 0', color: theme.textDim, fontSize: '13px' }}>Rút tiền linh hoạt 24/7 bất cứ lúc nào khi đủ điều kiện.</p>
-                        </div>
-                    </div>
                 </div>
             </div>
 
+            {/* KHỐI NHIỆM VỤ MỚI: CHỈ HIỂN THỊ NÚT NHẬN QUÀ HOẶC ĐÃ XONG */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 5px 0', fontSize: '18px' }}>🧠 Nạp Kiến Thức & Lan Tỏa</h2>
                 <p style={{ color: theme.gold, fontSize: '12px', marginBottom: '15px', fontStyle: 'italic' }}>⚠️ Lưu ý: Bạn cần bấm vào Link nhiệm vụ do Bot gửi trong tin nhắn trước khi bấm Nhận Quà tại đây.</p>
@@ -722,7 +716,6 @@ function App() {
                     </div>
                     {!tasks.shareTaskDone && (
                         <div style={{ display: 'flex', gap: '10px' }}>
-                            <button onClick={startShareTask} style={{ flex: 1, backgroundColor: '#34C759', color: '#fff', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>MỞ CHIA SẺ</button>
                             <button onClick={(e) => claimTaskApp('share', e)} style={{ flex: 1, backgroundColor: theme.gold, color: '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
                                 NHẬN QUÀ
                             </button>
