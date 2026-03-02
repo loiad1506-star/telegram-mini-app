@@ -44,10 +44,7 @@ function App() {
 
     const [boardType, setBoardType] = useState('weekly'); 
 
-    // STATE: Quản lý hiệu ứng tiền bay lên
     const [animations, setAnimations] = useState<{id: number, text: string, x: number, y: number}[]>([]);
-
-    // Lưu lại giờ VN do server báo về (dùng để đồng bộ kiểm tra điểm danh)
     const [serverDateVN, setServerDateVN] = useState<string>('');
 
     const BACKEND_URL = 'https://swc-bot-brain.onrender.com';
@@ -142,7 +139,6 @@ function App() {
                 const joinMs = data.joinDate ? new Date(data.joinDate).getTime() : new Date("2026-02-22T00:00:00Z").getTime();
                 setUnlockDateMs(joinMs + (daysLimit * 24 * 60 * 60 * 1000));
 
-                // Ép cứng kiểm tra theo giờ Việt Nam từ Server trả về
                 const vnNowStr = data.serverDateVN || new Date(new Date().getTime() + 7 * 3600000).toISOString().split('T')[0];
                 setServerDateVN(vnNowStr);
 
@@ -274,6 +270,10 @@ function App() {
 
     const handleCheckIn = (e: React.MouseEvent) => {
         if (isCheckedInToday) return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        const floatX = rect.left + rect.width / 2;
+        const floatY = rect.top;
+
         fetch(`${BACKEND_URL}/api/checkin`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -378,7 +378,6 @@ function App() {
         }
     };
 
-    // GỌI BOT ĐỂ TRẢ THƯỞNG - BẮT LỖI TỪ SERVER
     const claimTaskApp = (taskType: string, e: React.MouseEvent) => {
         fetch(`${BACKEND_URL}/api/claim-app-task`, {
             method: 'POST',
@@ -659,7 +658,7 @@ function App() {
                 </div>
             </div>
 
-            {/* KHỐI NHIỆM VỤ MỚI: CHỈ HIỂN THỊ NÚT NHẬN QUÀ */}
+            {/* KHỐI NHIỆM VỤ MỚI: CHỈ HIỂN THỊ NÚT NHẬN QUÀ HOẶC ĐÃ XONG */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 5px 0', fontSize: '18px' }}>🧠 Nạp Kiến Thức & Lan Tỏa</h2>
                 <p style={{ color: theme.gold, fontSize: '12px', marginBottom: '15px', fontStyle: 'italic' }}>⚠️ Lưu ý: Bạn cần bấm vào Link nhiệm vụ do Bot gửi trong tin nhắn trước khi bấm Nhận Quà tại đây.</p>
@@ -718,9 +717,11 @@ function App() {
                         {tasks.shareTaskDone && <span style={{ color: theme.green, fontWeight: 'bold' }}>✅ Xong</span>}
                     </div>
                     {!tasks.shareTaskDone && (
-                        <button onClick={(e) => claimTaskApp('share', e)} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
-                            🎁 NHẬN QUÀ CHIA SẺ
-                        </button>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <button onClick={(e) => claimTaskApp('share', e)} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
+                                🎁 NHẬN QUÀ CHIA SẺ
+                            </button>
+                        </div>
                     )}
                 </div>
             </div>
