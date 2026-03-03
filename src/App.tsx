@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, Math, useEffect } from 'react';
 
 function App() {
     const [activeTab, setActiveTab] = useState('home');
@@ -48,7 +48,7 @@ function App() {
     const [animations, setAnimations] = useState<{id: number, text: string, x: number, y: number}[]>([]);
     const [serverDateVN, setServerDateVN] = useState<string>('');
 
-    const BACKEND_URL = '[https://swc-bot-brain.onrender.com](https://swc-bot-brain.onrender.com)';
+    const BACKEND_URL = 'https://swc-bot-brain.onrender.com';
 
     const theme = {
         bg: '#0F0F0F',        
@@ -223,14 +223,14 @@ function App() {
     let wealthBoard = currentBoard.slice(0, 10).map((user, index) => {
         let estimatedTotal = (user.displayCount * 15) + 300 + (10 - index) * 50; 
         
-        // Sửa lại điều kiện nhận diện user hiện tại chính xác hơn
+        // Cập nhật điều kiện nhận diện chính xác
         if (user.firstName === userProfile.name.split(' ')[0]) {
             estimatedTotal = balance + (referrals * 15) + (checkInStreak * 5) + 50; 
         }
         return { ...user, totalEarned: Math.round(estimatedTotal * 10) / 10 };
     });
     
-    // Lỗi nằm ở đây: Bảng tuần cần sort theo số người mời (displayCount), không phải theo tổng tiền
+    // ĐIỂM SỬA LỖI: Chỉ dùng Total Earned để sort cho TOP TỔNG. Top Tuần giữ nguyên sort theo lượng người mời (displayCount)
     if (boardType === 'all') {
         wealthBoard.sort((a, b) => b.totalEarned - a.totalEarned);
     } else {
@@ -584,7 +584,7 @@ function App() {
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Cách Hoạt Động</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>📱 Bước 1: Tham gia Bot SWC</span><br/>Liên kết với <a href="[https://t.me/Dau_Tu_SWC_bot](https://t.me/Dau_Tu_SWC_bot)" target="_blank" rel="noreferrer" style={{color: theme.blue, textDecoration: 'none'}}>@Dau_Tu_SWC_bot</a> trên Telegram để bắt đầu.</p>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>📱 Bước 1: Tham gia Bot SWC</span><br/>Liên kết với <a href="https://t.me/Dau_Tu_SWC_bot" target="_blank" rel="noreferrer" style={{color: theme.blue, textDecoration: 'none'}}>@Dau_Tu_SWC_bot</a> trên Telegram để bắt đầu.</p>
                     <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>👥 Bước 2: Mời bạn bè</span><br/>Chia sẻ link giới thiệu và mời bạn bè tham gia cộng đồng SWC.</p>
                     <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>💰 Bước 3: Nhận SWGT</span><br/>Mỗi người bạn mời sẽ giúp bạn kiếm SWGT thưởng.</p>
                     <div style={{ backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, padding: '15px', borderRadius: '10px' }}>
@@ -781,7 +781,7 @@ function App() {
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>🔗 Công cụ lan tỏa</h3>
                     <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '8px', color: theme.gold, fontSize: '15px', wordBreak: 'break-all', marginBottom: '15px', border: `1px dashed ${theme.border}` }}>
-                        [https://t.me/Dau_Tu_SWC_bot?start=](https://t.me/Dau_Tu_SWC_bot?start=){userId || 'ref'}
+                        https://t.me/Dau_Tu_SWC_bot?start={userId || 'ref'}
                     </div>
                     <div style={{ display: 'flex', gap: '10px' }}>
                         <button onClick={handleCopyLink} style={{ flex: 1, backgroundColor: theme.gold, color: '#000', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', cursor: 'pointer', textAlign: 'center' }}>
@@ -958,7 +958,7 @@ function App() {
                             </ol>
                             <div style={{ marginTop: '15px', textAlign: 'center' }}>
                                 <img src="/gate-guide.jpg" alt="Hướng dẫn Gatecode" style={{ width: '100%', borderRadius: '8px', border: `1px solid ${theme.border}`, display: 'block' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                                <button onClick={() => window.open('[https://telegra.ph/H%C6%B0%E1%BB%9Bng-d%E1%BA%ABn-%C4%91%C4%83ng-k%C3%BD--t%E1%BA%A1o-m%E1%BB%9Bi-t%C3%A0i-kho%E1%BA%A3n-Gateio-to%C3%A0n-t%E1%BA%ADp-02-22](https://telegra.ph/H%C6%B0%E1%BB%9Bng-d%E1%BA%ABn-%C4%91%C4%83ng-k%C3%BD--t%E1%BA%A1o-m%E1%BB%9Bi-t%C3%A0i-kho%E1%BA%A3n-Gateio-to%C3%A0n-t%E1%BA%ADp-02-22)', '_blank')} style={{ width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '12px', borderRadius: '8px', fontWeight: 'bold', border: 'none', fontSize: '13px', cursor: 'pointer', marginTop: '15px' }}>
+                                <button onClick={() => window.open('https://telegra.ph/H%C6%B0%E1%BB%9Bng-d%E1%BA%ABn-%C4%91%C4%83ng-k%C3%BD--t%E1%BA%A1o-m%E1%BB%9Bi-t%C3%A0i-kho%E1%BA%A3n-Gateio-to%C3%A0n-t%E1%BA%ADp-02-22', '_blank')} style={{ width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '12px', borderRadius: '8px', fontWeight: 'bold', border: 'none', fontSize: '13px', cursor: 'pointer', marginTop: '15px' }}>
                                     📖 HƯỚNG DẪN TẠO VÍ GATE.IO
                                 </button>
                             </div>
