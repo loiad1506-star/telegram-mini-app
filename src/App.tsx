@@ -75,7 +75,6 @@ function App() {
         { req: 500, reward: 700, key: 'milestone500', rank: 'Đại Tướng 🌟🌟🌟🌟' }
     ];
 
-    // GIẢM 50% THƯỞNG ĐIỂM DANH
     const STREAK_REWARDS = [0.25, 0.75, 1.5, 1.75, 2.5, 3.5, 4.5];
 
     const triggerFloatAnim = (reward: string | number, x: number, y: number) => {
@@ -312,7 +311,7 @@ function App() {
     };
 
     const startShareTask = () => {
-        const url = `https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot&text=Cơ%20hội%20nhận%20SWGT%20miễn%20phí%20từ%20Cộng%20Đồng%20SWC!`;
+        const url = `https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Cơ%20hội%20nhận%20SWGT%20miễn%20phí%20từ%20Cộng%20Đồng%20SWC!`;
         window.open(url, '_blank'); 
     };
 
@@ -402,7 +401,6 @@ function App() {
     }
 
     const renderWealthBoard = () => {
-        // Tự động gộp dữ liệu từ API và Dummy cho sinh động
         const dummyUsers = [
             { firstName: 'Vũ', lastName: 'Dũng', referralCount: 65, weeklyReferralCount: 12 },
             { firstName: 'Mai', lastName: 'Thiều Thị', referralCount: 60, weeklyReferralCount: 10 },
@@ -414,7 +412,6 @@ function App() {
         let displayData = [...leaderboard];
         if (displayData.length < 5) displayData = [...displayData, ...dummyUsers];
 
-        // SẮP XẾP LẠI VÀ CHỈNH SỬA TOÁN HỌC (x5 SWGT CHO MỖI REFERRAL DO ĐÃ GIẢM 50%)
         const sortedData = displayData.map(u => ({
             ...u,
             displayCount: boardType === 'weekly' ? (u.weeklyReferralCount || 0) : u.referralCount,
@@ -459,7 +456,6 @@ function App() {
                 </div>
 
                 {sortedData.slice(0, 10).map((user, index) => {
-                    // HIỂN THỊ TÊN ĐẦY ĐỦ KHÔNG BỊ CẮT
                     const isMe = `${user.firstName} ${user.lastName}`.trim() === userProfile.name.trim();
                     const rankTitle = getMilitaryRank(user.referralCount);
                     let badge = "🥈";
@@ -543,7 +539,6 @@ function App() {
                 </button>
             </div>
 
-            {/* KHỐI NHIỆM VỤ MỚI: CHỈ HIỂN THỊ NÚT NHẬN QUÀ HOẶC ĐÃ XONG */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 5px 0', fontSize: '17px' }}>🧠 Nạp Kiến Thức & Lan Tỏa</h2>
                 <p style={{ color: theme.gold, fontSize: '11px', marginBottom: '15px', fontStyle: 'italic' }}>⚠️ Lưu ý: Bạn cần bấm vào Link nhiệm vụ do Bot gửi trong tin nhắn trước khi bấm Nhận Quà tại đây.</p>
@@ -552,7 +547,7 @@ function App() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                         <div>
                             <h4 style={{ margin: 0, color: theme.textLight, fontSize: '14px' }}>📖 Đọc bài phân tích</h4>
-                            <p style={{ margin: 0, color: theme.textDim, fontSize: '12px' }}>Đợi 60 giây (+5 SWGT)</p>
+                            <p style={{ margin: 0, color: theme.textDim, fontSize: '12px' }}>Đợi 60 giây (+3 SWGT)</p>
                         </div>
                         {tasks.readTaskDone && <span style={{ color: theme.green, fontWeight: 'bold' }}>✅ Xong</span>}
                     </div>
@@ -597,7 +592,7 @@ function App() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                         <div>
                             <h4 style={{ margin: 0, color: theme.textLight, fontSize: '14px' }}>📢 Chia sẻ dự án</h4>
-                            <p style={{ margin: 0, color: theme.textDim, fontSize: '12px' }}>Chuyển tiếp cho bạn bè (+7.5 SWGT)</p>
+                            <p style={{ margin: 0, color: theme.textDim, fontSize: '12px' }}>Chuyển tiếp cho bạn bè (+2 SWGT)</p>
                         </div>
                         {tasks.shareTaskDone && <span style={{ color: theme.green, fontWeight: 'bold' }}>✅ Xong</span>}
                     </div>
@@ -688,7 +683,6 @@ function App() {
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>💎 KHO ĐẶC QUYỀN VIP</h3>
                 <p style={{ color: theme.textDim, fontSize: '13px', marginBottom: '15px' }}>Dùng SWGT quy đổi lấy vũ khí thực chiến:</p>
                 
-                {/* GIỮ NGUYÊN CÁC MỐC CỬA HÀNG VIP NHƯ YÊU CẦU */}
                 <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '15px', marginBottom: '15px', border: `1px solid ${theme.border}`}}>
                     <h4 style={{margin: '0 0 8px 0', color: '#5E92F3', fontSize: '16px'}}>☕ Cà Phê Chiến Lược : 6000</h4>
                     <p style={{fontSize: '14px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Thảo luận danh mục trực tiếp cùng Admin Ucity.</p>
