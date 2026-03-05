@@ -20,6 +20,13 @@ function App() {
     
     const [giftCodeInput, setGiftCodeInput] = useState('');
 
+    const [tasks, setTasks] = useState({
+        readTaskDone: false,
+        youtubeTaskDone: false,
+        facebookTaskDone: false,
+        shareTaskDone: false
+    });
+
     const [userId, setUserId] = useState('');
     const [userProfile, setUserProfile] = useState({
         name: 'Đang tải...',
@@ -168,6 +175,16 @@ function App() {
 
                 const vnNowStr = data.serverDateVN || new Date(new Date().getTime() + 7 * 3600000).toISOString().split('T')[0];
                 setServerDateVN(vnNowStr);
+
+                const lastDailyStr = data.lastDailyTask ? new Date(new Date(data.lastDailyTask).getTime() + 7 * 3600000).toISOString().split('T')[0] : '';
+                const lastShareStr = data.lastShareTask ? new Date(new Date(data.lastShareTask).getTime() + 7 * 3600000).toISOString().split('T')[0] : '';
+                
+                setTasks({
+                    readTaskDone: lastDailyStr === vnNowStr, 
+                    shareTaskDone: lastShareStr === vnNowStr,
+                    youtubeTaskDone: data.youtubeTaskDone || false,
+                    facebookTaskDone: data.facebookTaskDone || false
+                });
             })
             .catch(err => console.error("Lỗi:", err));
     };
@@ -333,6 +350,9 @@ function App() {
         const isFireEffect = (Number(userId || 1) % 2) !== 0; 
         const effectColor = isFireEffect ? '#FF3B30' : '#00FFFF'; 
         const pulseAnim = isFireEffect ? 'pulseGlowRed 2s infinite' : 'pulseGlowCyan 2s infinite';
+        
+        // Khai báo biến hiển thị Cấp bậc để sửa lỗi TS2552
+        const militaryRank = getMilitaryRank(referrals);
 
         let myRank = 0;
         if (referrals > 0) {
@@ -579,7 +599,6 @@ function App() {
                 </p>
             </div>
 
-            {/* KHỐI HƯỚNG DẪN CỘNG ĐỒNG MỚI */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Hướng dẫn Xây Dựng Hệ Thống</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
