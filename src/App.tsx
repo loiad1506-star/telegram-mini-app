@@ -367,7 +367,7 @@ function App() {
                 <div style={{ display: 'flex', alignItems: 'center', textAlign: 'right' }}>
                     <div style={{ marginRight: '15px' }}>
                         <h2 style={{ margin: 0, fontSize: '15px', color: theme.textLight, fontWeight: 'bold' }}>{userProfile.name}</h2>
-                        <p style={{ margin: 0, fontSize: '12px', color: theme.textDim, fontWeight: 'bold' }}>{getMilitaryRank(referrals)}</p>
+                        <p style={{ margin: 0, fontSize: '12px', color: theme.textDim, fontWeight: 'bold' }}>{militaryRank}</p>
                     </div>
                     
                     <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
@@ -406,11 +406,16 @@ function App() {
             { firstName: 'Mai', lastName: 'Thiều Thị', referralCount: 60, weeklyReferralCount: 10 },
             { firstName: 'LINH', lastName: 'NGUYEN', referralCount: 47, weeklyReferralCount: 8 },
             { firstName: 'Minh', lastName: 'Ngọc Hoàng', referralCount: 33, weeklyReferralCount: 5 },
-            { firstName: 'PHƯƠNG', lastName: 'ANH PHÙNG', referralCount: 27, weeklyReferralCount: 4 }
+            { firstName: 'PHƯƠNG', lastName: 'ANH PHÙNG', referralCount: 27, weeklyReferralCount: 4 },
+            { firstName: 'Nông', lastName: 'Mao', referralCount: 12, weeklyReferralCount: 3 },
+            { firstName: 'Support', lastName: '', referralCount: 11, weeklyReferralCount: 2 },
+            { firstName: 'OSAKA', lastName: 'CHAU HUYNH', referralCount: 10, weeklyReferralCount: 1 },
+            { firstName: 'Trinh', lastName: 'Lê', referralCount: 9, weeklyReferralCount: 1 },
+            { firstName: 'Lý', lastName: 'Hà', referralCount: 8, weeklyReferralCount: 0 }
         ];
 
         let displayData = [...leaderboard];
-        if (displayData.length < 5) displayData = [...displayData, ...dummyUsers];
+        if (displayData.length < 10) displayData = [...displayData, ...dummyUsers.slice(0, 10 - displayData.length)];
 
         const sortedData = displayData.map(u => ({
             ...u,
@@ -428,7 +433,8 @@ function App() {
                             border: `2px solid ${boardType === 'weekly' ? theme.gold : theme.border}`, 
                             backgroundColor: boardType === 'weekly' ? 'rgba(244, 208, 63, 0.15)' : '#1C1C1E', 
                             color: boardType === 'weekly' ? theme.gold : theme.textDim, 
-                            fontWeight: '900', fontSize: '14px', cursor: 'pointer'
+                            fontWeight: '900', fontSize: '14px', cursor: 'pointer', transition: 'all 0.3s',
+                            boxShadow: boardType === 'weekly' ? `0 0 15px rgba(244, 208, 63, 0.3)` : 'none'
                         }}
                     >
                         🏆 TOP TUẦN
@@ -440,7 +446,8 @@ function App() {
                             border: `2px solid ${boardType === 'all' ? theme.gold : theme.border}`, 
                             backgroundColor: boardType === 'all' ? 'rgba(244, 208, 63, 0.15)' : '#1C1C1E', 
                             color: boardType === 'all' ? theme.gold : theme.textDim, 
-                            fontWeight: '900', fontSize: '14px', cursor: 'pointer'
+                            fontWeight: '900', fontSize: '14px', cursor: 'pointer', transition: 'all 0.3s',
+                            boxShadow: boardType === 'all' ? `0 0 15px rgba(244, 208, 63, 0.3)` : 'none'
                         }}
                     >
                         🌟 TOP TỔNG
@@ -448,35 +455,41 @@ function App() {
                 </div>
                 
                 <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '20px', border: `1px dashed ${theme.gold}` }}>
-                    <p style={{fontSize: '13px', color: theme.gold, margin: 0, lineHeight: '1.5', textAlign: 'center'}}>
+                    <p style={{fontSize: '13px', color: theme.gold, margin: 0, lineHeight: '1.5', textAlign: 'justify'}}>
+                        <span style={{fontWeight: 'bold'}}>📌 LƯU Ý QUAN TRỌNG:</span><br/> 
                         {boardType === 'weekly' 
-                            ? 'Số liệu Tuần Reset vào 23:59 Chủ Nhật hàng tuần.'
-                            : 'Bảng xếp hạng dựa trên tổng số người mời thực tế.'}
+                            ? 'Số liệu Tuần được tự động Reset vào 23:59 Chủ Nhật hàng tuần. Đua top ngay hôm nay để nhận thưởng hiện vật cực khủng!'
+                            : 'Bảng này tính TỔNG TÀI SẢN (Số dư hiện tại + Tiền đã rút + Quà Nhiệm vụ). Đây là thước đo chính xác đẳng cấp của bạn!'}
                     </p>
                 </div>
 
                 {sortedData.slice(0, 10).map((user, index) => {
                     const isMe = `${user.firstName} ${user.lastName}`.trim() === userProfile.name.trim();
                     const rankTitle = getMilitaryRank(user.referralCount);
-                    let badge = "🥈";
-                    if (index === 0) badge = "🥇";
-                    if (index === 2) badge = "🥉";
-                    if (index > 2) badge = "🎖️";
+                    let icon = "💸"; let topColor = theme.textDim; let topBg = "transparent"; let topBorder = "transparent";
+                    
+                    if (index === 0) { icon = "👑"; topColor = theme.gold; topBg = 'rgba(244, 208, 63, 0.1)'; topBorder = theme.gold; }
+                    else if (index === 1) { icon = "💎"; topColor = '#C0C0C0'; topBg = 'rgba(192, 192, 192, 0.1)'; topBorder = '#C0C0C0'; }
+                    else if (index === 2) { icon = "🌟"; topColor = '#CD7F32'; topBg = 'rgba(205, 127, 50, 0.1)'; topBorder = '#CD7F32'; }
+                    else { topBorder = theme.border; }
 
                     return (
-                        <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 10px', borderBottom: `1px solid ${theme.border}`, backgroundColor: isMe ? 'rgba(244, 208, 63, 0.05)' : 'transparent' }}>
+                        <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 10px', borderBottom: index < sortedData.length - 1 ? `1px solid ${theme.border}` : 'none', backgroundColor: isMe ? 'rgba(244, 208, 63, 0.05)' : 'transparent', borderRadius: '8px', marginBottom: '4px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-                                <div style={{ minWidth: '35px', textAlign: 'center', marginRight: '10px', fontSize: '18px' }}>{badge}</div>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '45px', marginRight: '12px', backgroundColor: topBg, border: `1px solid ${topBorder}`, borderRadius: '6px', padding: '4px' }}>
+                                    <span style={{ fontSize: '10px', fontWeight: 'bold', color: topColor }}>TOP {index + 1}</span>
+                                    <span style={{ fontSize: '18px', marginTop: '2px' }}>{icon}</span>
+                                </div>
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <span style={{ color: theme.textLight, fontWeight: 'bold', fontSize: '14px' }}>
-                                        {user.firstName} {user.lastName} {isMe && <span style={{color: theme.gold, fontSize: '11px', fontWeight: 'normal'}}>(Bạn)</span>}
+                                    <span style={{ color: isMe ? theme.gold : theme.textLight, fontWeight: 'bold', fontSize: '15px' }}>
+                                        {user.firstName} {user.lastName} {isMe && <span style={{fontSize: '11px', color: theme.gold, fontWeight: 'normal'}}> (Bạn)</span>}
                                     </span>
-                                    <span style={{ color: theme.textDim, fontSize: '11px' }}>{rankTitle}</span>
+                                    <span style={{ color: theme.textDim, fontSize: '12px', marginTop: '2px' }}>{rankTitle}</span>
                                 </div>
                             </div>
-                            <div style={{ textAlign: 'right' }}>
-                                <div style={{ color: theme.green, fontWeight: 'bold', fontSize: '14px' }}>{user.displayTotal} SWGT</div>
-                                <div style={{ color: theme.textDim, fontSize: '11px' }}>({user.displayCount} người)</div>
+                            <div style={{ color: theme.green, fontWeight: 'bold', fontSize: '16px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                <span>{user.displayTotal} <span style={{ fontSize: '12px', color: theme.textDim, fontWeight: 'normal' }}>SWGT</span></span>
+                                <span style={{fontSize: '11px', color: theme.gold}}>({user.displayCount} người)</span>
                             </div>
                         </div>
                     )
@@ -680,6 +693,12 @@ function App() {
                 <h3 style={{color: theme.gold, paddingBottom: '10px', marginBottom: '15px', fontSize: '17px', textAlign: 'center', fontWeight: '900'}}>🤝 BẢNG VÀNG ĐẠI SỨ</h3>
                 {renderWealthBoard()}
 
+                <div style={{ textAlign: 'center', paddingTop: '5px', marginBottom: '25px' }}>
+                    <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', textDecoration: 'none', boxSizing: 'border-box' }}>
+                        ✈️ CHIA SẺ LINK ĐỂ ĐUA TOP NGAY
+                    </a>
+                </div>
+
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>💎 KHO ĐẶC QUYỀN VIP</h3>
                 <p style={{ color: theme.textDim, fontSize: '13px', marginBottom: '15px' }}>Dùng SWGT quy đổi lấy vũ khí thực chiến:</p>
                 
@@ -696,7 +715,7 @@ function App() {
                 </div>
 
                 <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '15px', marginBottom: '15px', border: `1px solid ${theme.border}`}}>
-                    <h4 style={{margin: '0 0 8px 0', color: theme.gold, fontSize: '16px'}}>🎟️ Phiếu Đầu Tư Ưu Đãi : 9000</h4>
+                    <h4 style={{margin: '0 0 8px 0', color: theme.gold, fontSize: '16px'}}>🎟️ Phiếu Đầu Tư Ưu Đãi Đặc Biệt : 9000</h4>
                     <p style={{fontSize: '14px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Nhận Voucher chiết khấu đặc biệt khi vào gói đầu tư lớn.</p>
                     <button onClick={() => redeemItem('Phiếu Đầu Tư', 9000)} style={{backgroundColor: theme.gold, color: '#000', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer'}}>LIÊN HỆ ADMIN</button>
                 </div>
@@ -707,63 +726,113 @@ function App() {
     const renderWallet = () => (
         <div style={{ padding: '0 20px 20px 20px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
-                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '25px 20px', border: `1px solid ${theme.gold}`, textAlign: 'center' }}>
-                    <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 5px 0', fontWeight: 'bold' }}>💰 TỔNG TÀI SẢN SWGT</p>
-                    <h1 style={{ color: theme.gold, margin: '0', fontSize: '42px', fontWeight: '900' }}>
+                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '25px 20px', border: `1px solid ${theme.gold}`, textAlign: 'center', boxShadow: '0 4px 15px rgba(244, 208, 63, 0.1)' }}>
+                    <p style={{ color: theme.textDim, fontSize: '14px', margin: '0 0 5px 0', fontWeight: 'bold', textTransform: 'uppercase' }}>💰 TỔNG TÀI SẢN SWGT</p>
+                    <h1 style={{ color: theme.gold, margin: '0', fontSize: '45px', fontWeight: '900' }}>
                         {Math.round((balance + lockedBalance) * 100) / 100}
                     </h1>
                 </div>
 
                 <div style={{ display: 'flex', gap: '10px' }}>
                     <div style={{ flex: 1, backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px solid ${theme.green}`, borderRadius: '12px', padding: '15px 5px', textAlign: 'center' }}>
-                        <p style={{ color: theme.green, fontSize: '11px', margin: '0 0 5px 0', fontWeight: 'bold' }}>✅ Khả Dụng</p>
-                        <h3 style={{ margin: 0, color: '#fff', fontSize: '22px' }}>{balance}</h3>
+                        <p style={{ color: theme.green, fontSize: '12px', margin: '0 0 5px 0', fontWeight: 'bold' }}>✅ Khả Dụng</p>
+                        <h3 style={{ margin: 0, color: '#fff', fontSize: '24px' }}>{balance}</h3>
                     </div>
                     <div style={{ flex: 1, backgroundColor: 'rgba(255, 59, 48, 0.1)', border: `1px solid ${theme.red}`, borderRadius: '12px', padding: '15px 5px', textAlign: 'center' }}>
-                        <p style={{ color: theme.red, fontSize: '11px', margin: '0 0 5px 0', fontWeight: 'bold' }}>🔒 Chờ Duyệt</p>
-                        <h3 style={{ margin: 0, color: '#fff', fontSize: '22px' }}>{lockedBalance}</h3>
+                        <p style={{ color: theme.red, fontSize: '12px', margin: '0 0 5px 0', fontWeight: 'bold' }}>🔒 Chờ Duyệt</p>
+                        <h3 style={{ margin: 0, color: '#fff', fontSize: '24px' }}>{lockedBalance}</h3>
                     </div>
                 </div>
             </div>
 
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', textAlign: 'center', border: `1px solid ${theme.border}`, marginBottom: '20px' }}>
+                <p style={{ color: theme.textLight, fontSize: '14px', margin: '0 0 15px 0', fontWeight: 'bold' }}>👇 ĐIỀN SỐ LƯỢNG MUỐN RÚT 👇</p>
                 <input 
                     type="number" 
-                    placeholder="Số lượng muốn rút..." 
+                    placeholder="Nhập số dư Khả dụng..." 
                     value={withdrawAmount}
                     onChange={(e) => setWithdrawAmount(e.target.value)}
-                    style={{ width: '100%', padding: '14px', borderRadius: '10px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, marginBottom: '15px', fontSize: '15px', textAlign: 'center', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '14px', borderRadius: '10px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '15px', fontSize: '15px', textAlign: 'center' }}
                 />
-                <button onClick={handleWithdraw} style={{ width: '100%', backgroundColor: balance >= 500 ? theme.green : '#333', color: '#fff', padding: '16px', borderRadius: '12px', fontWeight: 'bold', border: 'none', cursor: balance >= 500 ? 'pointer' : 'not-allowed' }}>
-                    {balance >= 500 ? '💸 XÁC NHẬN RÚT TIỀN' : '🔒 TỐI THIỂU 500 KHẢ DỤNG'}
+
+                <button onClick={handleWithdraw} style={{ width: '100%', backgroundColor: balance >= 500 ? theme.green : '#333', color: balance >= 500 ? '#fff' : theme.textDim, padding: '16px', borderRadius: '12px', fontWeight: 'bold', border: 'none', fontSize: '16px', cursor: balance >= 500 ? 'pointer' : 'not-allowed', boxShadow: balance >= 500 ? '0 4px 15px rgba(52, 199, 89, 0.3)' : 'none' }}>
+                    {balance >= 500 ? '💸 XÁC NHẬN RÚT TIỀN' : '🔒 CẦN TỐI THIỂU 500 KHẢ DỤNG'}
                 </button>
             </div>
 
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
-                <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '15px' }}>⏳ Đếm ngược mở khóa ví</h3>
+                <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⏳ Đếm ngược mở khóa ví</h3>
+                
                 {isUnlocked ? (
-                    <div style={{ padding: '15px', backgroundColor: 'rgba(52, 199, 89, 0.1)', borderRadius: '10px', color: theme.green, fontWeight: 'bold', textAlign: 'center', border: `1px dashed ${theme.green}` }}>🎉 CỔNG RÚT TIỀN ĐÃ MỞ!</div>
+                    <div style={{ padding: '15px', backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, borderRadius: '10px', color: theme.green, fontWeight: 'bold', fontSize: '16px', textAlign: 'center' }}>
+                        {balance >= 1500 ? "🎉 ĐẶC QUYỀN 1500 SWGT: CỔNG RÚT ĐÃ MỞ!" : "🎉 CỔNG RÚT SWGT ĐÃ MỞ!"}
+                    </div>
                 ) : (
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
-                        <div style={{ padding: '10px', backgroundColor: '#222', borderRadius: '8px', color: theme.gold, fontWeight: 'bold' }}>{timeLeft.days}D</div>
-                        <div style={{ padding: '10px', backgroundColor: '#222', borderRadius: '8px', color: theme.gold, fontWeight: 'bold' }}>{timeLeft.hours}H</div>
-                        <div style={{ padding: '10px', backgroundColor: '#222', borderRadius: '8px', color: theme.gold, fontWeight: 'bold' }}>{timeLeft.mins}M</div>
+                    <div style={{ backgroundColor: '#000', padding: '20px', borderRadius: '10px', textAlign: 'center', border: `1px solid ${theme.border}` }}>
+                        <p style={{ color: theme.textDim, fontSize: '14px', margin: '0 0 15px 0' }}>Thời gian còn lại để mở khóa rút tiền:</p>
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '10px' }}>
+                            <span style={{ color: theme.textLight, fontSize: '18px', fontWeight: 'bold' }}>Còn</span>
+                            <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.days} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Ngày</span></div>
+                            <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.hours} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Giờ</span></div>
+                            <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.mins} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Phút</span></div>
+                        </div>
                     </div>
                 )}
             </div>
 
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
-                <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '15px' }}>⚙️ Thiết lập thanh toán</h3>
+                <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⚙️ Thiết lập thanh toán</h3>
+                
                 <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                    <button onClick={() => setWithdrawMethod('gate')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${withdrawMethod === 'gate' ? theme.green : theme.border}`, backgroundColor: withdrawMethod === 'gate' ? 'rgba(52, 199, 89, 0.1)' : '#000', color: withdrawMethod === 'gate' ? theme.green : theme.textDim, cursor: 'pointer', fontWeight: 'bold' }}>Gate.io</button>
-                    <button onClick={() => setWithdrawMethod('erc20')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${withdrawMethod === 'erc20' ? theme.red : theme.border}`, backgroundColor: withdrawMethod === 'erc20' ? 'rgba(255, 59, 48, 0.1)' : '#000', color: withdrawMethod === 'erc20' ? theme.red : theme.textDim, cursor: 'pointer', fontWeight: 'bold' }}>Ví ERC20</button>
+                    <button onClick={() => setWithdrawMethod('gate')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${withdrawMethod === 'gate' ? theme.green : theme.border}`, backgroundColor: withdrawMethod === 'gate' ? 'rgba(52, 199, 89, 0.1)' : '#000', color: withdrawMethod === 'gate' ? theme.green : theme.textDim, fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', transition: 'all 0.3s' }}>
+                        Gate.io (Miễn phí)
+                    </button>
+                    <button onClick={() => setWithdrawMethod('erc20')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${withdrawMethod === 'erc20' ? theme.red : theme.border}`, backgroundColor: withdrawMethod === 'erc20' ? 'rgba(255, 59, 48, 0.1)' : '#000', color: withdrawMethod === 'erc20' ? theme.red : theme.textDim, fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', transition: 'all 0.3s' }}>
+                        Ví ERC20 (-70 SWGT)
+                    </button>
                 </div>
-                {withdrawMethod === 'gate' ? (
-                    <input value={gatecode} onChange={(e) => setGatecode(e.target.value)} placeholder="UID / Gatecode Gate.io..." style={{ width: '100%', padding: '14px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.gold, marginBottom: '15px', boxSizing: 'border-box' }} />
-                ) : (
-                    <input value={wallet} onChange={(e) => setWallet(e.target.value)} placeholder="Địa chỉ ví ERC20..." style={{ width: '100%', padding: '14px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.gold, marginBottom: '15px', boxSizing: 'border-box' }} />
+
+                {withdrawMethod === 'gate' && (
+                    <div style={{ animation: 'fadeIn 0.3s ease' }}>
+                        <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '10px', border: `1px solid ${theme.border}`, marginBottom: '15px' }}>
+                            <p style={{ margin: '0 0 10px 0', color: theme.gold, fontSize: '14px', fontWeight: 'bold' }}>⭐ ƯU TIÊN VÌ KHÔNG MẤT PHÍ</p>
+                            <ol style={{ color: theme.textDim, fontSize: '13px', margin: 0, paddingLeft: '20px', lineHeight: '1.6' }}>
+                                <li>Yêu cầu thành viên vào tài khoản Gate.io</li>
+                                <li>Chọn nạp tiền SWGT</li>
+                                <li>Chọn nạp Gatecode (Chỉ dành cho tài khoản Gate)</li>
+                            </ol>
+                            <div style={{ marginTop: '15px', textAlign: 'center' }}>
+                                <img src="/gate-guide.jpg" alt="Hướng dẫn Gatecode" style={{ width: '100%', borderRadius: '8px', border: `1px solid ${theme.border}`, display: 'block' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                                <button onClick={() => window.open('https://telegra.ph/H%C6%B0%E1%BB%9Bng-d%E1%BA%ABn-%C4%91%C4%83ng-k%C3%BD--t%E1%BA%A1o-m%E1%BB%9Bi-t%C3%A0i-kho%E1%BA%A3n-Gateio-to%C3%A0n-t%E1%BA%ADp-02-22', '_blank')} style={{ width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '12px', borderRadius: '8px', fontWeight: 'bold', border: 'none', fontSize: '13px', cursor: 'pointer', marginTop: '15px' }}>
+                                    📖 HƯỚNG DẪN TẠO VÍ GATE.IO
+                                </button>
+                            </div>
+                        </div>
+
+                        <p style={{ color: theme.textLight, fontSize: '14px', fontWeight: 'bold', margin: '0 0 10px 0' }}>Bổ sung thông tin (Tùy chọn):</p>
+                        <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="1. Họ tên" style={{ width: '100%', padding: '14px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '10px', fontSize: '14px' }} />
+                        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="2. Gmail" style={{ width: '100%', padding: '14px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '10px', fontSize: '14px' }} />
+                        <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="3. Số điện thoại" style={{ width: '100%', padding: '14px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '15px', fontSize: '14px' }} />
+
+                        <p style={{ color: theme.textLight, fontSize: '14px', fontWeight: 'bold', margin: '0 0 10px 0' }}>Mã nhận tiền (Bắt buộc):</p>
+                        <input value={gatecode} onChange={(e) => setGatecode(e.target.value)} placeholder="Dán Gatecode / UID Gate.io tại đây..." style={{ width: '100%', padding: '14px', borderRadius: '8px', border: `1px solid ${theme.green}`, backgroundColor: '#000', color: theme.gold, boxSizing: 'border-box', marginBottom: '15px', fontSize: '14px' }} />
+                    </div>
                 )}
-                <button onClick={handleSaveWallet} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>LƯU THÔNG TIN</button>
+
+                {withdrawMethod === 'erc20' && (
+                    <div style={{ animation: 'fadeIn 0.3s ease' }}>
+                        <div style={{ backgroundColor: 'rgba(255, 59, 48, 0.1)', border: `1px dashed ${theme.red}`, padding: '15px', borderRadius: '10px', marginBottom: '15px' }}>
+                            <p style={{ margin: '0 0 5px 0', color: theme.red, fontSize: '14px', fontWeight: 'bold' }}>⚠️ CHÚ Ý QUAN TRỌNG:</p>
+                            <p style={{ margin: 0, color: theme.red, fontSize: '13px', lineHeight: '1.5' }}>Phí rút tiền qua mạng lưới <b>Ethereum (ERC20)</b> là <b>70 SWGT</b>. Nhập sai mạng lưới sẽ mất tài sản vĩnh viễn!</p>
+                        </div>
+                        <p style={{ color: theme.textLight, fontSize: '14px', fontWeight: 'bold', margin: '0 0 10px 0' }}>Địa chỉ ví (Bắt buộc):</p>
+                        <input value={wallet} onChange={(e) => setWallet(e.target.value)} placeholder="Dán địa chỉ ví ERC20 tại đây..." style={{ width: '100%', padding: '14px', borderRadius: '8px', border: `1px solid ${theme.red}`, backgroundColor: '#000', color: theme.gold, boxSizing: 'border-box', marginBottom: '15px', fontSize: '14px' }} />
+                    </div>
+                )}
+
+                <button onClick={handleSaveWallet} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '15px', cursor: 'pointer' }}>
+                    {(withdrawMethod === 'erc20' && wallet) || (withdrawMethod === 'gate' && gatecode) ? "CẬP NHẬT THÔNG TIN THANH TOÁN" : "LƯU THÔNG TIN THANH TOÁN"}
+                </button>
             </div>
         </div>
     );
@@ -772,15 +841,79 @@ function App() {
         <div style={{ backgroundColor: theme.bg, minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '90px' }}>
             <style>{`
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-                @keyframes spin { 100% { transform: rotate(360deg); } }
-                .nav-item { transition: all 0.3s; cursor: pointer; width: 33%; display: flex; flex-direction: column; align-items: center; opacity: 0.6; }
-                .nav-item.active { opacity: 1; transform: translateY(-4px); }
-                .floating-reward { position: fixed; color: #F4D03F; font-weight: 900; font-size: 24px; z-index: 9999; animation: floatUp 1s forwards; text-shadow: 0 0 8px rgba(0,0,0,0.5); }
-                @keyframes floatUp { 0% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -80px); } }
+                
+                /* Hiệu ứng thanh cuộn */
+                ::-webkit-scrollbar { height: 6px; }
+                ::-webkit-scrollbar-track { background: #1C1C1E; border-radius: 10px; }
+                ::-webkit-scrollbar-thumb { background: #F4D03F; border-radius: 10px; }
+                
+                /* Hiệu ứng viền Avatar xoay và nhấp nháy */
+                @keyframes spin { 
+                    100% { transform: rotate(360deg); } 
+                }
+                @keyframes pulseGlowRed {
+                    0%, 100% { box-shadow: 0 0 5px #FF3B30, inset 0 0 5px #FF3B30; }
+                    50% { box-shadow: 0 0 15px #FF3B30, inset 0 0 10px #FF3B30; }
+                }
+                @keyframes pulseGlowCyan {
+                    0%, 100% { box-shadow: 0 0 5px #00FFFF, inset 0 0 5px #00FFFF; }
+                    50% { box-shadow: 0 0 15px #00FFFF, inset 0 0 10px #00FFFF; }
+                }
+
+                /* Hiệu ứng Navigation Bottom Tab động */
+                .nav-item {
+                    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+                    cursor: pointer;
+                    width: 33%;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    opacity: 0.6;
+                }
+                .nav-item.active {
+                    opacity: 1;
+                    transform: translateY(-4px); /* Nhích nhẹ lên khi Active */
+                }
+                .nav-item:active {
+                    transform: scale(0.92); /* Thu nhỏ khi bấm */
+                }
+                .nav-icon {
+                    font-size: 26px;
+                    margin-bottom: 6px;
+                    transition: all 0.3s ease;
+                }
+                .nav-item.active .nav-icon {
+                    animation: bounceTab 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                    text-shadow: 0 0 15px rgba(244, 208, 63, 0.9); /* Phát sáng mờ cho icon */
+                }
+                @keyframes bounceTab {
+                    0% { transform: scale(1); }
+                    50% { transform: scale(1.25); }
+                    100% { transform: scale(1); }
+                }
+
+                /* Hiệu ứng số tiền thưởng bay lên */
+                @keyframes floatUp {
+                    0% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+                    100% { opacity: 0; transform: translate(-50%, -80px) scale(1.5); }
+                }
+                .floating-reward {
+                    position: fixed;
+                    color: #F4D03F;
+                    font-weight: 900;
+                    font-size: 24px;
+                    pointer-events: none;
+                    z-index: 9999;
+                    animation: floatUp 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+                    text-shadow: 0px 0px 8px rgba(244, 208, 63, 0.8), 0px 2px 4px rgba(0,0,0,1);
+                }
             `}</style>
             
+            {/* RENDER HIỆU ỨNG TIỀN BAY LÊN */}
             {animations.map(anim => (
-                <div key={anim.id} className="floating-reward" style={{ left: anim.x, top: anim.y }}>{anim.text}</div>
+                <div key={anim.id} className="floating-reward" style={{ left: anim.x, top: anim.y }}>
+                    {anim.text}
+                </div>
             ))}
 
             {renderHeader()}
@@ -790,19 +923,24 @@ function App() {
                 {activeTab === 'wallet' && renderWallet()}
             </div>
 
-            <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: theme.cardBg, borderTop: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-around', padding: '15px 0', zIndex: 100 }}>
+            {/* THANH ĐIỀU HƯỚNG TÍCH HỢP CLASS ĐỘNG MỚI */}
+            <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: theme.cardBg, borderTop: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-around', padding: '15px 0', paddingBottom: 'calc(15px + env(safe-area-inset-bottom))', zIndex: 100 }}>
+                
                 <div onClick={() => setActiveTab('home')} className={`nav-item ${activeTab === 'home' ? 'active' : ''}`} style={{ color: activeTab === 'home' ? theme.gold : theme.textDim }}>
-                    <span style={{ fontSize: '24px' }}>🏠</span>
-                    <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Trang chủ</span>
+                    <div className="nav-icon">🏠</div>
+                    <span style={{ fontSize: '14px', fontWeight: 'bold' }}>Trang chủ</span>
                 </div>
+                
                 <div onClick={() => setActiveTab('rewards')} className={`nav-item ${activeTab === 'rewards' ? 'active' : ''}`} style={{ color: activeTab === 'rewards' ? theme.gold : theme.textDim }}>
-                    <span style={{ fontSize: '24px' }}>🎁</span>
-                    <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Thưởng</span>
+                    <div className="nav-icon">🎁</div>
+                    <span style={{ fontSize: '14px', fontWeight: 'bold' }}>Phần thưởng</span>
                 </div>
+                
                 <div onClick={() => setActiveTab('wallet')} className={`nav-item ${activeTab === 'wallet' ? 'active' : ''}`} style={{ color: activeTab === 'wallet' ? theme.gold : theme.textDim }}>
-                    <span style={{ fontSize: '24px' }}>👛</span>
-                    <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Ví</span>
+                    <div className="nav-icon">👛</div>
+                    <span style={{ fontSize: '14px', fontWeight: 'bold' }}>Ví</span>
                 </div>
+
             </div>
         </div>
     );
