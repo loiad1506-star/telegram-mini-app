@@ -71,7 +71,7 @@ function App() {
         { req: 500, reward: 700, key: 'milestone500', rank: 'Đại Tướng 🌟🌟🌟🌟' }
     ];
 
-    const STREAK_REWARDS = [0.5, 1.5, 3, 3.5, 5, 7, 9];
+    const STREAK_REWARDS = [0.25, 0.75, 1.5, 1.75, 2.5, 3.5, 4.5];
 
     const triggerFloatAnim = (reward: string | number, x: number, y: number) => {
         const newAnim = { id: Date.now() + Math.random(), text: `+${reward} SWGT`, x, y };
@@ -393,89 +393,6 @@ function App() {
         );
     }
 
-    const renderWealthBoard = () => {
-        let displayData = [...leaderboard];
-        const sortedData = displayData.map(u => ({
-            ...u,
-            displayCount: boardType === 'weekly' ? (u.weeklyReferralCount || 0) : u.referralCount,
-            displayTotal: boardType === 'weekly' ? (u.weeklyReferralCount || 0) * 15 : (u.referralCount * 15) + 300
-        })).sort((a, b) => b.displayCount - a.displayCount);
-
-        return (
-            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
-                <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
-                    <button
-                        onClick={() => setBoardType('weekly')}
-                        style={{ 
-                            flex: 1, padding: '12px', borderRadius: '10px', 
-                            border: `2px solid ${boardType === 'weekly' ? theme.gold : theme.border}`, 
-                            backgroundColor: boardType === 'weekly' ? 'rgba(244, 208, 63, 0.15)' : '#1C1C1E', 
-                            color: boardType === 'weekly' ? theme.gold : theme.textDim, 
-                            fontWeight: '900', fontSize: '14px', cursor: 'pointer', transition: 'all 0.3s',
-                            boxShadow: boardType === 'weekly' ? `0 0 15px rgba(244, 208, 63, 0.3)` : 'none'
-                        }}
-                    >
-                        🏆 TOP TUẦN
-                    </button>
-                    <button
-                        onClick={() => setBoardType('all')}
-                        style={{ 
-                            flex: 1, padding: '12px', borderRadius: '10px', 
-                            border: `2px solid ${boardType === 'all' ? theme.gold : theme.border}`, 
-                            backgroundColor: boardType === 'all' ? 'rgba(244, 208, 63, 0.15)' : '#1C1C1E', 
-                            color: boardType === 'all' ? theme.gold : theme.textDim, 
-                            fontWeight: '900', fontSize: '14px', cursor: 'pointer', transition: 'all 0.3s',
-                            boxShadow: boardType === 'all' ? `0 0 15px rgba(244, 208, 63, 0.3)` : 'none'
-                        }}
-                    >
-                        🌟 TOP TỔNG
-                    </button>
-                </div>
-                
-                <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '20px', border: `1px dashed ${theme.gold}` }}>
-                    <p style={{fontSize: '13px', color: theme.gold, margin: 0, lineHeight: '1.5', textAlign: 'justify'}}>
-                        <span style={{fontWeight: 'bold'}}>📌 LƯU Ý QUAN TRỌNG:</span><br/> 
-                        {boardType === 'weekly' 
-                            ? 'Số liệu Tuần được tự động Reset vào 23:59 Chủ Nhật hàng tuần. Đua top ngay hôm nay để nhận thưởng hiện vật cực khủng!'
-                            : 'Bảng này tính TỔNG TÀI SẢN (Số dư hiện tại + Tiền đã rút + Quà Nhiệm vụ). Đây là thước đo chính xác đẳng cấp của bạn!'}
-                    </p>
-                </div>
-
-                {sortedData.slice(0, 10).map((user, index) => {
-                    const isMe = `${user.firstName} ${user.lastName}`.trim() === userProfile.name.trim();
-                    const rankTitle = getMilitaryRank(user.referralCount);
-                    let icon = "💸"; let topColor = theme.textDim; let topBg = "transparent"; let topBorder = "transparent";
-                    
-                    if (index === 0) { icon = "👑"; topColor = theme.gold; topBg = 'rgba(244, 208, 63, 0.1)'; topBorder = theme.gold; }
-                    else if (index === 1) { icon = "💎"; topColor = '#C0C0C0'; topBg = 'rgba(192, 192, 192, 0.1)'; topBorder = '#C0C0C0'; }
-                    else if (index === 2) { icon = "🌟"; topColor = '#CD7F32'; topBg = 'rgba(205, 127, 50, 0.1)'; topBorder = '#CD7F32'; }
-                    else { topBorder = theme.border; }
-
-                    return (
-                        <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 10px', borderBottom: index < sortedData.length - 1 ? `1px solid ${theme.border}` : 'none', backgroundColor: isMe ? 'rgba(244, 208, 63, 0.05)' : 'transparent', borderRadius: '8px', marginBottom: '4px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '45px', marginRight: '12px', backgroundColor: topBg, border: `1px solid ${topBorder}`, borderRadius: '6px', padding: '4px' }}>
-                                    <span style={{ fontSize: '10px', fontWeight: 'bold', color: topColor }}>TOP {index + 1}</span>
-                                    <span style={{ fontSize: '18px', marginTop: '2px' }}>{icon}</span>
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <span style={{ color: isMe ? theme.gold : theme.textLight, fontWeight: 'bold', fontSize: '15px' }}>
-                                        {user.firstName} {user.lastName} {isMe && <span style={{fontSize: '11px', color: theme.gold, fontWeight: 'normal'}}> (Bạn)</span>}
-                                    </span>
-                                    <span style={{ color: theme.textDim, fontSize: '12px', marginTop: '2px' }}>{rankTitle}</span>
-                                </div>
-                            </div>
-                            <div style={{ color: theme.green, fontWeight: 'bold', fontSize: '16px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                                <span>{user.displayTotal} <span style={{ fontSize: '12px', color: theme.textDim, fontWeight: 'normal' }}>SWGT</span></span>
-                                <span style={{fontSize: '11px', color: theme.gold}}>({user.displayCount} người)</span>
-                            </div>
-                        </div>
-                    )
-                })}
-            </div>
-        );
-    };
-
     const renderHome = () => (
         <div style={{ padding: '0 20px 20px 20px' }}>
             
@@ -555,12 +472,18 @@ function App() {
                 </button>
             </div>
 
-            {/* XÓA TOÀN BỘ KHỐI NHIỆM VỤ NẠP KIẾN THỨC VÀ CHIA SẺ, CHỈ ĐỂ LẠI GIAO DIỆN BẢNG VÀNG VÀ CHÍNH SÁCH */}
+            {/* XÓA TOÀN BỘ KHỐI NHIỆM VỤ NẠP KIẾN THỨC VÀ CHIA SẺ, CHỈ ĐỂ LẠI GIAO DIỆN HƯỚNG DẪN */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
-                <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Hướng dẫn Xây Dựng Hệ Thống</h2>
+                <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Mục Tiêu Phát Triển Cộng Đồng</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>1️⃣ Trở thành Cổ đông uST</span><br/>Chỉ bằng việc mời bạn bè tham gia Bot SWC, bạn sẽ nhận được SWGT Token để quy đổi Cổ phần.</p>
-                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>2️⃣ Chặng Nước Rút</span><br/>Sự kiện Airdrop miễn phí sẽ kết thúc vào Chủ Nhật tuần này. Tận dụng mọi thời gian để đua Top Leader!</p>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}>
+                        <span style={{color: theme.textLight, fontWeight:'bold'}}>1️⃣ Lan tỏa Sky World Community</span><br/>
+                        Mời bạn bè tham gia vào Cộng đồng SWC Việt Nam thông qua Link Bot, bạn sẽ nhận ngay SWGT Token để quy đổi Cổ phần uST.
+                    </p>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}>
+                        <span style={{color: theme.textLight, fontWeight:'bold'}}>2️⃣ Chặng Nước Rút</span><br/>
+                        Sự kiện Airdrop chào đón thành viên mới sẽ KẾT THÚC vào Chủ Nhật tuần này. Hãy nhanh tay đưa anh em vào Group để cùng nhận đặc quyền!
+                    </p>
                     <div style={{ backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, padding: '15px', borderRadius: '10px' }}>
                         <p style={{ margin: 0, color: theme.green, fontSize: '14px', lineHeight: '1.6' }}>
                             <span style={{fontWeight:'bold'}}>💬 MẸO: Tương tác kiếm thêm điểm</span><br/>Mỗi tin nhắn bạn chat trong Nhóm Thảo Luận (từ 10 ký tự trở lên) tự động cộng <b style={{color: theme.gold}}>+0.1 SWGT</b>. Chat càng nhiều, tiền càng nhiều!
@@ -572,7 +495,7 @@ function App() {
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '18px' }}>💎 Cơ Cấu Phần Thưởng SWGT</h2>
                 <div style={{ color: theme.textDim, fontSize: '14px', margin: '0 0 10px 0', lineHeight: '1.6' }}>
-                    <p style={{ margin: 0 }}>Khách hoàn thành nhiệm vụ Tân Binh: <span style={{color: theme.gold, fontWeight:'bold'}}>+10 SWGT/người</span></p>
+                    <p style={{ margin: 0 }}>Khách hoàn thành nhiệm vụ Tân Binh: <span style={{color: theme.gold, fontWeight:'bold'}}>+5 SWGT/người</span></p>
                 </div>
                 
                 <div style={{ backgroundColor: '#fef2f2', borderLeft: '4px solid #ef4444', padding: '12px', marginTop: '15px', borderRadius: '6px' }}>
@@ -659,6 +582,12 @@ function App() {
                 <h3 style={{color: theme.gold, paddingBottom: '10px', marginBottom: '15px', fontSize: '17px', textAlign: 'center', fontWeight: '900'}}>🤝 BẢNG VÀNG ĐẠI SỨ</h3>
                 {renderWealthBoard()}
 
+                <div style={{ textAlign: 'center', paddingTop: '5px', marginBottom: '25px' }}>
+                    <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', textDecoration: 'none', boxSizing: 'border-box' }}>
+                        ✈️ CHIA SẺ LINK ĐỂ ĐUA TOP NGAY
+                    </a>
+                </div>
+
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>💎 KHO ĐẶC QUYỀN VIP</h3>
                 <p style={{ color: theme.textDim, fontSize: '13px', marginBottom: '15px' }}>Dùng SWGT quy đổi lấy vũ khí thực chiến:</p>
                 
@@ -721,7 +650,7 @@ function App() {
             </div>
 
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
-                <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⏳ Đếm ngược mở khóa ({lockDaysLimit} Ngày)</h3>
+                <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⏳ Đếm ngược mở khóa ví</h3>
                 
                 {isUnlocked ? (
                     <div style={{ padding: '15px', backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, borderRadius: '10px', color: theme.green, fontWeight: 'bold', fontSize: '16px', textAlign: 'center' }}>
@@ -744,12 +673,8 @@ function App() {
                 <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⚙️ Thiết lập thanh toán</h3>
                 
                 <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                    <button onClick={() => setWithdrawMethod('gate')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${withdrawMethod === 'gate' ? theme.green : theme.border}`, backgroundColor: withdrawMethod === 'gate' ? 'rgba(52, 199, 89, 0.1)' : '#000', color: withdrawMethod === 'gate' ? theme.green : theme.textDim, fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', transition: 'all 0.3s' }}>
-                        Gate.io (Miễn phí)
-                    </button>
-                    <button onClick={() => setWithdrawMethod('erc20')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${withdrawMethod === 'erc20' ? theme.red : theme.border}`, backgroundColor: withdrawMethod === 'erc20' ? 'rgba(255, 59, 48, 0.1)' : '#000', color: withdrawMethod === 'erc20' ? theme.red : theme.textDim, fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', transition: 'all 0.3s' }}>
-                        Ví ERC20 (-70 SWGT)
-                    </button>
+                    <button onClick={() => setWithdrawMethod('gate')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${withdrawMethod === 'gate' ? theme.green : theme.border}`, backgroundColor: withdrawMethod === 'gate' ? 'rgba(52, 199, 89, 0.1)' : '#000', color: withdrawMethod === 'gate' ? theme.green : theme.textDim, cursor: 'pointer', fontWeight: 'bold' }}>Gate.io</button>
+                    <button onClick={() => setWithdrawMethod('erc20')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${withdrawMethod === 'erc20' ? theme.red : theme.border}`, backgroundColor: withdrawMethod === 'erc20' ? 'rgba(255, 59, 48, 0.1)' : '#000', color: withdrawMethod === 'erc20' ? theme.red : theme.textDim, cursor: 'pointer', fontWeight: 'bold' }}>Ví ERC20</button>
                 </div>
 
                 {withdrawMethod === 'gate' && (
@@ -790,7 +715,7 @@ function App() {
                     </div>
                 )}
 
-                <button onClick={handleSaveWallet} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
+                <button onClick={handleSaveWallet} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '15px', cursor: 'pointer' }}>
                     {(withdrawMethod === 'erc20' && wallet) || (withdrawMethod === 'gate' && gatecode) ? "CẬP NHẬT THÔNG TIN THANH TOÁN" : "LƯU THÔNG TIN THANH TOÁN"}
                 </button>
             </div>
