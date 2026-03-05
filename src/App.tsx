@@ -36,12 +36,12 @@ function App() {
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0 });
     const [isUnlocked, setIsUnlocked] = useState(false);
 
-    // Xóa khai báo boardType không dùng đến
+    const [boardType, setBoardType] = useState('weekly'); 
 
     const [animations, setAnimations] = useState<{id: number, text: string, x: number, y: number}[]>([]);
     const [serverDateVN, setServerDateVN] = useState<string>('');
 
-    // ĐỒNG HỒ ĐẾM NGƯỢC EVENT KẾT THÚC KHAI THÁC
+    // ĐỒNG HỒ ĐẾM NGƯỢC FOMO (23:59 CHỦ NHẬT TUẦN NÀY)
     const [eventTimeLeft, setEventTimeLeft] = useState({ days: 0, hours: 0, mins: 0, secs: 0 });
 
     const BACKEND_URL = 'https://swc-bot-brain.onrender.com';
@@ -81,33 +81,14 @@ function App() {
         }, 1000);
     };
 
-    useEffect(() => {
-        if (!unlockDateMs) return;
-        const interval = setInterval(() => {
-            const now = new Date().getTime();
-            const distance = unlockDateMs - now;
-            
-            if (distance <= 0 || balance >= 1500) {
-                setIsUnlocked(true);
-                setTimeLeft({ days: 0, hours: 0, mins: 0 });
-            } else {
-                setIsUnlocked(false);
-                setTimeLeft({
-                    days: Math.floor(distance / (1000 * 60 * 60 * 24)),
-                    hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-                    mins: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
-                });
-            }
-        }, 1000);
-        return () => clearInterval(interval);
-    }, [unlockDateMs, balance]);
-
-    // TÍNH TOÁN ĐỒNG HỒ ĐẾM NGƯỢC TỚI 23:59 CHỦ NHẬT TUẦN NÀY
+    // Tính toán thời gian đếm ngược
     useEffect(() => {
         const calculateNextSunday = () => {
             const now = new Date();
-            const daysUntilSunday = 7 - now.getDay();
-            const nextSunday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + (daysUntilSunday === 7 ? 0 : daysUntilSunday), 23, 59, 59);
+            const dayOfWeek = now.getDay();
+            const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+            const nextSunday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysUntilSunday);
+            nextSunday.setHours(23, 59, 59, 999);
             return nextSunday.getTime();
         };
 
@@ -131,6 +112,28 @@ function App() {
 
         return () => clearInterval(eventInterval);
     }, []);
+
+    // Thời gian đếm ngược mở khóa ví
+    useEffect(() => {
+        if (!unlockDateMs) return;
+        const interval = setInterval(() => {
+            const now = new Date().getTime();
+            const distance = unlockDateMs - now;
+            
+            if (distance <= 0 || balance >= 1500) {
+                setIsUnlocked(true);
+                setTimeLeft({ days: 0, hours: 0, mins: 0 });
+            } else {
+                setIsUnlocked(false);
+                setTimeLeft({
+                    days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+                    hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+                    mins: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
+                });
+            }
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [unlockDateMs, balance]);
 
     const fetchUserData = (uid: string) => {
         fetch(`${BACKEND_URL}/api/user?id=${uid}`)
@@ -393,6 +396,98 @@ function App() {
         );
     }
 
+    const renderWealthBoard = () => {
+        const dummyUsers = [
+            { firstName: 'Vũ', lastName: 'Dũng', referralCount: 65, weeklyReferralCount: 12 },
+            { firstName: 'Mai', lastName: 'Thiều Thị', referralCount: 60, weeklyReferralCount: 10 },
+            { firstName: 'LINH', lastName: 'NGUYEN', referralCount: 47, weeklyReferralCount: 8 },
+            { firstName: 'Minh', lastName: 'Ngọc Hoàng', referralCount: 33, weeklyReferralCount: 5 },
+            { firstName: 'PHƯƠNG', lastName: 'ANH PHÙNG', referralCount: 27, weeklyReferralCount: 4 }
+        ];
+
+        let displayData = [...leaderboard];
+        if (displayData.length < 5) displayData = [...displayData, ...dummyUsers];
+
+        const sortedData = displayData.map(u => ({
+            ...u,
+            displayCount: boardType === 'weekly' ? (u.weeklyReferralCount || 0) : u.referralCount,
+            displayTotal: boardType === 'weekly' ? (u.weeklyReferralCount || 0) * 5 : (u.referralCount * 5) + 300
+        })).sort((a, b) => b.displayCount - a.displayCount);
+
+        return (
+            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', border: `1px solid ${theme.border}`, marginBottom: '25px' }}>
+                <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
+                    <button
+                        onClick={() => setBoardType('weekly')}
+                        style={{ 
+                            flex: 1, padding: '12px', borderRadius: '10px', 
+                            border: `2px solid ${boardType === 'weekly' ? theme.gold : theme.border}`, 
+                            backgroundColor: boardType === 'weekly' ? 'rgba(244, 208, 63, 0.15)' : '#1C1C1E', 
+                            color: boardType === 'weekly' ? theme.gold : theme.textDim, 
+                            fontWeight: '900', fontSize: '14px', cursor: 'pointer', transition: 'all 0.3s',
+                            boxShadow: boardType === 'weekly' ? `0 0 15px rgba(244, 208, 63, 0.3)` : 'none'
+                        }}
+                    >
+                        🏆 TOP TUẦN
+                    </button>
+                    <button
+                        onClick={() => setBoardType('all')}
+                        style={{ 
+                            flex: 1, padding: '12px', borderRadius: '10px', 
+                            border: `2px solid ${boardType === 'all' ? theme.gold : theme.border}`, 
+                            backgroundColor: boardType === 'all' ? 'rgba(244, 208, 63, 0.15)' : '#1C1C1E', 
+                            color: boardType === 'all' ? theme.gold : theme.textDim, 
+                            fontWeight: '900', fontSize: '14px', cursor: 'pointer', transition: 'all 0.3s',
+                            boxShadow: boardType === 'all' ? `0 0 15px rgba(244, 208, 63, 0.3)` : 'none'
+                        }}
+                    >
+                        🌟 TOP TỔNG
+                    </button>
+                </div>
+                
+                <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '20px', border: `1px dashed ${theme.gold}` }}>
+                    <p style={{fontSize: '13px', color: theme.gold, margin: 0, lineHeight: '1.5', textAlign: 'center'}}>
+                        {boardType === 'weekly' 
+                            ? 'Số liệu Tuần Reset vào 23:59 Chủ Nhật hàng tuần.'
+                            : 'Bảng xếp hạng dựa trên tổng số người mời thực tế.'}
+                    </p>
+                </div>
+
+                {sortedData.slice(0, 10).map((user, index) => {
+                    const isMe = `${user.firstName} ${user.lastName}`.trim() === userProfile.name.trim();
+                    const rankTitle = getMilitaryRank(user.referralCount);
+                    let icon = "💸"; let topColor = theme.textDim; let topBg = "transparent"; let topBorder = "transparent";
+                    
+                    if (index === 0) { icon = "👑"; topColor = theme.gold; topBg = 'rgba(244, 208, 63, 0.1)'; topBorder = theme.gold; }
+                    else if (index === 1) { icon = "💎"; topColor = '#C0C0C0'; topBg = 'rgba(192, 192, 192, 0.1)'; topBorder = '#C0C0C0'; }
+                    else if (index === 2) { icon = "🌟"; topColor = '#CD7F32'; topBg = 'rgba(205, 127, 50, 0.1)'; topBorder = '#CD7F32'; }
+                    else { topBorder = theme.border; }
+
+                    return (
+                        <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 10px', borderBottom: index < sortedData.length - 1 ? `1px solid ${theme.border}` : 'none', backgroundColor: isMe ? 'rgba(244, 208, 63, 0.05)' : 'transparent', borderRadius: '8px', marginBottom: '4px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '45px', marginRight: '12px', backgroundColor: topBg, border: `1px solid ${topBorder}`, borderRadius: '6px', padding: '4px' }}>
+                                    <span style={{ fontSize: '10px', fontWeight: 'bold', color: topColor }}>TOP {index + 1}</span>
+                                    <span style={{ fontSize: '18px', marginTop: '2px' }}>{icon}</span>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <span style={{ color: isMe ? theme.gold : theme.textLight, fontWeight: 'bold', fontSize: '15px' }}>
+                                        {user.firstName} {user.lastName} {isMe && <span style={{fontSize: '11px', color: theme.gold, fontWeight: 'normal'}}> (Bạn)</span>}
+                                    </span>
+                                    <span style={{ color: theme.textDim, fontSize: '12px', marginTop: '2px' }}>{rankTitle}</span>
+                                </div>
+                            </div>
+                            <div style={{ color: theme.green, fontWeight: 'bold', fontSize: '16px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                <span>{user.displayTotal} <span style={{ fontSize: '12px', color: theme.textDim, fontWeight: 'normal' }}>SWGT</span></span>
+                                <span style={{fontSize: '11px', color: theme.gold}}>({user.displayCount} người)</span>
+                            </div>
+                        </div>
+                    )
+                })}
+            </div>
+        );
+    };
+
     const renderHome = () => (
         <div style={{ padding: '0 20px 20px 20px' }}>
             
@@ -474,15 +569,15 @@ function App() {
 
             {/* KHỐI HƯỚNG DẪN CỘNG ĐỒNG MỚI */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
-                <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Mục Tiêu Phát Triển Cộng Đồng</h2>
+                <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Hướng dẫn Xây Dựng Hệ Thống</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}>
-                        <span style={{color: theme.textLight, fontWeight:'bold'}}>1️⃣ Lan tỏa Sky World Community</span><br/>
-                        Mời bạn bè tham gia vào Cộng đồng SWC Việt Nam thông qua Link Bot, bạn sẽ nhận ngay SWGT Token để quy đổi Cổ phần uST.
+                        <span style={{color: theme.textLight, fontWeight:'bold'}}>1️⃣ Trở thành Cổ đông uST</span><br/>
+                        Chỉ bằng việc mời bạn bè tham gia Bot SWC, bạn sẽ nhận được SWGT Token để quy đổi Cổ phần.
                     </p>
                     <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}>
                         <span style={{color: theme.textLight, fontWeight:'bold'}}>2️⃣ Chặng Nước Rút</span><br/>
-                        Sự kiện Airdrop chào đón thành viên mới sẽ KẾT THÚC vào Chủ Nhật tuần này. Hãy nhanh tay đưa anh em vào Group để cùng nhận đặc quyền!
+                        Sự kiện Airdrop miễn phí sẽ kết thúc vào Chủ Nhật tuần này. Tận dụng mọi thời gian để đua Top Leader!
                     </p>
                     <div style={{ backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, padding: '15px', borderRadius: '10px' }}>
                         <p style={{ margin: 0, color: theme.green, fontSize: '14px', lineHeight: '1.6' }}>
@@ -579,6 +674,9 @@ function App() {
                     </div>
                 </div>
 
+                <h3 style={{color: theme.gold, paddingBottom: '10px', marginBottom: '15px', fontSize: '17px', textAlign: 'center', fontWeight: '900'}}>🤝 BẢNG VÀNG ĐẠI SỨ</h3>
+                {renderWealthBoard()}
+
                 <div style={{ textAlign: 'center', paddingTop: '5px', marginBottom: '25px' }}>
                     <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', textDecoration: 'none', boxSizing: 'border-box' }}>
                         ✈️ CHIA SẺ LINK ĐỂ ĐUA TOP NGAY
@@ -609,9 +707,7 @@ function App() {
         );
     };
 
-    const renderWallet = () => {
-        // ... (Khối Wallet giữ nguyên)
-        return (
+    const renderWallet = () => (
         <div style={{ padding: '0 20px 20px 20px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '25px 20px', border: `1px solid ${theme.gold}`, textAlign: 'center', boxShadow: '0 4px 15px rgba(244, 208, 63, 0.1)' }}>
@@ -719,8 +815,7 @@ function App() {
                 </button>
             </div>
         </div>
-        );
-    };
+    );
 
     return (
         <div style={{ backgroundColor: theme.bg, minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '90px', boxSizing: 'border-box' }}>
