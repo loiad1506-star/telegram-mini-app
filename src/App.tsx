@@ -36,7 +36,7 @@ function App() {
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0 });
     const [isUnlocked, setIsUnlocked] = useState(false);
 
-    const [boardType, setBoardType] = useState('weekly'); 
+    // Xóa khai báo boardType không dùng đến
 
     const [animations, setAnimations] = useState<{id: number, text: string, x: number, y: number}[]>([]);
     const [serverDateVN, setServerDateVN] = useState<string>('');
@@ -360,7 +360,7 @@ function App() {
                 <div style={{ display: 'flex', alignItems: 'center', textAlign: 'right' }}>
                     <div style={{ marginRight: '15px' }}>
                         <h2 style={{ margin: 0, fontSize: '15px', color: theme.textLight, fontWeight: 'bold' }}>{userProfile.name}</h2>
-                        <p style={{ margin: 0, fontSize: '12px', color: theme.textDim, fontWeight: 'bold' }}>{getMilitaryRank(referrals)}</p>
+                        <p style={{ margin: 0, fontSize: '12px', color: theme.textDim, fontWeight: 'bold' }}>{militaryRank}</p>
                     </div>
                     
                     <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
@@ -472,7 +472,7 @@ function App() {
                 </button>
             </div>
 
-            {/* XÓA TOÀN BỘ KHỐI NHIỆM VỤ NẠP KIẾN THỨC VÀ CHIA SẺ, CHỈ ĐỂ LẠI GIAO DIỆN HƯỚNG DẪN */}
+            {/* KHỐI HƯỚNG DẪN CỘNG ĐỒNG MỚI */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Mục Tiêu Phát Triển Cộng Đồng</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -579,9 +579,6 @@ function App() {
                     </div>
                 </div>
 
-                <h3 style={{color: theme.gold, paddingBottom: '10px', marginBottom: '15px', fontSize: '17px', textAlign: 'center', fontWeight: '900'}}>🤝 BẢNG VÀNG ĐẠI SỨ</h3>
-                {renderWealthBoard()}
-
                 <div style={{ textAlign: 'center', paddingTop: '5px', marginBottom: '25px' }}>
                     <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', textDecoration: 'none', boxSizing: 'border-box' }}>
                         ✈️ CHIA SẺ LINK ĐỂ ĐUA TOP NGAY
@@ -612,7 +609,9 @@ function App() {
         );
     };
 
-    const renderWallet = () => (
+    const renderWallet = () => {
+        // ... (Khối Wallet giữ nguyên)
+        return (
         <div style={{ padding: '0 20px 20px 20px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '25px 20px', border: `1px solid ${theme.gold}`, textAlign: 'center', boxShadow: '0 4px 15px rgba(244, 208, 63, 0.1)' }}>
@@ -650,7 +649,7 @@ function App() {
             </div>
 
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
-                <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⏳ Đếm ngược mở khóa ví</h3>
+                <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⏳ Đếm ngược mở khóa ({lockDaysLimit} Ngày)</h3>
                 
                 {isUnlocked ? (
                     <div style={{ padding: '15px', backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, borderRadius: '10px', color: theme.green, fontWeight: 'bold', fontSize: '16px', textAlign: 'center' }}>
@@ -720,7 +719,8 @@ function App() {
                 </button>
             </div>
         </div>
-    );
+        );
+    };
 
     return (
         <div style={{ backgroundColor: theme.bg, minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '90px', boxSizing: 'border-box' }}>
