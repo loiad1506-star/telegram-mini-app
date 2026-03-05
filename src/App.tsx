@@ -20,13 +20,6 @@ function App() {
     
     const [giftCodeInput, setGiftCodeInput] = useState('');
 
-    const [tasks, setTasks] = useState({
-        readTaskDone: false,
-        youtubeTaskDone: false,
-        facebookTaskDone: false,
-        shareTaskDone: false
-    });
-
     const [userId, setUserId] = useState('');
     const [userProfile, setUserProfile] = useState({
         name: 'Đang tải...',
@@ -175,16 +168,6 @@ function App() {
 
                 const vnNowStr = data.serverDateVN || new Date(new Date().getTime() + 7 * 3600000).toISOString().split('T')[0];
                 setServerDateVN(vnNowStr);
-
-                const lastDailyStr = data.lastDailyTask ? new Date(new Date(data.lastDailyTask).getTime() + 7 * 3600000).toISOString().split('T')[0] : '';
-                const lastShareStr = data.lastShareTask ? new Date(new Date(data.lastShareTask).getTime() + 7 * 3600000).toISOString().split('T')[0] : '';
-                
-                setTasks({
-                    readTaskDone: lastDailyStr === vnNowStr, 
-                    shareTaskDone: lastShareStr === vnNowStr,
-                    youtubeTaskDone: data.youtubeTaskDone || false,
-                    facebookTaskDone: data.facebookTaskDone || false
-                });
             })
             .catch(err => console.error("Lỗi:", err));
     };
@@ -351,7 +334,6 @@ function App() {
         const effectColor = isFireEffect ? '#FF3B30' : '#00FFFF'; 
         const pulseAnim = isFireEffect ? 'pulseGlowRed 2s infinite' : 'pulseGlowCyan 2s infinite';
         
-        // Khai báo biến hiển thị Cấp bậc để sửa lỗi TS2552
         const militaryRank = getMilitaryRank(referrals);
 
         let myRank = 0;
@@ -593,22 +575,17 @@ function App() {
                 </button>
             </div>
 
-            <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.1)', border: `1px dashed ${theme.gold}`, padding: '15px', borderRadius: '10px', marginBottom: '20px' }}>
-                <p style={{ margin: 0, color: theme.gold, fontSize: '14px', lineHeight: '1.6', textAlign: 'center' }}>
-                    <span style={{fontWeight:'bold'}}>⚡ ĐẶC QUYỀN MỞ KHÓA TỐC ĐỘ:</span><br/>Cày đạt mốc <b>1500 SWGT</b> sẽ được <b style={{color: '#fff'}}>RÚT TIỀN VỀ VÍ NGAY LẬP TỨC</b>, bỏ qua hoàn toàn thời gian đếm ngược!
-                </p>
-            </div>
-
+            {/* KHỐI HƯỚNG DẪN CỘNG ĐỒNG */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
-                <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Hướng dẫn Xây Dựng Hệ Thống</h2>
+                <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Mục Tiêu Phát Triển Cộng Đồng</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}>
-                        <span style={{color: theme.textLight, fontWeight:'bold'}}>1️⃣ Trở thành Cổ đông uST</span><br/>
-                        Chỉ bằng việc mời bạn bè tham gia Bot SWC, bạn sẽ nhận được SWGT Token để quy đổi Cổ phần.
+                        <span style={{color: theme.textLight, fontWeight:'bold'}}>1️⃣ Lan tỏa Sky World Community</span><br/>
+                        Mời bạn bè tham gia vào Cộng đồng SWC Việt Nam thông qua Link Bot, bạn sẽ nhận ngay SWGT Token để quy đổi Cổ phần uST.
                     </p>
                     <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}>
                         <span style={{color: theme.textLight, fontWeight:'bold'}}>2️⃣ Chặng Nước Rút</span><br/>
-                        Sự kiện Airdrop miễn phí sẽ kết thúc vào Chủ Nhật tuần này. Tận dụng mọi thời gian để đua Top Leader!
+                        Sự kiện Airdrop chào đón thành viên mới sẽ KẾT THÚC vào Chủ Nhật tuần này. Hãy nhanh tay đưa anh em vào Group để cùng nhận đặc quyền!
                     </p>
                     <div style={{ backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, padding: '15px', borderRadius: '10px' }}>
                         <p style={{ margin: 0, color: theme.green, fontSize: '14px', lineHeight: '1.6' }}>
