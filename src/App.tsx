@@ -557,7 +557,7 @@ function App() {
                         {tasks.readTaskDone && <span style={{ color: theme.green, fontWeight: 'bold' }}>✅ Xong</span>}
                     </div>
                     {!tasks.readTaskDone && (
-                        <button onClick={(e) => claimTaskApp('read', e)} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold' }}>
+                        <button onClick={(e) => claimTaskApp('read', e)} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
                             🎁 NHẬN QUÀ ĐỌC BÀI
                         </button>
                     )}
@@ -572,7 +572,7 @@ function App() {
                         {tasks.youtubeTaskDone && <span style={{ color: theme.green, fontWeight: 'bold' }}>✅ Xong</span>}
                     </div>
                     {!tasks.youtubeTaskDone && (
-                        <button onClick={(e) => claimTaskApp('youtube', e)} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold' }}>
+                        <button onClick={(e) => claimTaskApp('youtube', e)} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
                             🎁 NHẬN QUÀ YOUTUBE
                         </button>
                     )}
@@ -587,7 +587,7 @@ function App() {
                         {tasks.facebookTaskDone && <span style={{ color: theme.green, fontWeight: 'bold' }}>✅ Xong</span>}
                     </div>
                     {!tasks.facebookTaskDone && (
-                        <button onClick={(e) => claimTaskApp('facebook', e)} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold' }}>
+                        <button onClick={(e) => claimTaskApp('facebook', e)} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
                             🎁 NHẬN QUÀ FANPAGE
                         </button>
                     )}
@@ -603,8 +603,8 @@ function App() {
                     </div>
                     {!tasks.shareTaskDone && (
                         <div style={{ display: 'flex', gap: '10px' }}>
-                            <button onClick={startShareTask} style={{ flex: 1, backgroundColor: '#34C759', color: '#fff', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold' }}>MỞ CHIA SẺ</button>
-                            <button onClick={(e) => claimTaskApp('share', e)} style={{ flex: 1, backgroundColor: theme.gold, color: '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold' }}>
+                            <button onClick={startShareTask} style={{ flex: 1, backgroundColor: '#34C759', color: '#fff', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>MỞ CHIA SẺ</button>
+                            <button onClick={(e) => claimTaskApp('share', e)} style={{ flex: 1, backgroundColor: theme.gold, color: '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
                                 NHẬN QUÀ
                             </button>
                         </div>
@@ -686,7 +686,7 @@ function App() {
                 {renderWealthBoard()}
 
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>💎 KHO ĐẶC QUYỀN VIP</h3>
-                <p style={{ color: theme.textDim, fontSize: '13px', marginBottom: '15px' }}>Hãy để lại số lượng Token</p>
+                <p style={{ color: theme.textDim, fontSize: '13px', marginBottom: '15px' }}>Dùng SWGT quy đổi lấy vũ khí thực chiến:</p>
                 
                 {/* GIỮ NGUYÊN CÁC MỐC CỬA HÀNG VIP NHƯ YÊU CẦU */}
                 <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '15px', marginBottom: '15px', border: `1px solid ${theme.border}`}}>
@@ -702,7 +702,7 @@ function App() {
                 </div>
 
                 <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '15px', marginBottom: '15px', border: `1px solid ${theme.border}`}}>
-                    <h4 style={{margin: '0 0 8px 0', color: theme.gold, fontSize: '16px'}}>🎟️ Phiếu Đầu Tư Ưu Đãi Đặc Biệt : 9000</h4>
+                    <h4 style={{margin: '0 0 8px 0', color: theme.gold, fontSize: '16px'}}>🎟️ Phiếu Đầu Tư Ưu Đãi : 9000</h4>
                     <p style={{fontSize: '14px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Nhận Voucher chiết khấu đặc biệt khi vào gói đầu tư lớn.</p>
                     <button onClick={() => redeemItem('Phiếu Đầu Tư', 9000)} style={{backgroundColor: theme.gold, color: '#000', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer'}}>LIÊN HỆ ADMIN</button>
                 </div>
