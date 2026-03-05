@@ -20,13 +20,6 @@ function App() {
     
     const [giftCodeInput, setGiftCodeInput] = useState('');
 
-    const [tasks, setTasks] = useState({
-        readTaskDone: false,
-        youtubeTaskDone: false,
-        facebookTaskDone: false,
-        shareTaskDone: false
-    });
-
     const [userId, setUserId] = useState('');
     const [userProfile, setUserProfile] = useState({
         name: 'Đang tải...',
@@ -47,6 +40,9 @@ function App() {
 
     const [animations, setAnimations] = useState<{id: number, text: string, x: number, y: number}[]>([]);
     const [serverDateVN, setServerDateVN] = useState<string>('');
+
+    // ĐỒNG HỒ ĐẾM NGƯỢC EVENT KẾT THÚC KHAI THÁC
+    const [eventTimeLeft, setEventTimeLeft] = useState({ days: 0, hours: 0, mins: 0, secs: 0 });
 
     const BACKEND_URL = 'https://swc-bot-brain.onrender.com';
 
@@ -75,7 +71,7 @@ function App() {
         { req: 500, reward: 700, key: 'milestone500', rank: 'Đại Tướng 🌟🌟🌟🌟' }
     ];
 
-    const STREAK_REWARDS = [0.25, 0.75, 1.5, 1.75, 2.5, 3.5, 4.5];
+    const STREAK_REWARDS = [0.5, 1.5, 3, 3.5, 5, 7, 9];
 
     const triggerFloatAnim = (reward: string | number, x: number, y: number) => {
         const newAnim = { id: Date.now() + Math.random(), text: `+${reward} SWGT`, x, y };
@@ -105,6 +101,36 @@ function App() {
         }, 1000);
         return () => clearInterval(interval);
     }, [unlockDateMs, balance]);
+
+    // TÍNH TOÁN ĐỒNG HỒ ĐẾM NGƯỢC TỚI 23:59 CHỦ NHẬT TUẦN NÀY
+    useEffect(() => {
+        const calculateNextSunday = () => {
+            const now = new Date();
+            const daysUntilSunday = 7 - now.getDay();
+            const nextSunday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + (daysUntilSunday === 7 ? 0 : daysUntilSunday), 23, 59, 59);
+            return nextSunday.getTime();
+        };
+
+        const targetTime = calculateNextSunday();
+
+        const eventInterval = setInterval(() => {
+            const now = new Date().getTime();
+            const distance = targetTime - now;
+
+            if (distance <= 0) {
+                setEventTimeLeft({ days: 0, hours: 0, mins: 0, secs: 0 });
+            } else {
+                setEventTimeLeft({
+                    days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+                    hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+                    mins: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+                    secs: Math.floor((distance % (1000 * 60)) / 1000)
+                });
+            }
+        }, 1000);
+
+        return () => clearInterval(eventInterval);
+    }, []);
 
     const fetchUserData = (uid: string) => {
         fetch(`${BACKEND_URL}/api/user?id=${uid}`)
@@ -139,16 +165,6 @@ function App() {
 
                 const vnNowStr = data.serverDateVN || new Date(new Date().getTime() + 7 * 3600000).toISOString().split('T')[0];
                 setServerDateVN(vnNowStr);
-
-                const lastDailyStr = data.lastDailyTask ? new Date(new Date(data.lastDailyTask).getTime() + 7 * 3600000).toISOString().split('T')[0] : '';
-                const lastShareStr = data.lastShareTask ? new Date(new Date(data.lastShareTask).getTime() + 7 * 3600000).toISOString().split('T')[0] : '';
-                
-                setTasks({
-                    readTaskDone: lastDailyStr === vnNowStr, 
-                    shareTaskDone: lastShareStr === vnNowStr,
-                    youtubeTaskDone: data.youtubeTaskDone || false,
-                    facebookTaskDone: data.facebookTaskDone || false
-                });
             })
             .catch(err => console.error("Lỗi:", err));
     };
@@ -310,29 +326,6 @@ function App() {
         }
     };
 
-    const startShareTask = () => {
-        const url = `https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Cơ%20hội%20nhận%20SWGT%20miễn%20phí%20từ%20Cộng%20Đồng%20SWC!`;
-        window.open(url, '_blank'); 
-    };
-
-    const claimTaskApp = (taskType: string, e: React.MouseEvent) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        const floatX = rect.left + rect.width / 2;
-        const floatY = rect.top;
-
-        fetch(`${BACKEND_URL}/api/claim-app-task`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, taskType })
-        }).then(res => res.json()).then(data => {
-            if(data.success) {
-                setBalance(data.balance);
-                setTasks(prev => ({ ...prev, [`${taskType}TaskDone`]: true }));
-                triggerFloatAnim(data.reward, floatX, floatY); 
-            } else { alert(data.message || "⚠️ Bạn chưa thao tác trên Bot Telegram hoặc chưa nán lại đủ thời gian!"); }
-        }).catch(() => alert("⚠️ Mạng chậm, vui lòng thử lại."));
-    };
-
     const renderHeader = () => {
         const isFireEffect = (Number(userId || 1) % 2) !== 0; 
         const effectColor = isFireEffect ? '#FF3B30' : '#00FFFF'; 
@@ -367,7 +360,7 @@ function App() {
                 <div style={{ display: 'flex', alignItems: 'center', textAlign: 'right' }}>
                     <div style={{ marginRight: '15px' }}>
                         <h2 style={{ margin: 0, fontSize: '15px', color: theme.textLight, fontWeight: 'bold' }}>{userProfile.name}</h2>
-                        <p style={{ margin: 0, fontSize: '12px', color: theme.textDim, fontWeight: 'bold' }}>{militaryRank}</p>
+                        <p style={{ margin: 0, fontSize: '12px', color: theme.textDim, fontWeight: 'bold' }}>{getMilitaryRank(referrals)}</p>
                     </div>
                     
                     <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
@@ -401,26 +394,11 @@ function App() {
     }
 
     const renderWealthBoard = () => {
-        const dummyUsers = [
-            { firstName: 'Vũ', lastName: 'Dũng', referralCount: 65, weeklyReferralCount: 12 },
-            { firstName: 'Mai', lastName: 'Thiều Thị', referralCount: 60, weeklyReferralCount: 10 },
-            { firstName: 'LINH', lastName: 'NGUYEN', referralCount: 47, weeklyReferralCount: 8 },
-            { firstName: 'Minh', lastName: 'Ngọc Hoàng', referralCount: 33, weeklyReferralCount: 5 },
-            { firstName: 'PHƯƠNG', lastName: 'ANH PHÙNG', referralCount: 27, weeklyReferralCount: 4 },
-            { firstName: 'Nông', lastName: 'Mao', referralCount: 12, weeklyReferralCount: 3 },
-            { firstName: 'Support', lastName: '', referralCount: 11, weeklyReferralCount: 2 },
-            { firstName: 'OSAKA', lastName: 'CHAU HUYNH', referralCount: 10, weeklyReferralCount: 1 },
-            { firstName: 'Trinh', lastName: 'Lê', referralCount: 9, weeklyReferralCount: 1 },
-            { firstName: 'Lý', lastName: 'Hà', referralCount: 8, weeklyReferralCount: 0 }
-        ];
-
         let displayData = [...leaderboard];
-        if (displayData.length < 10) displayData = [...displayData, ...dummyUsers.slice(0, 10 - displayData.length)];
-
         const sortedData = displayData.map(u => ({
             ...u,
             displayCount: boardType === 'weekly' ? (u.weeklyReferralCount || 0) : u.referralCount,
-            displayTotal: boardType === 'weekly' ? (u.weeklyReferralCount || 0) * 5 : (u.referralCount * 5) + 300
+            displayTotal: boardType === 'weekly' ? (u.weeklyReferralCount || 0) * 15 : (u.referralCount * 15) + 300
         })).sort((a, b) => b.displayCount - a.displayCount);
 
         return (
@@ -500,6 +478,31 @@ function App() {
 
     const renderHome = () => (
         <div style={{ padding: '0 20px 20px 20px' }}>
+            
+            {/* ĐỒNG HỒ ĐẾM NGƯỢC FOMO (HIỆN NGAY TRÊN CÙNG TRANG CHỦ) */}
+            <div style={{ backgroundColor: 'rgba(255, 59, 48, 0.1)', border: `1px dashed ${theme.red}`, borderRadius: '15px', padding: '20px', textAlign: 'center', marginBottom: '20px', animation: 'pulseGlowRed 2s infinite' }}>
+                <h3 style={{ margin: '0 0 10px 0', color: theme.red, fontSize: '16px', fontWeight: '900', textTransform: 'uppercase' }}>
+                    🚨 CẢNH BÁO: ĐÓNG CỔNG KHAI THÁC SWGT MIỄN PHÍ
+                </h3>
+                <p style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '13px', lineHeight: '1.5' }}>
+                    99% Tổng cung Airdrop đã được khai thác. Hệ thống sẽ chính thức đóng cổng khai thác vào <b style={{color: theme.gold}}>23:59 Chủ Nhật Tuần Này!</b>
+                </p>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                    <div style={{ padding: '10px 12px', backgroundColor: theme.red, borderRadius: '8px', color: '#fff', fontWeight: '900', fontSize: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        {eventTimeLeft.days} <span style={{fontSize:'10px', fontWeight:'normal', textTransform:'uppercase'}}>Ngày</span>
+                    </div>
+                    <div style={{ padding: '10px 12px', backgroundColor: theme.red, borderRadius: '8px', color: '#fff', fontWeight: '900', fontSize: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        {eventTimeLeft.hours} <span style={{fontSize:'10px', fontWeight:'normal', textTransform:'uppercase'}}>Giờ</span>
+                    </div>
+                    <div style={{ padding: '10px 12px', backgroundColor: theme.red, borderRadius: '8px', color: '#fff', fontWeight: '900', fontSize: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        {eventTimeLeft.mins} <span style={{fontSize:'10px', fontWeight:'normal', textTransform:'uppercase'}}>Phút</span>
+                    </div>
+                    <div style={{ padding: '10px 12px', backgroundColor: '#333', borderRadius: '8px', color: theme.gold, fontWeight: '900', fontSize: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        {eventTimeLeft.secs} <span style={{fontSize:'10px', fontWeight:'normal', textTransform:'uppercase'}}>Giây</span>
+                    </div>
+                </div>
+            </div>
+
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', marginBottom: '20px' }}>
                 <div style={{ flex: 1, backgroundColor: theme.cardBg, borderRadius: '12px', padding: '15px 5px', textAlign: 'center', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: 0, color: theme.gold, fontSize: '20px', fontWeight: 'bold' }}>{balance}</h3>
@@ -552,71 +555,34 @@ function App() {
                 </button>
             </div>
 
+            {/* XÓA TOÀN BỘ KHỐI NHIỆM VỤ NẠP KIẾN THỨC VÀ CHIA SẺ, CHỈ ĐỂ LẠI GIAO DIỆN BẢNG VÀNG VÀ CHÍNH SÁCH */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
-                <h2 style={{ color: theme.textLight, margin: '0 0 5px 0', fontSize: '17px' }}>🧠 Nạp Kiến Thức & Lan Tỏa</h2>
-                <p style={{ color: theme.gold, fontSize: '11px', marginBottom: '15px', fontStyle: 'italic' }}>⚠️ Lưu ý: Bạn cần bấm vào Link nhiệm vụ do Bot gửi trong tin nhắn trước khi bấm Nhận Quà tại đây.</p>
+                <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Hướng dẫn Xây Dựng Hệ Thống</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>1️⃣ Trở thành Cổ đông uST</span><br/>Chỉ bằng việc mời bạn bè tham gia Bot SWC, bạn sẽ nhận được SWGT Token để quy đổi Cổ phần.</p>
+                    <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}><span style={{color: theme.textLight, fontWeight:'bold'}}>2️⃣ Chặng Nước Rút</span><br/>Sự kiện Airdrop miễn phí sẽ kết thúc vào Chủ Nhật tuần này. Tận dụng mọi thời gian để đua Top Leader!</p>
+                    <div style={{ backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, padding: '15px', borderRadius: '10px' }}>
+                        <p style={{ margin: 0, color: theme.green, fontSize: '14px', lineHeight: '1.6' }}>
+                            <span style={{fontWeight:'bold'}}>💬 MẸO: Tương tác kiếm thêm điểm</span><br/>Mỗi tin nhắn bạn chat trong Nhóm Thảo Luận (từ 10 ký tự trở lên) tự động cộng <b style={{color: theme.gold}}>+0.1 SWGT</b>. Chat càng nhiều, tiền càng nhiều!
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
+                <h2 style={{ color: theme.gold, margin: '0 0 15px 0', fontSize: '18px' }}>💎 Cơ Cấu Phần Thưởng SWGT</h2>
+                <div style={{ color: theme.textDim, fontSize: '14px', margin: '0 0 10px 0', lineHeight: '1.6' }}>
+                    <p style={{ margin: 0 }}>Khách hoàn thành nhiệm vụ Tân Binh: <span style={{color: theme.gold, fontWeight:'bold'}}>+10 SWGT/người</span></p>
+                </div>
                 
-                <div style={{ backgroundColor: '#000', padding: '12px', borderRadius: '10px', marginBottom: '10px', border: `1px solid ${theme.border}` }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                        <div>
-                            <h4 style={{ margin: 0, color: theme.textLight, fontSize: '14px' }}>📖 Đọc bài phân tích</h4>
-                            <p style={{ margin: 0, color: theme.textDim, fontSize: '12px' }}>Đợi 60 giây (+3 SWGT)</p>
-                        </div>
-                        {tasks.readTaskDone && <span style={{ color: theme.green, fontWeight: 'bold' }}>✅ Xong</span>}
-                    </div>
-                    {!tasks.readTaskDone && (
-                        <button onClick={(e) => claimTaskApp('read', e)} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
-                            🎁 NHẬN QUÀ ĐỌC BÀI
-                        </button>
-                    )}
-                </div>
-
-                <div style={{ backgroundColor: '#000', padding: '12px', borderRadius: '10px', marginBottom: '10px', border: `1px solid ${theme.border}` }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                        <div>
-                            <h4 style={{ margin: 0, color: theme.textLight, fontSize: '14px' }}>▶️ Xem YouTube SWC</h4>
-                            <p style={{ margin: 0, color: theme.textDim, fontSize: '12px' }}>Đợi 6 giây (+2.5 SWGT)</p>
-                        </div>
-                        {tasks.youtubeTaskDone && <span style={{ color: theme.green, fontWeight: 'bold' }}>✅ Xong</span>}
-                    </div>
-                    {!tasks.youtubeTaskDone && (
-                        <button onClick={(e) => claimTaskApp('youtube', e)} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
-                            🎁 NHẬN QUÀ YOUTUBE
-                        </button>
-                    )}
-                </div>
-
-                <div style={{ backgroundColor: '#000', padding: '12px', borderRadius: '10px', marginBottom: '10px', border: `1px solid ${theme.border}` }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                        <div>
-                            <h4 style={{ margin: 0, color: theme.textLight, fontSize: '14px' }}>📘 Theo dõi Fanpage</h4>
-                            <p style={{ margin: 0, color: theme.textDim, fontSize: '12px' }}>Đợi 5 giây (+2.5 SWGT)</p>
-                        </div>
-                        {tasks.facebookTaskDone && <span style={{ color: theme.green, fontWeight: 'bold' }}>✅ Xong</span>}
-                    </div>
-                    {!tasks.facebookTaskDone && (
-                        <button onClick={(e) => claimTaskApp('facebook', e)} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
-                            🎁 NHẬN QUÀ FANPAGE
-                        </button>
-                    )}
-                </div>
-
-                <div style={{ backgroundColor: '#000', padding: '12px', borderRadius: '10px', border: `1px solid ${theme.border}` }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                        <div>
-                            <h4 style={{ margin: 0, color: theme.textLight, fontSize: '14px' }}>📢 Chia sẻ dự án</h4>
-                            <p style={{ margin: 0, color: theme.textDim, fontSize: '12px' }}>Chuyển tiếp cho bạn bè (+2 SWGT)</p>
-                        </div>
-                        {tasks.shareTaskDone && <span style={{ color: theme.green, fontWeight: 'bold' }}>✅ Xong</span>}
-                    </div>
-                    {!tasks.shareTaskDone && (
-                        <div style={{ display: 'flex', gap: '10px' }}>
-                            <button onClick={startShareTask} style={{ flex: 1, backgroundColor: '#34C759', color: '#fff', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>MỞ CHIA SẺ</button>
-                            <button onClick={(e) => claimTaskApp('share', e)} style={{ flex: 1, backgroundColor: theme.gold, color: '#000', padding: '10px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
-                                NHẬN QUÀ
-                            </button>
-                        </div>
-                    )}
+                <div style={{ backgroundColor: '#fef2f2', borderLeft: '4px solid #ef4444', padding: '12px', marginTop: '15px', borderRadius: '6px' }}>
+                    <h4 style={{ color: '#991b1b', fontWeight: 'bold', margin: '0 0 8px 0', fontSize: '14px' }}>
+                        ⚠️ CHÍNH SÁCH CHỐNG GIAN LẬN (RADAR 24/7)
+                    </h4>
+                    <p style={{ color: '#b91c1c', margin: 0, fontSize: '13px', lineHeight: '1.5' }}>
+                        1. Tài khoản ảo/mới tạo sẽ bị giam tiền <b>30 ngày</b>.<br/>
+                        2. Bắt buộc duy trì trong Group tối thiểu <b>21 ngày</b>. Rời nhóm = <b>THU HỒI TOÀN BỘ!</b>
+                    </p>
                 </div>
             </div>
         </div>
@@ -693,12 +659,6 @@ function App() {
                 <h3 style={{color: theme.gold, paddingBottom: '10px', marginBottom: '15px', fontSize: '17px', textAlign: 'center', fontWeight: '900'}}>🤝 BẢNG VÀNG ĐẠI SỨ</h3>
                 {renderWealthBoard()}
 
-                <div style={{ textAlign: 'center', paddingTop: '5px', marginBottom: '25px' }}>
-                    <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', textDecoration: 'none', boxSizing: 'border-box' }}>
-                        ✈️ CHIA SẺ LINK ĐỂ ĐUA TOP NGAY
-                    </a>
-                </div>
-
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>💎 KHO ĐẶC QUYỀN VIP</h3>
                 <p style={{ color: theme.textDim, fontSize: '13px', marginBottom: '15px' }}>Dùng SWGT quy đổi lấy vũ khí thực chiến:</p>
                 
@@ -715,7 +675,7 @@ function App() {
                 </div>
 
                 <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '15px', marginBottom: '15px', border: `1px solid ${theme.border}`}}>
-                    <h4 style={{margin: '0 0 8px 0', color: theme.gold, fontSize: '16px'}}>🎟️ Phiếu Đầu Tư Ưu Đãi Đặc Biệt : 9000</h4>
+                    <h4 style={{margin: '0 0 8px 0', color: theme.gold, fontSize: '16px'}}>🎟️ Phiếu Đầu Tư Ưu Đãi : 9000</h4>
                     <p style={{fontSize: '14px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Nhận Voucher chiết khấu đặc biệt khi vào gói đầu tư lớn.</p>
                     <button onClick={() => redeemItem('Phiếu Đầu Tư', 9000)} style={{backgroundColor: theme.gold, color: '#000', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer'}}>LIÊN HỆ ADMIN</button>
                 </div>
@@ -761,7 +721,7 @@ function App() {
             </div>
 
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
-                <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⏳ Đếm ngược mở khóa ví</h3>
+                <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⏳ Đếm ngược mở khóa ({lockDaysLimit} Ngày)</h3>
                 
                 {isUnlocked ? (
                     <div style={{ padding: '15px', backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, borderRadius: '10px', color: theme.green, fontWeight: 'bold', fontSize: '16px', textAlign: 'center' }}>
@@ -830,7 +790,7 @@ function App() {
                     </div>
                 )}
 
-                <button onClick={handleSaveWallet} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '15px', cursor: 'pointer' }}>
+                <button onClick={handleSaveWallet} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
                     {(withdrawMethod === 'erc20' && wallet) || (withdrawMethod === 'gate' && gatecode) ? "CẬP NHẬT THÔNG TIN THANH TOÁN" : "LƯU THÔNG TIN THANH TOÁN"}
                 </button>
             </div>
@@ -838,7 +798,7 @@ function App() {
     );
 
     return (
-        <div style={{ backgroundColor: theme.bg, minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '90px' }}>
+        <div style={{ backgroundColor: theme.bg, minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '90px', boxSizing: 'border-box' }}>
             <style>{`
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
                 
