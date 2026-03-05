@@ -81,7 +81,7 @@ function App() {
         }, 1000);
     };
 
-    // Tính toán thời gian đếm ngược tới Chủ Nhật tuần này
+    // Tính toán thời gian đếm ngược
     useEffect(() => {
         const calculateNextSunday = () => {
             const now = new Date();
@@ -497,7 +497,7 @@ function App() {
     const renderHome = () => (
         <div style={{ padding: '0 20px 20px 20px' }}>
             
-            {/* ĐỒNG HỒ ĐẾM NGƯỢC FOMO (HIỆN NGAY TRÊN CÙNG TRANG CHỦ) */}
+            {/* ĐỒNG HỒ ĐẾM NGƯỢC FOMO */}
             <div style={{ backgroundColor: 'rgba(255, 59, 48, 0.1)', border: `1px dashed ${theme.red}`, borderRadius: '15px', padding: '20px', textAlign: 'center', marginBottom: '20px', animation: 'pulseGlowRed 2s infinite' }}>
                 <h3 style={{ margin: '0 0 10px 0', color: theme.red, fontSize: '16px', fontWeight: '900', textTransform: 'uppercase' }}>
                     🚨 CẢNH BÁO: ĐÓNG CỔNG KHAI THÁC SWGT MIỄN PHÍ
@@ -573,13 +573,18 @@ function App() {
                 </button>
             </div>
 
-            {/* KHỐI HƯỚNG DẪN CỘNG ĐỒNG MỚI */}
+            <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.1)', border: `1px dashed ${theme.gold}`, padding: '15px', borderRadius: '10px', marginBottom: '20px' }}>
+                <p style={{ margin: 0, color: theme.gold, fontSize: '14px', lineHeight: '1.6', textAlign: 'center' }}>
+                    <span style={{fontWeight:'bold'}}>⚡ ĐẶC QUYỀN MỞ KHÓA TỐC ĐỘ:</span><br/>Cày đạt mốc <b>1500 SWGT</b> sẽ được <b style={{color: '#fff'}}>RÚT TIỀN VỀ VÍ NGAY LẬP TỨC</b>, bỏ qua hoàn toàn thời gian đếm ngược!
+                </p>
+            </div>
+
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
-                <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Mục Tiêu Phát Triển Cộng Đồng</h2>
+                <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Cách Hoạt Động</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}>
                         <span style={{color: theme.textLight, fontWeight:'bold'}}>1️⃣ Lan tỏa Sky World Community</span><br/>
-                        Mời bạn bè tham gia vào Cộng đồng SWC Việt Nam thông qua Link Bot, bạn sẽ nhận ngay SWGT Token.
+                        Mời bạn bè tham gia vào Cộng đồng SWC Việt Nam thông qua Link Bot, bạn sẽ nhận ngay SWGT Token để quy đổi Cổ phần uST.
                     </p>
                     <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}>
                         <span style={{color: theme.textLight, fontWeight:'bold'}}>2️⃣ Chặng Nước Rút</span><br/>
