@@ -14,6 +14,7 @@ function App() {
     
     // Thêm State cho Ngân hàng (Thanh khoản VNĐ)
     const [bankName, setBankName] = useState('');
+    const [accountName, setAccountName] = useState(''); // Thêm Tên Chủ TK
     const [bankAccount, setBankAccount] = useState('');
 
     const [referrals, setReferrals] = useState(0); 
@@ -74,7 +75,8 @@ function App() {
         { req: 500, reward: 700, key: 'milestone500', rank: 'Đại Tướng 🌟🌟🌟🌟' }
     ];
 
-    const STREAK_REWARDS = [0.5, 1.5, 3, 3.5, 5, 7, 9];
+    // Cập nhật lại mảng điểm danh mới nhất theo yêu cầu
+    const STREAK_REWARDS = [0.25, 0.75, 1.5, 1.75, 2.5, 3.5, 4.5];
 
     const triggerFloatAnim = (reward: string | number, x: number, y: number) => {
         const newAnim = { id: Date.now() + Math.random(), text: `+${reward} SWGT`, x, y };
@@ -292,18 +294,18 @@ function App() {
         }
     };
 
-    // --- HÀM CHO 2 OPTION THANH KHOẢN ---
+    // --- HÀM CHO 2 OPTION THANH KHOẢN (Cập nhật Min 5k và Chủ TK) ---
     const handleLiquidateVND = (vndAmount: string, isEligible: boolean) => {
-        if (!isEligible) return alert("⚠️ Số dư quy đổi chưa đạt tối thiểu 100.000 VNĐ. Bạn cần cày thêm SWGT hoặc chọn Nạp ghép vốn!");
-        if (!bankName || !bankAccount) return alert("⚠️ Vui lòng nhập Tên Ngân Hàng và Số Tài Khoản để nhận tiền!");
+        if (!isEligible) return alert("⚠️ Số dư quy đổi chưa đạt tối thiểu 5.000 VNĐ.");
+        if (!bankName || !bankAccount || !accountName) return alert("⚠️ Vui lòng nhập Tên Ngân Hàng, Chủ Tài Khoản và Số Tài Khoản để nhận tiền!");
         if (window.confirm(`Xác nhận thanh lý ${balance} SWGT để nhận ${vndAmount} VNĐ về tài khoản ngân hàng?`)) {
             fetch(`${BACKEND_URL}/api/liquidate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, vndAmount, bankName, bankAccount }) 
+                body: JSON.stringify({ userId, vndAmount, bankName, accountName, bankAccount }) 
             }).then(res => res.json()).then(data => {
                 if(data.success) {
-                    setBalance(data.balance); setBankName(''); setBankAccount('');
+                    setBalance(data.balance); setBankName(''); setBankAccount(''); setAccountName('');
                     alert(`✅ Lệnh thanh khoản đã gửi! Vui lòng chờ Admin chuyển khoản cho bạn.`);
                 } else { alert(data.message); }
             });
@@ -449,10 +451,13 @@ function App() {
         let displayData = [...leaderboard];
         if (displayData.length < 10) displayData = [...displayData, ...dummyUsers.slice(0, 10 - displayData.length)];
 
+        // HIỂN THỊ TỔNG TÀI SẢN THEO CÔNG THỨC: 15 SWGT/1 REF + 350đ Nhiệm vụ
         const sortedData = displayData.map(u => ({
             ...u,
             displayCount: boardType === 'weekly' ? (u.weeklyReferralCount || 0) : u.referralCount,
-            displayTotal: boardType === 'weekly' ? (u.weeklyReferralCount || 0) * 5 : (u.referralCount * 5) + 300
+            displayTotal: boardType === 'weekly' 
+                ? (u.weeklyReferralCount || 0) * 5 
+                : (u.referralCount * 15) + 350
         })).sort((a, b) => b.displayCount - a.displayCount);
 
         return (
@@ -765,8 +770,8 @@ function App() {
         const costUSDT = (shortfall * 0.020).toFixed(2);
         const costVND = Math.floor(shortfall * 0.020 * usdtRate).toLocaleString('vi-VN');
         
-        // Cờ khóa nút Bán VNĐ nếu chưa đủ 100k
-        const isEligibleForVND = liquidateVNDNum >= 100000;
+        // Điều kiện: Chỉ cần đủ 5000 VNĐ là được rút
+        const isEligibleForVND = liquidateVNDNum >= 5000;
 
         return (
             <div style={{ padding: '0 20px 20px 20px' }}>
@@ -799,12 +804,13 @@ function App() {
                                 BQT hỗ trợ thu mua số dư nhỏ ngay lập tức. Số dư <b>{balance} SWGT</b> của bạn có thể quy đổi thành: <b style={{color: theme.gold, fontSize: '16px'}}>{liquidateVND} VNĐ</b>
                             </p>
                             <input value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="Tên Ngân hàng (VD: Vietcombank)" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '10px', fontSize: '13px' }} />
+                            <input value={accountName} onChange={(e) => setAccountName(e.target.value)} placeholder="Họ và Tên Chủ Tài Khoản" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '10px', fontSize: '13px' }} />
                             <input value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} placeholder="Số Tài Khoản Nhận Tiền" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '15px', fontSize: '13px' }} />
                             <button 
                                 onClick={() => handleLiquidateVND(liquidateVND, isEligibleForVND)} 
                                 style={{ width: '100%', backgroundColor: isEligibleForVND ? theme.green : '#333', color: isEligibleForVND ? '#fff' : theme.textDim, padding: '14px', borderRadius: '8px', fontWeight: 'bold', border: 'none', cursor: isEligibleForVND ? 'pointer' : 'not-allowed' }}
                             >
-                                {isEligibleForVND ? `BÁN LẤY ${liquidateVND} VNĐ` : `🔒 CẦN ĐẠT MIN 100.000 VNĐ`}
+                                {isEligibleForVND ? `BÁN LẤY ${liquidateVND} VNĐ` : `🔒 CẦN ĐẠT MIN 5.000 VNĐ`}
                             </button>
                         </div>
 
