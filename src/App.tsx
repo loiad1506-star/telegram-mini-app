@@ -122,6 +122,7 @@ function App() {
             const now = new Date().getTime();
             const distance = unlockDateMs - now;
             
+            // LUẬT MỚI: HẾT NGÀY ĐẾM NGƯỢC HOẶC SỐ DƯ ĐẠT 500 LÀ AUTO MỞ KHÓA
             if (distance <= 0 || balance >= 500) {
                 setIsUnlocked(true);
                 setTimeLeft({ days: 0, hours: 0, mins: 0 });
@@ -349,23 +350,25 @@ function App() {
         });
     };
 
+    // FIX LỖI TS2322: TÁCH RIÊNG XỬ LÝ PROMPT EMAIL
     const redeemItem = (itemName: string, cost: number) => {
         if (balance < cost) return alert(`⚠️ Bạn cần thêm ${cost - balance} SWGT nữa để đổi quyền lợi này!`);
         
-        let userEmail = "";
+        let finalEmail = "";
         if (itemName.includes('Ebook') || itemName.includes('Audio') || itemName.includes('Combo')) {
-            userEmail = window.prompt(`📧 Nhập địa chỉ Gmail của bạn để Admin gửi tài liệu [${itemName}]:`);
-            if (userEmail === null) return; 
-            if (!userEmail.trim() || !userEmail.includes('@')) {
+            const promptInput = window.prompt(`📧 Nhập địa chỉ Gmail của bạn để Admin gửi tài liệu [${itemName}]:`);
+            if (promptInput === null) return; 
+            if (!promptInput.trim() || !promptInput.includes('@')) {
                 return alert("⚠️ Địa chỉ Gmail không hợp lệ. Vui lòng thao tác lại!");
             }
+            finalEmail = promptInput.trim();
         }
 
         if (window.confirm(`Xác nhận dùng ${cost} SWGT để đổi lấy [${itemName}]?`)) {
             fetch(`${BACKEND_URL}/api/redeem`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, itemName, cost, email: userEmail })
+                body: JSON.stringify({ userId, itemName, cost, email: finalEmail })
             }).then(res => res.json()).then(data => {
                 if(data.success) { 
                     setBalance(data.balance); 
@@ -824,10 +827,11 @@ function App() {
     };
 
     const renderWallet = () => {
+        // Khách hàng dưới 500 thì hiện Thanh Khoản VNĐ và Nạp Ghép Vốn
         const isUnder500 = balance > 0 && balance < 500;
         
-        const bidRate = 25400; 
-        const askRate = 27000; 
+        const bidRate = 25400; // Tỷ giá thu mua VNĐ
+        const askRate = 27000; // Tỷ giá ghép vốn USDT
 
         const liquidateVNDNum = Math.floor(balance * 0.007 * bidRate); 
         const liquidateVND = liquidateVNDNum.toLocaleString('vi-VN');
@@ -860,13 +864,13 @@ function App() {
                     </div>
                 </div>
 
-                {/* 2. KHỐI ĐẾM NGƯỢC */}
+                {/* 2. KHỐI ĐẾM NGƯỢC (Luôn nằm trên cùng) */}
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⏳ Tình trạng Mở khóa ({lockDaysLimit} Ngày)</h3>
                     
                     {isUnlocked ? (
                         <div style={{ padding: '15px', backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, borderRadius: '10px', color: theme.green, fontWeight: 'bold', fontSize: '16px', textAlign: 'center' }}>
-                            🎉 ĐÃ ĐỦ ĐIỀU KIỆN. CỔNG GIAO DỊCH ĐÃ MỞ!
+                            🎉 THỜI GIAN KHÓA ĐÃ KẾT THÚC. CỔNG GIAO DỊCH ĐÃ MỞ!
                         </div>
                     ) : (
                         <div style={{ backgroundColor: '#000', padding: '20px', borderRadius: '10px', textAlign: 'center', border: `1px solid ${theme.border}` }}>
@@ -877,7 +881,7 @@ function App() {
                                 <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.hours} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Giờ</span></div>
                                 <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.mins} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Phút</span></div>
                             </div>
-                            <p style={{ color: theme.gold, fontSize: '12px', margin: '10px 0 0 0', fontStyle: 'italic' }}>Gợi ý: Cày hoặc Nạp đạt 500 SWGT để mở khóa ngay lập tức!</p>
+                            <p style={{ color: theme.gold, fontSize: '12px', margin: '10px 0 0 0', fontStyle: 'italic' }}>Vui lòng chờ hết đếm ngược để mở khóa ví!</p>
                         </div>
                     )}
                 </div>
@@ -917,7 +921,7 @@ function App() {
                         </div>
                     </div>
                 ) : (
-                    // --- 4. KHỐI RÚT TIỀN TRÊN 500 ---
+                    // --- 4. KHỐI RÚT TIỀN TRÊN 500 (CHỈ HIỂN THỊ KHI ĐÃ UNLOCKED VÀ TRÊN 500) ---
                     <div style={{ animation: 'fadeIn 0.5s ease' }}>
                         {isUnlocked ? (
                             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', textAlign: 'center', border: `1px solid ${theme.border}`, marginBottom: '20px' }}>
@@ -935,13 +939,13 @@ function App() {
                             </div>
                         ) : (
                             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', textAlign: 'center', border: `1px dashed ${theme.red}`, marginBottom: '20px' }}>
-                                <p style={{ color: theme.red, fontSize: '14px', margin: '0', fontWeight: 'bold' }}>Tài khoản của bạn đã đạt 500 SWGT nhưng chưa hết thời gian khóa. Vui lòng chờ đợi!</p>
+                                <p style={{ color: theme.red, fontSize: '14px', margin: '0', fontWeight: 'bold' }}>Tài khoản của bạn đã đạt 500 SWGT nhưng chưa hết thời gian khóa 15 ngày. Vui lòng chờ đợi!</p>
                             </div>
                         )}
                     </div>
                 )}
 
-                {/* 5. KHỐI THIẾT LẬP THANH TOÁN */}
+                {/* 5. KHỐI THIẾT LẬP THANH TOÁN (LUÔN HIỆN) */}
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⚙️ Thiết lập thanh toán</h3>
                     
