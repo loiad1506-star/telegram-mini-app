@@ -12,7 +12,6 @@ function App() {
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     
-    // Thêm State cho Ngân hàng (Thanh khoản VNĐ)
     const [bankName, setBankName] = useState('');
     const [accountName, setAccountName] = useState(''); 
     const [bankAccount, setBankAccount] = useState('');
@@ -293,7 +292,7 @@ function App() {
         }
     };
 
-    // --- HÀM CHO 2 OPTION THANH KHOẢN (Cập nhật giá 0.008) ---
+    // --- HÀM THANH KHOẢN & GHÉP VỐN ---
     const handleLiquidateVND = (vndAmount: string, isEligible: boolean) => {
         if (!isEligible) return alert("⚠️ Số dư quy đổi chưa đạt tối thiểu 5.000 VNĐ.");
         if (!bankName || !bankAccount || !accountName) return alert("⚠️ Vui lòng nhập Tên Ngân Hàng, Chủ Tài Khoản và Số Tài Khoản để nhận tiền!");
@@ -319,7 +318,7 @@ function App() {
                 body: JSON.stringify({ userId, usdtAmount, vndAmount }) 
             }).then(res => res.json()).then(data => {
                 if(data.success) {
-                    alert(`✅ Yêu cầu đã ghi nhận! Bot Telegram vừa gửi tin nhắn hướng dẫn thanh toán cho bạn.`);
+                    alert(`✅ Bot Telegram vừa gửi tin nhắn cấp số tài khoản cho bạn. Hãy mở Bot kiểm tra và làm theo hướng dẫn nhé!`);
                 }
             });
         }
@@ -351,7 +350,7 @@ function App() {
     };
 
     const redeemItem = (itemName: string, cost: number) => {
-        if (balance < cost) return alert(`⚠️ Bạn cần thêm ${cost - balance} SWGT nữa để đổi tài liệu này!`);
+        if (balance < cost) return alert(`⚠️ Bạn cần thêm ${cost - balance} SWGT nữa để đổi quyền lợi này!`);
         if (window.confirm(`Xác nhận dùng ${cost} SWGT để đổi lấy [${itemName}]?`)) {
             fetch(`${BACKEND_URL}/api/redeem`, {
                 method: 'POST',
@@ -360,7 +359,7 @@ function App() {
             }).then(res => res.json()).then(data => {
                 if(data.success) { 
                     setBalance(data.balance); 
-                    alert("🎉 Đổi tài liệu thành công! Vui lòng kiểm tra tin nhắn với Bot Telegram để nhận File."); 
+                    alert("🎉 Đổi thưởng thành công! Vui lòng kiểm tra tin nhắn với Bot Telegram để nhận file/link."); 
                 }
             });
         }
@@ -617,15 +616,15 @@ function App() {
 
             {/* KHỐI HƯỚNG DẪN CỘNG ĐỒNG */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
-                <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Mục Tiêu Phát Triển Cộng Đồng</h2>
+                <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Hướng dẫn Xây Dựng Hệ Thống</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}>
-                        <span style={{color: theme.textLight, fontWeight:'bold'}}>1️⃣ Lan tỏa Sky World Community</span><br/>
-                        Mời bạn bè tham gia vào Cộng đồng SWC Việt Nam thông qua Link Bot, bạn sẽ nhận ngay SWGT Token để quy đổi Cổ phần uST.
+                        <span style={{color: theme.textLight, fontWeight:'bold'}}>1️⃣ Trở thành Cổ đông uST</span><br/>
+                        Chỉ bằng việc mời bạn bè tham gia Bot SWC, bạn sẽ nhận được SWGT Token để quy đổi Cổ phần.
                     </p>
                     <p style={{ margin: 0, color: theme.textDim, fontSize: '14px', lineHeight: '1.6' }}>
                         <span style={{color: theme.textLight, fontWeight:'bold'}}>2️⃣ Chặng Nước Rút</span><br/>
-                        Sự kiện Airdrop chào đón thành viên mới sẽ KẾT THÚC vào Chủ Nhật tuần này. Hãy nhanh tay đưa anh em vào Group để cùng nhận đặc quyền!
+                        Sự kiện Airdrop miễn phí sẽ kết thúc vào Chủ Nhật tuần này. Tận dụng mọi thời gian để đua Top Leader!
                     </p>
                     <div style={{ backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, padding: '15px', borderRadius: '10px' }}>
                         <p style={{ margin: 0, color: theme.green, fontSize: '14px', lineHeight: '1.6' }}>
@@ -711,16 +710,16 @@ function App() {
                         <li>Miễn phí vào Group Private vĩnh viễn.</li>
                         <li>Hỗ trợ 1-1 nạp rút, họp Zoom kín.</li>
                     </ul>
-                    <button onClick={() => alert("Hãy nhắn tin cho Admin và gửi kèm ảnh chụp màn hình gói SWC Pass của bạn để được duyệt vào Nhóm Kín nhé!")} style={{backgroundColor: theme.green, color: '#fff', border: 'none', padding: '10px 0', width: '100%', borderRadius: '8px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'}}>LIÊN HỆ NHẬN QUYỀN LỢI</button>
+                    <button onClick={() => alert("Hãy tham gia Nhóm Chat và nhắn tin cho Admin (@swc_capital_vn), gửi kèm ảnh chụp màn hình tài khoản SWC Pass của bạn để được duyệt vào Nhóm Kín @swctradings nhé!")} style={{backgroundColor: theme.green, color: '#fff', border: 'none', padding: '10px 0', width: '100%', borderRadius: '8px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'}}>LIÊN HỆ NHẬN QUYỀN LỢI</button>
                 </div>
 
                 <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '15px', marginBottom: '25px', border: `1px solid ${theme.border}`}}>
                     <h4 style={{margin: '0 0 8px 0', color: theme.red, fontSize: '15px'}}>🔴 KHÁCH NGOÀI HỆ THỐNG (CROSSLINE)</h4>
-                    <p style={{fontSize: '13px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Anh em thuộc tuyến Leader khác nhưng vẫn muốn tham gia Group VIP của Admin để nhận phím kèo & tài liệu độc quyền.</p>
+                    <p style={{fontSize: '13px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Anh em thuộc tuyến Leader khác nhưng vẫn muốn tham gia Group VIP @swctradings của Admin để nhận phím kèo & tài liệu độc quyền.</p>
                     <div style={{ backgroundColor: '#000', padding: '12px', borderRadius: '8px', marginBottom: '15px' }}>
                         <p style={{ margin: 0, color: theme.gold, fontSize: '14px', fontWeight: 'bold', textAlign: 'center' }}>PHÍ BẢO TRỢ: 2000 SWGT / NĂM</p>
                     </div>
-                    <button onClick={() => redeemItem('Vé vào Group VIP (Khách Crossline)', 2000)} style={{backgroundColor: '#333', color: theme.gold, border: `1px solid ${theme.gold}`, padding: '10px 0', width: '100%', borderRadius: '8px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'}}>DÙNG 2000 SWGT ĐỂ VÀO NHÓM</button>
+                    <button onClick={() => redeemItem('Vé vào Group VIP @swctradings (Khách Crossline)', 2000)} style={{backgroundColor: '#333', color: theme.gold, border: `1px solid ${theme.gold}`, padding: '10px 0', width: '100%', borderRadius: '8px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'}}>DÙNG 2000 SWGT ĐỂ VÀO NHÓM</button>
                 </div>
 
                 {/* 3. KHU VỰC NHIỆM VỤ CŨ & BẢNG XẾP HẠNG */}
@@ -798,12 +797,12 @@ function App() {
     const renderWallet = () => {
         // Biến toán học cho 2 Option Thanh khoản
         const isUnder500 = balance > 0 && balance < 500;
-        const usdtRate = 25400;
-        const liquidateVNDNum = Math.floor(balance * 0.008 * usdtRate);
+        const usdtRate = 27000;
+        const liquidateVNDNum = Math.floor(balance * 0.008 * 25400); // Admin thu mua tỉ giá cũ 25400
         const liquidateVND = liquidateVNDNum.toLocaleString('vi-VN');
         const shortfall = 500 - balance;
         const costUSDT = (shortfall * 0.020).toFixed(2);
-        const costVND = Math.floor(shortfall * 0.020 * usdtRate).toLocaleString('vi-VN');
+        const costVND = Math.floor(shortfall * 0.020 * usdtRate).toLocaleString('vi-VN'); // Khách nạp tỉ giá mới 27000
         
         // Điều kiện: Chỉ cần đủ 5000 VNĐ là được rút
         const isEligibleForVND = liquidateVNDNum >= 5000;
