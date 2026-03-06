@@ -663,40 +663,20 @@ function App() {
         return (
             <div style={{ padding: '0 20px 20px 20px', paddingBottom: '100px' }}>
                 
-                {/* 1. KHU VỰC KHO TRI THỨC */}
+                {/* 1. KHU VỰC KHO TRI THỨC (CẬP NHẬT CHỈ CÒN 1 QUYỂN LOGIC KIẾM TIỀN) */}
                 <div style={{ textAlign: 'center', marginBottom: '20px', marginTop: '10px' }}>
                     <div style={{ fontSize: '40px', marginBottom: '5px' }}>📚</div>
                     <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '20px', fontWeight: '900', textTransform: 'uppercase' }}>Kho Tàng Tri Thức</h2>
                     <p style={{ color: theme.textDim, fontSize: '13px', margin: 0 }}>Dùng SWGT đổi lấy Ebook / Audio tuyệt mật.</p>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '30px' }}>
-                    <div style={{ backgroundColor: theme.cardBg, padding: '15px', borderRadius: '12px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
-                        <div style={{ fontSize: '30px', marginBottom: '10px' }}>📘</div>
-                        <h4 style={{ margin: '0 0 5px 0', color: theme.textLight, fontSize: '13px', height: '32px' }}>Logic Kiếm Tiền</h4>
-                        <p style={{ color: theme.gold, fontWeight: 'bold', fontSize: '14px', margin: '0 0 10px 0' }}>200 SWGT</p>
-                        <button onClick={() => redeemItem('Ebook Logic Kiếm Tiền', 200)} style={{ backgroundColor: '#5E92F3', color: '#fff', border: 'none', padding: '8px 0', width: '100%', borderRadius: '6px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}>ĐỔI NGAY</button>
-                    </div>
-
-                    <div style={{ backgroundColor: theme.cardBg, padding: '15px', borderRadius: '12px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
-                        <div style={{ fontSize: '30px', marginBottom: '10px' }}>📕</div>
-                        <h4 style={{ margin: '0 0 5px 0', color: theme.textLight, fontSize: '13px', height: '32px' }}>Luật Ngầm Tài Chính</h4>
-                        <p style={{ color: theme.gold, fontWeight: 'bold', fontSize: '14px', margin: '0 0 10px 0' }}>300 SWGT</p>
-                        <button onClick={() => redeemItem('Ebook Luật Ngầm Tài Chính', 300)} style={{ backgroundColor: '#5E92F3', color: '#fff', border: 'none', padding: '8px 0', width: '100%', borderRadius: '6px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}>ĐỔI NGAY</button>
-                    </div>
-
-                    <div style={{ backgroundColor: theme.cardBg, padding: '15px', borderRadius: '12px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
-                        <div style={{ fontSize: '30px', marginBottom: '10px' }}>🎧</div>
-                        <h4 style={{ margin: '0 0 5px 0', color: theme.textLight, fontSize: '13px', height: '32px' }}>Nhân Tính Đen Trắng</h4>
-                        <p style={{ color: theme.gold, fontWeight: 'bold', fontSize: '14px', margin: '0 0 10px 0' }}>400 SWGT</p>
-                        <button onClick={() => redeemItem('Audio Nhân Tính Đen Trắng', 400)} style={{ backgroundColor: '#5E92F3', color: '#fff', border: 'none', padding: '8px 0', width: '100%', borderRadius: '6px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}>ĐỔI NGAY</button>
-                    </div>
-
-                    <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.1)', padding: '15px', borderRadius: '12px', border: `1px solid ${theme.gold}`, textAlign: 'center' }}>
-                        <div style={{ fontSize: '30px', marginBottom: '10px' }}>👑</div>
-                        <h4 style={{ margin: '0 0 5px 0', color: theme.gold, fontSize: '13px', height: '32px' }}>Combo Thượng Lưu</h4>
-                        <p style={{ color: theme.gold, fontWeight: 'bold', fontSize: '14px', margin: '0 0 10px 0' }}>500 SWGT</p>
-                        <button onClick={() => redeemItem('Combo Thượng Lưu (Full Bộ)', 500)} style={{ backgroundColor: theme.gold, color: '#000', border: 'none', padding: '8px 0', width: '100%', borderRadius: '6px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}>ĐỔI COMBO</button>
+                <div style={{ marginBottom: '30px' }}>
+                    <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '12px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
+                        <div style={{ fontSize: '40px', marginBottom: '10px' }}>📘</div>
+                        <h4 style={{ margin: '0 0 5px 0', color: theme.textLight, fontSize: '16px' }}>Bản Gốc: Logic Kiếm Tiền</h4>
+                        <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 10px 0' }}>Bí mật dòng tiền của giới tinh hoa.</p>
+                        <p style={{ color: theme.gold, fontWeight: 'bold', fontSize: '16px', margin: '0 0 15px 0' }}>200 SWGT</p>
+                        <button onClick={() => redeemItem('Ebook Logic Kiếm Tiền', 200)} style={{ backgroundColor: '#5E92F3', color: '#fff', border: 'none', padding: '12px 0', width: '100%', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}>ĐỔI NGAY</button>
                     </div>
                 </div>
 
@@ -723,14 +703,6 @@ function App() {
                 </div>
 
                 {/* 3. KHU VỰC NHIỆM VỤ CŨ & BẢNG XẾP HẠNG */}
-                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
-                    <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>🔗 Link Lan Tỏa</h3>
-                    <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '8px', color: theme.gold, fontSize: '13px', wordBreak: 'break-all', marginBottom: '15px', border: `1px dashed ${theme.border}` }}>
-                        https://t.me/Dau_Tu_SWC_bot?start={userId || 'ref'}
-                    </div>
-                    <button onClick={handleCopyLink} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>📋 COPY LINK MỜI</button>
-                </div>
-
                 <h3 style={{color: '#fff', paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🚀 9 CỘT MỐC THƯỞNG NÓNG</h3>
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '10px' }}>
@@ -782,6 +754,14 @@ function App() {
                     </div>
                 </div>
 
+                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
+                    <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>🔗 Link Lan Tỏa</h3>
+                    <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '8px', color: theme.gold, fontSize: '13px', wordBreak: 'break-all', marginBottom: '15px', border: `1px dashed ${theme.border}` }}>
+                        https://t.me/Dau_Tu_SWC_bot?start={userId || 'ref'}
+                    </div>
+                    <button onClick={handleCopyLink} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>📋 COPY LINK MỜI</button>
+                </div>
+
                 <h3 style={{color: theme.gold, paddingBottom: '10px', marginBottom: '15px', fontSize: '17px', textAlign: 'center', fontWeight: '900'}}>🤝 BẢNG VÀNG ĐẠI SỨ</h3>
                 {renderWealthBoard()}
 
@@ -796,12 +776,16 @@ function App() {
 
     const renderWallet = () => {
         const isUnder500 = balance > 0 && balance < 500;
-        const usdtRate = 25400;
-        const liquidateVNDNum = Math.floor(balance * 0.008 * 25400); 
+        
+        // CẬP NHẬT BIẾN ĐỂ TRÁNH LỖI TS6133
+        const bidRate = 25400; // Tỷ giá thu mua VNĐ
+        const askRate = 27000; // Tỷ giá ghép vốn USDT
+
+        const liquidateVNDNum = Math.floor(balance * 0.008 * bidRate); 
         const liquidateVND = liquidateVNDNum.toLocaleString('vi-VN');
         const shortfall = 500 - balance;
         const costUSDT = (shortfall * 0.020).toFixed(2);
-        const costVND = Math.floor(shortfall * 0.020 * 27000).toLocaleString('vi-VN'); 
+        const costVND = Math.floor(shortfall * 0.020 * askRate).toLocaleString('vi-VN'); 
         
         const isEligibleForVND = liquidateVNDNum >= 5000;
 
@@ -828,7 +812,7 @@ function App() {
                     </div>
                 </div>
 
-                {/* 2. KHỐI ĐẾM NGƯỢC (Đưa lên trên cùng theo yêu cầu) */}
+                {/* 2. KHỐI ĐẾM NGƯỢC */}
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⏳ Tình trạng Mở khóa ({lockDaysLimit} Ngày)</h3>
                     
@@ -850,7 +834,7 @@ function App() {
                     )}
                 </div>
 
-                {/* 3. KHỐI HÀNH ĐỘNG RÚT/THANH KHOẢN (CHỈ HIỂN THỊ KHI isUnlocked === true) */}
+                {/* 3. KHỐI HÀNH ĐỘNG RÚT/THANH KHOẢN */}
                 {isUnlocked && (
                     <div style={{ animation: 'fadeIn 0.5s ease' }}>
                         {isUnder500 ? (
@@ -907,7 +891,7 @@ function App() {
                     </div>
                 )}
 
-                {/* 4. KHỐI THIẾT LẬP THANH TOÁN (LUÔN HIỂN THỊ ĐỂ KHÁCH CẬP NHẬT TRƯỚC) */}
+                {/* 4. KHỐI THIẾT LẬP THANH TOÁN */}
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⚙️ Thiết lập thanh toán</h3>
                     
