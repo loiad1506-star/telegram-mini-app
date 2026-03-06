@@ -356,7 +356,7 @@ function App() {
         if (balance < cost) return alert(`⚠️ Bạn cần thêm ${cost - balance} SWGT nữa để đổi quyền lợi này!`);
         
         let finalEmail = "";
-        if (itemName.includes('Ebook') || itemName.includes('Audio') || itemName.includes('Combo') || itemName.includes('Gói')) {
+        if (itemName.includes('Ebook') || itemName.includes('Audio') || itemName.includes('Combo')) {
             const promptInput = window.prompt(`📧 Nhập địa chỉ Gmail của bạn để Admin gửi tài liệu [${itemName}]:`);
             if (promptInput === null) return; 
             if (!promptInput.trim() || !promptInput.includes('@')) {
@@ -379,7 +379,7 @@ function App() {
         }
     };
 
-    // --- HÀM MỞ RƯƠNG BÍ ẨN ĐÃ FIX LỖI TÊN QUÀ ---
+    // --- HÀM MỞ RƯƠNG BÍ ẨN ---
     const handleOpenChest = () => {
         if (balance < 20) return alert("⚠️ Bạn cần tối thiểu 20 SWGT để mua búa đập rương!");
         setIsShaking(true);
@@ -396,15 +396,11 @@ function App() {
                 setIsShaking(false);
                 if (data.success) {
                     setBalance(data.newBalance);
-                    // Dùng thủ thuật Fallback: Nếu backend cũ trả về, tự map tên quà
-                    setOpenedReward({ 
-                        type: data.rewardType || (data.reward > 0 ? 'swgt' : 'none'), 
-                        name: data.rewardName || (data.reward > 0 ? `${data.reward} SWGT` : 'Chúc bạn may mắn lần sau!') 
-                    });
+                    setOpenedReward({ type: data.rewardType, name: data.rewardName });
                 } else {
                     alert(data.message || "❌ Có lỗi xảy ra, không thể mở rương!");
                 }
-            }, 1500); 
+            }, 1500); // Rung rương trong 1.5 giây tạo hồi hộp
         })
         .catch(() => {
             setIsShaking(false);
@@ -727,24 +723,13 @@ function App() {
                             </button>
                         </>
                     ) : (
-                        <div className="pop-in" style={{ padding: '10px 0' }}>
-                            <div style={{ fontSize: '70px', marginBottom: '15px' }}>
+                        <div className="pop-in" style={{ padding: '20px 0' }}>
+                            <div style={{ fontSize: '80px', marginBottom: '15px' }}>
                                 {openedReward.type === 'none' ? '😢' : (openedReward.type === 'swgt' ? '💸' : '🎁')}
                             </div>
-                            
-                            {/* KHUNG HIỂN THỊ TÊN QUÀ CỰC ĐẸP ĐÃ FIX LỖI TÀNG HÌNH CHỮ */}
-                            {openedReward.type !== 'none' ? (
-                                <div style={{ backgroundColor: openedReward.type === 'swgt' ? 'rgba(244, 208, 63, 0.15)' : 'rgba(52, 199, 89, 0.15)', border: `1px dashed ${openedReward.type === 'swgt' ? theme.gold : theme.green}`, padding: '10px 20px', borderRadius: '10px', margin: '0 auto 15px auto', display: 'inline-block' }}>
-                                    <h3 style={{ color: openedReward.type === 'swgt' ? theme.gold : theme.green, margin: 0, fontSize: '20px', fontWeight: '900' }}>
-                                        {openedReward.name}
-                                    </h3>
-                                </div>
-                            ) : (
-                                <h3 style={{ color: theme.textDim, margin: '0 0 15px 0', fontSize: '20px', fontWeight: '900' }}>
-                                    {openedReward.name}
-                                </h3>
-                            )}
-
+                            <h3 style={{ color: openedReward.type === 'none' ? theme.textDim : theme.green, margin: '0 0 10px 0', fontSize: '22px', fontWeight: '900' }}>
+                                {openedReward.name}
+                            </h3>
                             <p style={{ color: theme.textLight, fontSize: '13px', margin: '0 0 25px 0', lineHeight: '1.5', padding: '0 10px' }}>
                                 {openedReward.type === 'none' ? "Rất tiếc, rương trống không! Hãy thử lại vận may nhé." 
                                 : (openedReward.type === 'swgt' ? "Chúc mừng! Số tiền đã được cộng thẳng vào Két sắt của bạn." 
@@ -761,14 +746,15 @@ function App() {
                 </div>
 
                 <div style={{ width: '100%', backgroundColor: 'rgba(244, 208, 63, 0.05)', border: `1px dashed ${theme.gold}`, borderRadius: '12px', padding: '15px', marginTop: '20px', boxSizing: 'border-box' }}>
-                    <h4 style={{ color: theme.gold, margin: '0 0 10px 0', fontSize: '14px' }}>📊 TỶ LỆ TRÚNG ĐỒ & BẢO HIỂM :</h4>
-                    <ul style={{ color: theme.textDim, fontSize: '13px', margin: 0, paddingLeft: '20px', lineHeight: '1.8' }}>
-                        <li style={{ color: '#fff', fontWeight: 'bold', marginBottom: '5px' }}>💎 CƠ CHẾ BẢO HIỂM ĐẶC BIỆT:<br/><span style={{ color: theme.green, fontWeight: 'normal', fontSize: '12px' }}>Đập rương tích lũy, TRONG 30 LẦN ĐẬP CHẮC CHẮN TRÚNG 500 SWGT!</span></li>
-                        <li>Trúng <b style={{color: '#fff'}}>5 - 500 SWGT</b> (Tỉ lệ cao)</li>
-                        <li>Trúng <b style={{color: theme.gold}}>Sách & Audio VIP</b> (Siêu hiếm)</li>
+                    <h4 style={{ color: theme.gold, margin: '0 0 10px 0', fontSize: '14px' }}>📊 TỶ LỆ RỚT ĐỒ:</h4>
+                    <ul style={{ color: theme.textDim, fontSize: '12px', margin: 0, paddingLeft: '20px', lineHeight: '1.8' }}>
+                        <li>Trúng <b style={{color: '#fff'}}>5 - 50 SWGT</b> (Tỉ lệ cao)</li>
+                        <li>Trúng <b style={{color: theme.green}}>Sách: Logic Kiếm Tiền</b> (Cực hiếm)</li>
+                        <li>Trúng <b style={{color: theme.green}}>Audio: Nhân Tính</b> (Cực hiếm)</li>
                         <li>Rương rỗng (Có rủi ro)</li>
                     </ul>
                 </div>
+            </div>
         );
     }
 
@@ -934,7 +920,6 @@ function App() {
     };
 
     const renderWallet = () => {
-        // Khách hàng dưới 500 thì hiện Thanh Khoản VNĐ và Nạp Ghép Vốn
         const isUnder500 = balance > 0 && balance < 500;
         
         const bidRate = 25400; // Tỷ giá thu mua VNĐ
@@ -971,7 +956,7 @@ function App() {
                     </div>
                 </div>
 
-                {/* 2. KHỐI ĐẾM NGƯỢC (Luôn nằm trên cùng) */}
+                {/* 2. KHỐI ĐẾM NGƯỢC */}
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⏳ Tình trạng Mở khóa ({lockDaysLimit} Ngày)</h3>
                     
@@ -988,12 +973,12 @@ function App() {
                                 <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.hours} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Giờ</span></div>
                                 <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.mins} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Phút</span></div>
                             </div>
-                            <p style={{ color: theme.gold, fontSize: '12px', margin: '10px 0 0 0', fontStyle: 'italic' }}>Mẹo: Nạp Ghép Vốn để đủ 500 SWGT và mở khóa ngay lập tức!</p>
+                            <p style={{ color: theme.gold, fontSize: '12px', margin: '10px 0 0 0', fontStyle: 'italic' }}>Gợi ý: Cày hoặc Nạp đạt 500 SWGT để mở khóa ngay lập tức!</p>
                         </div>
                     )}
                 </div>
 
-                {/* 3. KHỐI HÀNH ĐỘNG DƯỚI 500 (VẪN CHO BÁN VNĐ VÀ NẠP TIỀN BẤT CHẤP THỜI GIAN KHÓA) */}
+                {/* 3. KHỐI HÀNH ĐỘNG DƯỚI 500 */}
                 {isUnder500 ? (
                     <div style={{ animation: 'fadeIn 0.5s ease' }}>
                         <div style={{ backgroundColor: 'rgba(52, 199, 89, 0.05)', borderRadius: '15px', padding: '20px', border: `1px solid ${theme.green}`, marginBottom: '15px' }}>
@@ -1006,7 +991,7 @@ function App() {
                             <input value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} placeholder="Số Tài Khoản Nhận Tiền" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '15px', fontSize: '13px' }} />
                             <button 
                                 onClick={() => handleLiquidateVND(liquidateVND, isEligibleForVND)} 
-                                style={{ width: '100%', backgroundColor: isEligibleForVND ? theme.green : '#333', color: isEligibleForVND ? '#fff' : theme.textDim, padding: '14px', borderRadius: '8px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
+                                style={{ width: '100%', backgroundColor: isEligibleForVND ? theme.green : '#333', color: isEligibleForVND ? '#fff' : theme.textDim, padding: '14px', borderRadius: '8px', fontWeight: 'bold', border: 'none', cursor: isEligibleForVND ? 'pointer' : 'not-allowed' }}
                             >
                                 {isEligibleForVND ? `BÁN LẤY ${liquidateVND} VNĐ` : `🔒 CẦN ĐẠT MIN 5.000 VNĐ`}
                             </button>
@@ -1015,7 +1000,7 @@ function App() {
                         <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.05)', borderRadius: '15px', padding: '20px', border: `1px solid ${theme.gold}`, marginBottom: '20px' }}>
                             <h3 style={{ margin: '0 0 10px 0', color: theme.gold, fontSize: '15px', textTransform: 'uppercase' }}>⚡ GHÉP VỐN ĐỂ RÚT TOKEN</h3>
                             <p style={{ color: theme.textLight, fontSize: '13px', margin: '0 0 15px 0', lineHeight: '1.5' }}>
-                                Bạn đang thiếu <b>{shortfall} SWGT</b> để đủ hạn mức rút về ví cá nhân (Min 500). Bạn có thể mua thêm từ quỹ OTC nội bộ để miễn phí Gas mạng lưới. Sau khi nạp đủ, hệ thống sẽ mở khóa rút tiền ngay.
+                                Bạn đang thiếu <b>{shortfall} SWGT</b> để đủ hạn mức rút về ví cá nhân (Min 500). Bạn có thể mua thêm từ quỹ OTC nội bộ để miễn phí Gas mạng lưới.
                             </p>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', backgroundColor: '#000', padding: '12px', borderRadius: '8px' }}>
                                 <span style={{ color: theme.textDim, fontSize: '13px' }}>Chi phí nạp ghép vốn:</span>
@@ -1052,7 +1037,7 @@ function App() {
                     </div>
                 )}
 
-                {/* 5. KHỐI THIẾT LẬP THANH TOÁN (LUÔN HIỆN) */}
+                {/* 5. KHỐI THIẾT LẬP THANH TOÁN */}
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⚙️ Thiết lập thanh toán</h3>
                     
@@ -1250,3 +1235,4 @@ function App() {
 }
 
 export default App;
+
