@@ -1245,7 +1245,7 @@ function App() {
 
                 <div onClick={() => setActiveTab('game')} className={`nav-item ${activeTab === 'game' ? 'active' : ''}`} style={{ color: activeTab === 'game' ? theme.gold : theme.textDim }}>
                     <div className="nav-icon">🕹️</div>
-                    <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Trò chơi</span>
+                    <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Đập Rương</span>
                 </div>
                 
                 <div onClick={() => setActiveTab('rewards')} className={`nav-item ${activeTab === 'rewards' ? 'active' : ''}`} style={{ color: activeTab === 'rewards' ? theme.gold : theme.textDim }}>
