@@ -761,15 +761,14 @@ function App() {
                 </div>
 
                 <div style={{ width: '100%', backgroundColor: 'rgba(244, 208, 63, 0.05)', border: `1px dashed ${theme.gold}`, borderRadius: '12px', padding: '15px', marginTop: '20px', boxSizing: 'border-box' }}>
-                    <h4 style={{ color: theme.gold, margin: '0 0 10px 0', fontSize: '14px' }}>📊 TỶ LỆ RỚT ĐỒ:</h4>
-                    <ul style={{ color: theme.textDim, fontSize: '12px', margin: 0, paddingLeft: '20px', lineHeight: '1.8' }}>
-                        <li>Trúng <b style={{color: '#fff'}}>5 - 50 SWGT</b> (Tỉ lệ cao)</li>
-                        <li>Trúng <b style={{color: theme.green}}>Sách: Logic Kiếm Tiền</b> (Cực hiếm)</li>
-                        <li>Trúng <b style={{color: theme.green}}>Audio: Nhân Tính</b> (Cực hiếm)</li>
+                    <h4 style={{ color: theme.gold, margin: '0 0 10px 0', fontSize: '14px' }}>📊 TỶ LỆ TRÚNG ĐỒ & BẢO HIỂM :</h4>
+                    <ul style={{ color: theme.textDim, fontSize: '13px', margin: 0, paddingLeft: '20px', lineHeight: '1.8' }}>
+                        <li style={{ color: '#fff', fontWeight: 'bold', marginBottom: '5px' }}>💎 CƠ CHẾ BẢO HIỂM ĐẶC BIỆT:<br/><span style={{ color: theme.green, fontWeight: 'normal', fontSize: '12px' }}>Đập rương tích lũy, TRONG 30 LẦN ĐẬP CHẮC CHẮN TRÚNG 500 SWGT!</span></li>
+                        <li>Trúng <b style={{color: '#fff'}}>5 - 500 SWGT</b> (Tỉ lệ cao)</li>
+                        <li>Trúng <b style={{color: theme.gold}}>Sách & Audio VIP</b> (Siêu hiếm)</li>
                         <li>Rương rỗng (Có rủi ro)</li>
                     </ul>
                 </div>
-            </div>
         );
     }
 
