@@ -122,8 +122,8 @@ function App() {
             const now = new Date().getTime();
             const distance = unlockDateMs - now;
             
-            // Mở khóa nếu hết ngày HOẶC tài khoản >= 500 SWGT
-            if (distance <= 0 || balance >= 500) {
+            // ÉP BUỘC PHẢI CHỜ HẾT ĐẾM NGƯỢC (Không quan tâm số dư)
+            if (distance <= 0) {
                 setIsUnlocked(true);
                 setTimeLeft({ days: 0, hours: 0, mins: 0 });
             } else {
@@ -136,7 +136,7 @@ function App() {
             }
         }, 1000);
         return () => clearInterval(interval);
-    }, [unlockDateMs, balance]);
+    }, [unlockDateMs]);
 
     const fetchUserData = (uid: string) => {
         fetch(`${BACKEND_URL}/api/user?id=${uid}`)
@@ -266,9 +266,9 @@ function App() {
     };
 
     const handleWithdraw = () => {
-        // Chỉ cho phép rút khi đã mở khóa
+        // Ràng buộc nghiêm ngặt: Phải mở khóa VÀ đủ 500
         if (!isUnlocked) { 
-            return alert(`⏳ Bạn chưa hết thời gian mở khóa (${lockDaysLimit} ngày). Cày lên 500 SWGT để được rút ngay nhé!`); 
+            return alert(`⏳ Bạn chưa hết thời gian mở khóa (${lockDaysLimit} ngày). Vui lòng kiên nhẫn chờ đợi!`); 
         }
         const amount = Number(withdrawAmount);
         if (!amount || amount < 500) return alert("⚠️ Bạn cần rút tối thiểu 500 SWGT!");
@@ -453,7 +453,6 @@ function App() {
         let displayData = [...leaderboard];
         if (displayData.length < 10) displayData = [...displayData, ...dummyUsers.slice(0, 10 - displayData.length)];
 
-        // HIỂN THỊ TỔNG TÀI SẢN THEO CÔNG THỨC: 15 SWGT/1 REF + 350đ Nhiệm vụ
         const sortedData = displayData.map(u => ({
             ...u,
             displayCount: boardType === 'weekly' ? (u.weeklyReferralCount || 0) : u.referralCount,
@@ -665,7 +664,7 @@ function App() {
         return (
             <div style={{ padding: '0 20px 20px 20px', paddingBottom: '100px' }}>
                 
-                {/* 1. KHU VỰC KHO TRI THỨC (CẬP NHẬT CHỈ CÒN 1 QUYỂN LOGIC KIẾM TIỀN) */}
+                {/* 1. KHU VỰC KHO TRI THỨC */}
                 <div style={{ textAlign: 'center', marginBottom: '20px', marginTop: '10px' }}>
                     <div style={{ fontSize: '40px', marginBottom: '5px' }}>📚</div>
                     <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '20px', fontWeight: '900', textTransform: 'uppercase' }}>Kho Tàng Tri Thức</h2>
@@ -777,8 +776,6 @@ function App() {
     };
 
     const renderWallet = () => {
-        // Khách hàng dưới 500 thì hiện Thanh Khoản VNĐ và Nạp Ghép Vốn
-        // Khách hàng từ 500 trở lên thì TỰ ĐỘNG KHÓA NẠP, mở khóa RÚT TIỀN nếu hết 15 ngày
         const isUnder500 = balance > 0 && balance < 500;
         
         const bidRate = 25400; // Tỷ giá thu mua VNĐ
@@ -821,7 +818,7 @@ function App() {
                     
                     {isUnlocked ? (
                         <div style={{ padding: '15px', backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, borderRadius: '10px', color: theme.green, fontWeight: 'bold', fontSize: '16px', textAlign: 'center' }}>
-                            {balance >= 500 ? "🎉 ĐÃ ĐỦ ĐIỀU KIỆN: CỔNG RÚT MỞ!" : "🎉 TÀI KHOẢN ĐÃ MỞ KHÓA GIAO DỊCH!"}
+                            🎉 THỜI GIAN KHÓA ĐÃ KẾT THÚC. CỔNG GIAO DỊCH ĐÃ MỞ!
                         </div>
                     ) : (
                         <div style={{ backgroundColor: '#000', padding: '20px', borderRadius: '10px', textAlign: 'center', border: `1px solid ${theme.border}` }}>
@@ -832,7 +829,7 @@ function App() {
                                 <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.hours} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Giờ</span></div>
                                 <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.mins} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Phút</span></div>
                             </div>
-                            <p style={{ color: theme.gold, fontSize: '12px', margin: '10px 0 0 0', fontStyle: 'italic' }}>Gợi ý: Cày đạt 500 SWGT để hệ thống tự động mở khóa ngay!</p>
+                            <p style={{ color: theme.gold, fontSize: '12px', margin: '10px 0 0 0', fontStyle: 'italic' }}>Vui lòng chờ hết đếm ngược để mở khóa ví!</p>
                         </div>
                     )}
                 </div>
@@ -859,7 +856,7 @@ function App() {
                         <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.05)', borderRadius: '15px', padding: '20px', border: `1px solid ${theme.gold}`, marginBottom: '20px' }}>
                             <h3 style={{ margin: '0 0 10px 0', color: theme.gold, fontSize: '15px', textTransform: 'uppercase' }}>⚡ GHÉP VỐN ĐỂ RÚT TOKEN</h3>
                             <p style={{ color: theme.textLight, fontSize: '13px', margin: '0 0 15px 0', lineHeight: '1.5' }}>
-                                Bạn đang thiếu <b>{shortfall} SWGT</b> để đủ hạn mức rút về ví cá nhân (Min 500). Bạn có thể mua thêm từ quỹ OTC nội bộ để miễn phí Gas mạng lưới. Sau khi nạp đủ, hệ thống sẽ mở khóa rút tiền ngay.
+                                Bạn đang thiếu <b>{shortfall} SWGT</b> để đủ hạn mức rút về ví cá nhân (Min 500). Bạn có thể mua thêm từ quỹ OTC nội bộ để miễn phí Gas mạng lưới.
                             </p>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', backgroundColor: '#000', padding: '12px', borderRadius: '8px' }}>
                                 <span style={{ color: theme.textDim, fontSize: '13px' }}>Chi phí nạp ghép vốn:</span>
@@ -872,7 +869,7 @@ function App() {
                         </div>
                     </div>
                 ) : (
-                    // --- 4. KHỐI RÚT TIỀN TRÊN 500 (CHỈ HIỂN THỊ KHI ĐÃ UNLOCKED VÀ TRÊN 500) ---
+                    // --- 4. KHỐI RÚT TIỀN TRÊN 500 ---
                     <div style={{ animation: 'fadeIn 0.5s ease' }}>
                         {isUnlocked ? (
                             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', textAlign: 'center', border: `1px solid ${theme.border}`, marginBottom: '20px' }}>
@@ -890,7 +887,7 @@ function App() {
                             </div>
                         ) : (
                             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', textAlign: 'center', border: `1px dashed ${theme.red}`, marginBottom: '20px' }}>
-                                <p style={{ color: theme.red, fontSize: '14px', margin: '0', fontWeight: 'bold' }}>Tài khoản của bạn đã đạt 500 SWGT nhưng chưa hết thời gian khóa 15 ngày. Vui lòng chờ đợi!</p>
+                                <p style={{ color: theme.red, fontSize: '14px', margin: '0', fontWeight: 'bold' }}>Tài khoản của bạn đã đạt 500 SWGT nhưng chưa hết thời gian khóa. Vui lòng chờ đợi!</p>
                             </div>
                         )}
                     </div>
