@@ -379,8 +379,7 @@ function App() {
         }
     };
 
-    // --- HÀM MỞ RƯƠNG BÍ ẨN VỚI LOGIC PHỄU VIP ---
-    const handleOpenChest = () => {
+const handleOpenChest = () => {
         if (balance < 20) return alert("⚠️ Bạn cần tối thiểu 20 SWGT để mua búa đập rương!");
         setIsShaking(true);
         setOpenedReward(null);
@@ -396,26 +395,59 @@ function App() {
                 setIsShaking(false);
                 if (data.success) {
                     setBalance(data.newBalance);
-                    const rewardData = { 
-                        type: data.rewardType || 'none', 
-                        name: data.rewardName || 'Chúc bạn may mắn lần sau!' 
-                    };
-                    setOpenedReward(rewardData);
 
-                    // NẾU TRÚNG ĐỒ HIẾM (FILE) -> HIỆN POPUP HỎI MAIL
-                    if (data.rewardType === 'ebook' || data.rewardType === 'audio') {
+                    // BIẾN ĐỔI SỐ TIỀN TRÚNG THÀNH TÊN PHẦN THƯỞNG BỞI VÌ BACKEND CHỈ TRẢ VỀ SỐ
+                    let rType = 'swgt';
+                    let rName = `${data.reward} SWGT`;
+
+                    if (data.reward === 0) {
+                        rType = 'none';
+                        rName = 'Chúc bạn may mắn lần sau!';
+                    } else if (data.reward === 100) {
+                        rType = 'ebook';
+                        rName = 'Ebook: Logic Kiếm Tiền';
+                    } else if (data.reward === 500) {
+                        rType = 'audio';
+                        rName = 'Audio: Nhân Tính Đen Trắng';
+                    }
+
+                    setOpenedReward({ 
+                        type: rType, 
+                        name: rName 
+                    });
+
+                    // NẾU TRÚNG ĐỒ HIẾM (EBOOK / AUDIO) -> BẬT VÒNG LẶP ÉP NHẬP MAIL
+                    if (rType === 'ebook' || rType === 'audio') {
                         setTimeout(() => {
-                            const emailInput = window.prompt(`🎉 Chúc mừng bạn đã trúng ${data.rewardName}!\n\n📧 Vui lòng nhập GMAIL của bạn để Admin gửi tài liệu này cho bạn nhé:`);
-                            if (emailInput && emailInput.trim().includes('@')) {
-                                fetch(`${BACKEND_URL}/api/submit-game-email`, {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ userId, email: emailInput.trim(), rewardName: data.rewardName })
-                                });
-                            } else {
-                                alert("⚠️ Bạn chưa nhập đúng định dạng Gmail. Admin sẽ liên hệ qua tin nhắn Bot để lấy mail sau.");
+                            let emailInput = "";
+                            // Ép khách hàng phải nhập mail có chứa ký tự @
+                            while (!emailInput || !emailInput.includes('@')) {
+                                emailInput = window.prompt(`🎉 KINH KHỦNG QUÁ! BẠN ĐÃ TRÚNG SIÊU PHẨM: ${rName}!\n\n📧 BẮT BUỘC: Hãy nhập địa chỉ GMAIL của bạn để Admin gửi file tài liệu nhé:`);
+                                
+                                // Nếu khách bấm Hủy (Cancel)
+                                if (emailInput === null) {
+                                    alert("⚠️ Bạn đã hủy nhập Mail. Admin sẽ liên hệ qua tin nhắn Bot để cấp tài liệu sau nhé.");
+                                    break;
+                                }
+                                
+                                // Nếu khách nhập đúng định dạng
+                                if (emailInput.trim() && emailInput.trim().includes('@')) {
+                                    // MẸO: Tái sử dụng API redeem với giá = 0 để bắn luôn thông báo kèm Mail về Telegram Admin
+                                    fetch(`${BACKEND_URL}/api/redeem`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ 
+                                            userId, 
+                                            itemName: `[TRÚNG RƯƠNG] ${rName} - (Trả file về Email: ${emailInput.trim()})`, 
+                                            cost: 0 
+                                        })
+                                    });
+                                    alert("✅ Lưu Gmail thành công! Tài liệu sẽ được Admin gửi vào mail của bạn sớm nhất.");
+                                } else {
+                                    alert("❌ Địa chỉ Gmail không hợp lệ. Vui lòng nhập lại (Bắt buộc phải có chữ @)!");
+                                }
                             }
-                        }, 500);
+                        }, 800);
                     }
                 } else {
                     alert(data.message || "❌ Có lỗi xảy ra, không thể mở rương!");
@@ -424,7 +456,7 @@ function App() {
         })
         .catch(() => {
             setIsShaking(false);
-            alert("⚠️ Lỗi kết nối mạng!");
+            alert("⚠️ Lỗi kết nối mạng, vui lòng thử lại!");
         });
     };
 
@@ -987,7 +1019,7 @@ function App() {
 
             <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: theme.cardBg, borderTop: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-around', padding: '15px 0', paddingBottom: 'calc(15px + env(safe-area-inset-bottom))', zIndex: 100 }}>
                 <div onClick={() => setActiveTab('home')} className={`nav-item ${activeTab === 'home' ? 'active' : ''}`}><div className="nav-icon">🏠</div><span style={{ fontSize: '12px', fontWeight: 'bold' }}>Trang chủ</span></div>
-                <div onClick={() => setActiveTab('game')} className={`nav-item ${activeTab === 'game' ? 'active' : ''}`}><div className="nav-icon">🕹️</div><span style={{ fontSize: '12px', fontWeight: 'bold' }}>Trò chơi</span></div>
+                <div onClick={() => setActiveTab('game')} className={`nav-item ${activeTab === 'game' ? 'active' : ''}`}><div className="nav-icon">🏦</div><span style={{ fontSize: '12px', fontWeight: 'bold' }}>Đập Rưởng</span></div>
                 <div onClick={() => setActiveTab('rewards')} className={`nav-item ${activeTab === 'rewards' ? 'active' : ''}`}><div className="nav-icon">🎁</div><span style={{ fontSize: '12px', fontWeight: 'bold' }}>Cửa hàng</span></div>
                 <div onClick={() => setActiveTab('wallet')} className={`nav-item ${activeTab === 'wallet' ? 'active' : ''}`}><div className="nav-icon">👛</div><span style={{ fontSize: '12px', fontWeight: 'bold' }}>Ví</span></div>
             </div>
