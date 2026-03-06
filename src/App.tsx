@@ -675,7 +675,7 @@ function App() {
                     <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '12px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
                         <div style={{ fontSize: '40px', marginBottom: '10px' }}>📘</div>
                         <h4 style={{ margin: '0 0 5px 0', color: theme.textLight, fontSize: '16px' }}>Bản Gốc: Logic Kiếm Tiền</h4>
-                        <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 10px 0' }}>Bí mật dòng tiền của giới tinh hoa.</p>
+                        <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 10px 0' }}>Tập trung xây dựng hệ thống kiếm tiền.</p>
                         <p style={{ color: theme.gold, fontWeight: 'bold', fontSize: '16px', margin: '0 0 15px 0' }}>300 SWGT</p>
                         <button onClick={() => redeemItem('Ebook Logic Kiếm Tiền', 300)} style={{ backgroundColor: '#5E92F3', color: '#fff', border: 'none', padding: '12px 0', width: '100%', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}>ĐỔI NGAY</button>
                     </div>
