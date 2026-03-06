@@ -746,12 +746,12 @@ function App() {
                 </div>
 
                 <div style={{ width: '100%', backgroundColor: 'rgba(244, 208, 63, 0.05)', border: `1px dashed ${theme.gold}`, borderRadius: '12px', padding: '15px', marginTop: '20px', boxSizing: 'border-box' }}>
-                    <h4 style={{ color: theme.gold, margin: '0 0 10px 0', fontSize: '14px' }}>📊 TỶ LỆ RỚT ĐỒ:</h4>
-                    <ul style={{ color: theme.textDim, fontSize: '12px', margin: 0, paddingLeft: '20px', lineHeight: '1.8' }}>
+                    <h4 style={{ color: theme.gold, margin: '0 0 10px 0', fontSize: '14px' }}>📊 DANH SÁCH KHO BÁU:</h4>
+                    <ul style={{ color: theme.textDim, fontSize: '13px', margin: 0, paddingLeft: '20px', lineHeight: '1.8' }}>
                         <li>Trúng <b style={{color: '#fff'}}>5 - 50 SWGT</b> (Tỉ lệ cao)</li>
-                        <li>Trúng <b style={{color: theme.green}}>Sách: Logic Kiếm Tiền</b> (Cực hiếm)</li>
-                        <li>Trúng <b style={{color: theme.green}}>Audio: Nhân Tính</b> (Cực hiếm)</li>
-                        <li>Rương rỗng (Có rủi ro)</li>
+                        <li>Trúng <b style={{color: theme.gold}}>Ebook: Logic Kiếm Tiền</b> (Siêu hiếm)</li>
+                        <li>Trúng <b style={{color: theme.gold}}>Audio: Nhân Tính Đen Trắng</b> (Siêu hiếm)</li>
+                        <li>Rương rỗng (Kém may mắn)</li>
                     </ul>
                 </div>
             </div>
