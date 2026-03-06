@@ -14,7 +14,7 @@ function App() {
     
     // Thêm State cho Ngân hàng (Thanh khoản VNĐ)
     const [bankName, setBankName] = useState('');
-    const [accountName, setAccountName] = useState(''); // Thêm Tên Chủ TK
+    const [accountName, setAccountName] = useState(''); 
     const [bankAccount, setBankAccount] = useState('');
 
     const [referrals, setReferrals] = useState(0); 
@@ -324,7 +324,6 @@ function App() {
             });
         }
     };
-    // -------------------------------------
 
     const handleCopyLink = () => {
         const link = `https://t.me/Dau_Tu_SWC_bot?start=${userId || 'ref'}`;
@@ -352,14 +351,17 @@ function App() {
     };
 
     const redeemItem = (itemName: string, cost: number) => {
-        if (balance < cost) return alert(`⚠️ Bạn cần thêm ${cost - balance} SWGT nữa để đổi quyền lợi này!`);
-        if (window.confirm(`Xác nhận dùng ${cost} SWGT để đổi ${itemName}?`)) {
+        if (balance < cost) return alert(`⚠️ Bạn cần thêm ${cost - balance} SWGT nữa để đổi tài liệu này!`);
+        if (window.confirm(`Xác nhận dùng ${cost} SWGT để đổi lấy [${itemName}]?`)) {
             fetch(`${BACKEND_URL}/api/redeem`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId, itemName, cost })
             }).then(res => res.json()).then(data => {
-                if(data.success) { setBalance(data.balance); alert("🎉 Yêu cầu đổi quà đã được gửi! Admin sẽ xử lý sớm."); }
+                if(data.success) { 
+                    setBalance(data.balance); 
+                    alert("🎉 Đổi tài liệu thành công! Vui lòng kiểm tra tin nhắn với Bot Telegram để nhận File."); 
+                }
             });
         }
     };
@@ -613,12 +615,6 @@ function App() {
                 </button>
             </div>
 
-            <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.1)', border: `1px dashed ${theme.gold}`, padding: '15px', borderRadius: '10px', marginBottom: '20px' }}>
-                <p style={{ margin: 0, color: theme.gold, fontSize: '14px', lineHeight: '1.6', textAlign: 'center' }}>
-                    <span style={{fontWeight:'bold'}}>⚡ ĐẶC QUYỀN MỞ KHÓA TỐC ĐỘ:</span><br/>Cày đạt mốc <b>1500 SWGT</b> sẽ được <b style={{color: '#fff'}}>RÚT TIỀN VỀ VÍ NGAY LẬP TỨC</b>, bỏ qua hoàn toàn thời gian đếm ngược!
-                </p>
-            </div>
-
             {/* KHỐI HƯỚNG DẪN CỘNG ĐỒNG */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Mục Tiêu Phát Triển Cộng Đồng</h2>
@@ -667,29 +663,67 @@ function App() {
 
         return (
             <div style={{ padding: '0 20px 20px 20px', paddingBottom: '100px' }}>
-                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
-                    <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>🎟️ Nhập Mã Giftcode</h3>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        <input 
-                            value={giftCodeInput} 
-                            onChange={(e) => setGiftCodeInput(e.target.value)} 
-                            placeholder="Nhập mã săn được..." 
-                            style={{ flex: 1, padding: '14px', borderRadius: '10px', border: `1px solid ${theme.green}`, backgroundColor: '#000', color: theme.gold, fontSize: '14px', textTransform: 'uppercase', boxSizing: 'border-box' }} 
-                        />
-                        <button onClick={handleClaimGiftCode} style={{ backgroundColor: theme.green, color: '#fff', padding: '0 20px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
-                            NHẬN
-                        </button>
+                
+                {/* 1. KHU VỰC KHO TRI THỨC (MỚI) */}
+                <div style={{ textAlign: 'center', marginBottom: '20px', marginTop: '10px' }}>
+                    <div style={{ fontSize: '40px', marginBottom: '5px' }}>📚</div>
+                    <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '20px', fontWeight: '900', textTransform: 'uppercase' }}>Kho Tàng Tri Thức</h2>
+                    <p style={{ color: theme.textDim, fontSize: '13px', margin: 0 }}>Dùng SWGT đổi lấy Ebook / Audio tuyệt mật.</p>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '30px' }}>
+                    <div style={{ backgroundColor: theme.cardBg, padding: '15px', borderRadius: '12px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
+                        <div style={{ fontSize: '30px', marginBottom: '10px' }}>📘</div>
+                        <h4 style={{ margin: '0 0 5px 0', color: theme.textLight, fontSize: '13px', height: '32px' }}>Logic Kiếm Tiền</h4>
+                        <p style={{ color: theme.gold, fontWeight: 'bold', fontSize: '14px', margin: '0 0 10px 0' }}>200 SWGT</p>
+                        <button onClick={() => redeemItem('Ebook Logic Kiếm Tiền', 200)} style={{ backgroundColor: '#5E92F3', color: '#fff', border: 'none', padding: '8px 0', width: '100%', borderRadius: '6px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}>ĐỔI NGAY</button>
+                    </div>
+
+                    <div style={{ backgroundColor: theme.cardBg, padding: '15px', borderRadius: '12px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
+                        <div style={{ fontSize: '30px', marginBottom: '10px' }}>📕</div>
+                        <h4 style={{ margin: '0 0 5px 0', color: theme.textLight, fontSize: '13px', height: '32px' }}>Luật Ngầm Tài Chính</h4>
+                        <p style={{ color: theme.gold, fontWeight: 'bold', fontSize: '14px', margin: '0 0 10px 0' }}>300 SWGT</p>
+                        <button onClick={() => redeemItem('Ebook Luật Ngầm Tài Chính', 300)} style={{ backgroundColor: '#5E92F3', color: '#fff', border: 'none', padding: '8px 0', width: '100%', borderRadius: '6px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}>ĐỔI NGAY</button>
+                    </div>
+
+                    <div style={{ backgroundColor: theme.cardBg, padding: '15px', borderRadius: '12px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
+                        <div style={{ fontSize: '30px', marginBottom: '10px' }}>🎧</div>
+                        <h4 style={{ margin: '0 0 5px 0', color: theme.textLight, fontSize: '13px', height: '32px' }}>Nhân Tính Đen Trắng</h4>
+                        <p style={{ color: theme.gold, fontWeight: 'bold', fontSize: '14px', margin: '0 0 10px 0' }}>400 SWGT</p>
+                        <button onClick={() => redeemItem('Audio Nhân Tính Đen Trắng', 400)} style={{ backgroundColor: '#5E92F3', color: '#fff', border: 'none', padding: '8px 0', width: '100%', borderRadius: '6px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}>ĐỔI NGAY</button>
+                    </div>
+
+                    <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.1)', padding: '15px', borderRadius: '12px', border: `1px solid ${theme.gold}`, textAlign: 'center' }}>
+                        <div style={{ fontSize: '30px', marginBottom: '10px' }}>👑</div>
+                        <h4 style={{ margin: '0 0 5px 0', color: theme.gold, fontSize: '13px', height: '32px' }}>Combo Thượng Lưu</h4>
+                        <p style={{ color: theme.gold, fontWeight: 'bold', fontSize: '14px', margin: '0 0 10px 0' }}>500 SWGT</p>
+                        <button onClick={() => redeemItem('Combo Thượng Lưu (Full Bộ)', 500)} style={{ backgroundColor: theme.gold, color: '#000', border: 'none', padding: '8px 0', width: '100%', borderRadius: '6px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}>ĐỔI COMBO</button>
                     </div>
                 </div>
 
-                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
-                    <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>🔗 Link Lan Tỏa</h3>
-                    <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '8px', color: theme.gold, fontSize: '13px', wordBreak: 'break-all', marginBottom: '15px', border: `1px dashed ${theme.border}` }}>
-                        https://t.me/Dau_Tu_SWC_bot?start={userId || 'ref'}
-                    </div>
-                    <button onClick={handleCopyLink} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>📋 COPY LINK MỜI</button>
+                {/* 2. KHU VỰC GROUP VIP */}
+                <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px', textTransform: 'uppercase'}}>💎 QUYỀN LỰC VIP (ROAD TO $1M)</h3>
+                
+                <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '15px', marginBottom: '15px', border: `1px solid ${theme.border}`}}>
+                    <h4 style={{margin: '0 0 8px 0', color: theme.green, fontSize: '15px'}}>🟢 TUYẾN TRONG HỆ THỐNG</h4>
+                    <p style={{fontSize: '13px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Dành cho khách hàng đã đăng ký mua Gói <b>SWC Pass</b> qua đường link của Admin.</p>
+                    <ul style={{ margin: '0 0 15px 0', paddingLeft: '20px', color: theme.textLight, fontSize: '13px', lineHeight: '1.6' }}>
+                        <li>Miễn phí vào Group Private vĩnh viễn.</li>
+                        <li>Hỗ trợ 1-1 nạp rút, họp Zoom kín.</li>
+                    </ul>
+                    <button onClick={() => alert("Hãy nhắn tin cho Admin và gửi kèm ảnh chụp màn hình gói SWC Pass của bạn để được duyệt vào Nhóm Kín nhé!")} style={{backgroundColor: theme.green, color: '#fff', border: 'none', padding: '10px 0', width: '100%', borderRadius: '8px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'}}>LIÊN HỆ NHẬN QUYỀN LỢI</button>
                 </div>
 
+                <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '15px', marginBottom: '25px', border: `1px solid ${theme.border}`}}>
+                    <h4 style={{margin: '0 0 8px 0', color: theme.red, fontSize: '15px'}}>🔴 KHÁCH NGOÀI HỆ THỐNG (CROSSLINE)</h4>
+                    <p style={{fontSize: '13px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Anh em thuộc tuyến Leader khác nhưng vẫn muốn tham gia Group VIP của Admin để nhận phím kèo & tài liệu độc quyền.</p>
+                    <div style={{ backgroundColor: '#000', padding: '12px', borderRadius: '8px', marginBottom: '15px' }}>
+                        <p style={{ margin: 0, color: theme.gold, fontSize: '14px', fontWeight: 'bold', textAlign: 'center' }}>PHÍ BẢO TRỢ: 2000 SWGT / NĂM</p>
+                    </div>
+                    <button onClick={() => redeemItem('Vé vào Group VIP (Khách Crossline)', 2000)} style={{backgroundColor: '#333', color: theme.gold, border: `1px solid ${theme.gold}`, padding: '10px 0', width: '100%', borderRadius: '8px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'}}>DÙNG 2000 SWGT ĐỂ VÀO NHÓM</button>
+                </div>
+
+                {/* 3. KHU VỰC NHIỆM VỤ CŨ & BẢNG XẾP HẠNG */}
                 <h3 style={{color: '#fff', paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🚀 9 CỘT MỐC THƯỞNG NÓNG</h3>
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '10px' }}>
@@ -726,6 +760,29 @@ function App() {
                     </div>
                 </div>
 
+                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
+                    <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>🎟️ Nhập Mã Giftcode</h3>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <input 
+                            value={giftCodeInput} 
+                            onChange={(e) => setGiftCodeInput(e.target.value)} 
+                            placeholder="Nhập mã săn được..." 
+                            style={{ flex: 1, padding: '14px', borderRadius: '10px', border: `1px solid ${theme.green}`, backgroundColor: '#000', color: theme.gold, fontSize: '14px', textTransform: 'uppercase', boxSizing: 'border-box' }} 
+                        />
+                        <button onClick={handleClaimGiftCode} style={{ backgroundColor: theme.green, color: '#fff', padding: '0 20px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
+                            NHẬN
+                        </button>
+                    </div>
+                </div>
+
+                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
+                    <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>🔗 Link Lan Tỏa</h3>
+                    <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '8px', color: theme.gold, fontSize: '13px', wordBreak: 'break-all', marginBottom: '15px', border: `1px dashed ${theme.border}` }}>
+                        https://t.me/Dau_Tu_SWC_bot?start={userId || 'ref'}
+                    </div>
+                    <button onClick={handleCopyLink} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>📋 COPY LINK MỜI</button>
+                </div>
+
                 <h3 style={{color: theme.gold, paddingBottom: '10px', marginBottom: '15px', fontSize: '17px', textAlign: 'center', fontWeight: '900'}}>🤝 BẢNG VÀNG ĐẠI SỨ</h3>
                 {renderWealthBoard()}
 
@@ -733,27 +790,6 @@ function App() {
                     <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', textDecoration: 'none', boxSizing: 'border-box' }}>
                         ✈️ CHIA SẺ LINK ĐỂ ĐUA TOP NGAY
                     </a>
-                </div>
-
-                <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>💎 KHO ĐẶC QUYỀN VIP</h3>
-                <p style={{ color: theme.textDim, fontSize: '13px', marginBottom: '15px' }}>Dùng SWGT quy đổi lấy vũ khí thực chiến:</p>
-                
-                <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '15px', marginBottom: '15px', border: `1px solid ${theme.border}`}}>
-                    <h4 style={{margin: '0 0 8px 0', color: '#5E92F3', fontSize: '16px'}}>☕ Cà Phê Chiến Lược : 6000</h4>
-                    <p style={{fontSize: '14px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Thảo luận danh mục trực tiếp cùng Admin Ucity.</p>
-                    <button onClick={() => redeemItem('Cà Phê Chiến Lược', 6000)} style={{backgroundColor: '#5E92F3', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer'}}>LIÊN HỆ ADMIN</button>
-                </div>
-                
-                <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '15px', marginBottom: '15px', border: `1px solid ${theme.border}`}}>
-                    <h4 style={{margin: '0 0 8px 0', color: '#34C759', fontSize: '16px'}}>🔓 Mở Khóa Group Private : 8000</h4>
-                    <p style={{fontSize: '14px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Nhận tín hiệu thị trường và họp Zoom kín hàng tuần.</p>
-                    <button onClick={() => redeemItem('Group Private', 8000)} style={{backgroundColor: '#34C759', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer'}}>LIÊN HỆ ADMIN</button>
-                </div>
-
-                <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '15px', marginBottom: '15px', border: `1px solid ${theme.border}`}}>
-                    <h4 style={{margin: '0 0 8px 0', color: theme.gold, fontSize: '16px'}}>🎟️ Phiếu Đầu Tư Ưu Đãi : 9000</h4>
-                    <p style={{fontSize: '14px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Nhận Voucher chiết khấu đặc biệt khi vào gói đầu tư lớn.</p>
-                    <button onClick={() => redeemItem('Phiếu Đầu Tư', 9000)} style={{backgroundColor: theme.gold, color: '#000', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer'}}>LIÊN HỆ ADMIN</button>
                 </div>
             </div>
         );
