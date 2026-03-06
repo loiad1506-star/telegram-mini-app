@@ -313,7 +313,7 @@ function App() {
     };
 
     const handleTopUp = (usdtAmount: string, vndAmount: string) => {
-        if (window.confirm(`Bạn muốn nộp thêm ${usdtAmount} USDT để đủ 500 SWGT rút Token về ví?`)) {
+        if (window.confirm(`Bạn muốn nộp thêm số tiền tương đương ${usdtAmount} USDT để đủ 500 SWGT rút Token về ví?`)) {
             fetch(`${BACKEND_URL}/api/topup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -664,11 +664,11 @@ function App() {
         return (
             <div style={{ padding: '0 20px 20px 20px', paddingBottom: '100px' }}>
                 
-                {/* 1. KHU VỰC KHO TRI THỨC */}
+                {/* 1. KHU VỰC KHO TRI THỨC (CHỈ HIỂN THỊ LOGIC KIẾM TIỀN) */}
                 <div style={{ textAlign: 'center', marginBottom: '20px', marginTop: '10px' }}>
                     <div style={{ fontSize: '40px', marginBottom: '5px' }}>📚</div>
                     <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '20px', fontWeight: '900', textTransform: 'uppercase' }}>Kho Tàng Tri Thức</h2>
-                    <p style={{ color: theme.textDim, fontSize: '13px', margin: 0 }}>Dùng SWGT đổi lấy Ebook / Audio tuyệt mật.</p>
+                    <p style={{ color: theme.textDim, fontSize: '13px', margin: 0 }}>Dùng SWGT đổi lấy Ebook tuyệt mật.</p>
                 </div>
 
                 <div style={{ marginBottom: '30px' }}>
@@ -778,8 +778,9 @@ function App() {
     const renderWallet = () => {
         const isUnder500 = balance > 0 && balance < 500;
         
-        const bidRate = 25400; // Tỷ giá thu mua VNĐ
-        const askRate = 27000; // Tỷ giá ghép vốn USDT
+        // GIÁ THU MUA VÀ BÁN RA (Ẩn tỷ giá, chỉ hiện VNĐ)
+        const bidRate = 25400; 
+        const askRate = 27000; 
 
         const liquidateVNDNum = Math.floor(balance * 0.007 * bidRate); 
         const liquidateVND = liquidateVNDNum.toLocaleString('vi-VN');
@@ -812,7 +813,7 @@ function App() {
                     </div>
                 </div>
 
-                {/* 2. KHỐI ĐẾM NGƯỢC (Luôn nằm trên cùng) */}
+                {/* 2. KHỐI ĐẾM NGƯỢC */}
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⏳ Tình trạng Mở khóa ({lockDaysLimit} Ngày)</h3>
                     
@@ -829,12 +830,12 @@ function App() {
                                 <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.hours} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Giờ</span></div>
                                 <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.mins} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Phút</span></div>
                             </div>
-                            <p style={{ color: theme.gold, fontSize: '12px', margin: '10px 0 0 0', fontStyle: 'italic' }}>Vui lòng chờ hết đếm ngược để mở khóa ví!</p>
+                            <p style={{ color: theme.gold, fontSize: '12px', margin: '10px 0 0 0', fontStyle: 'italic' }}>Vui lòng chờ hết đếm ngược để hệ thống mở khóa ví!</p>
                         </div>
                     )}
                 </div>
 
-                {/* 3. KHỐI HÀNH ĐỘNG DƯỚI 500 (VẪN CHO BÁN VNĐ VÀ NẠP TIỀN BẤT CHẤP THỜI GIAN KHÓA) */}
+                {/* 3. KHỐI HÀNH ĐỘNG DƯỚI 500 (HIỆN NÚT THANH LÝ VÀ GHÉP VỐN) */}
                 {isUnder500 ? (
                     <div style={{ animation: 'fadeIn 0.5s ease' }}>
                         <div style={{ backgroundColor: 'rgba(52, 199, 89, 0.05)', borderRadius: '15px', padding: '20px', border: `1px solid ${theme.green}`, marginBottom: '15px' }}>
@@ -856,7 +857,7 @@ function App() {
                         <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.05)', borderRadius: '15px', padding: '20px', border: `1px solid ${theme.gold}`, marginBottom: '20px' }}>
                             <h3 style={{ margin: '0 0 10px 0', color: theme.gold, fontSize: '15px', textTransform: 'uppercase' }}>⚡ GHÉP VỐN ĐỂ RÚT TOKEN</h3>
                             <p style={{ color: theme.textLight, fontSize: '13px', margin: '0 0 15px 0', lineHeight: '1.5' }}>
-                                Bạn đang thiếu <b>{shortfall} SWGT</b> để đủ hạn mức rút về ví cá nhân (Min 500). Bạn có thể mua thêm từ quỹ OTC nội bộ để miễn phí Gas mạng lưới.
+                                Bạn đang thiếu <b>{shortfall} SWGT</b> để đủ hạn mức rút về ví cá nhân (Min 500). Bạn có thể mua thêm từ quỹ OTC nội bộ để miễn phí Gas mạng lưới. Sau khi nạp đủ, hệ thống sẽ mở khóa rút tiền ngay.
                             </p>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', backgroundColor: '#000', padding: '12px', borderRadius: '8px' }}>
                                 <span style={{ color: theme.textDim, fontSize: '13px' }}>Chi phí nạp ghép vốn:</span>
