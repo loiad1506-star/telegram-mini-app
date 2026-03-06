@@ -75,7 +75,6 @@ function App() {
         { req: 500, reward: 700, key: 'milestone500', rank: 'Đại Tướng 🌟🌟🌟🌟' }
     ];
 
-    // Cập nhật lại mảng điểm danh mới nhất theo yêu cầu
     const STREAK_REWARDS = [0.25, 0.75, 1.5, 1.75, 2.5, 3.5, 4.5];
 
     const triggerFloatAnim = (reward: string | number, x: number, y: number) => {
@@ -294,7 +293,7 @@ function App() {
         }
     };
 
-    // --- HÀM CHO 2 OPTION THANH KHOẢN (Cập nhật Min 5k và Chủ TK) ---
+    // --- HÀM CHO 2 OPTION THANH KHOẢN (Cập nhật giá 0.008) ---
     const handleLiquidateVND = (vndAmount: string, isEligible: boolean) => {
         if (!isEligible) return alert("⚠️ Số dư quy đổi chưa đạt tối thiểu 5.000 VNĐ.");
         if (!bankName || !bankAccount || !accountName) return alert("⚠️ Vui lòng nhập Tên Ngân Hàng, Chủ Tài Khoản và Số Tài Khoản để nhận tiền!");
@@ -764,7 +763,7 @@ function App() {
         // Biến toán học cho 2 Option Thanh khoản
         const isUnder500 = balance > 0 && balance < 500;
         const usdtRate = 25400;
-        const liquidateVNDNum = Math.floor(balance * 0.010 * usdtRate);
+        const liquidateVNDNum = Math.floor(balance * 0.008 * usdtRate);
         const liquidateVND = liquidateVNDNum.toLocaleString('vi-VN');
         const shortfall = 500 - balance;
         const costUSDT = (shortfall * 0.020).toFixed(2);
