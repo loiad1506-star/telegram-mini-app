@@ -122,7 +122,8 @@ function App() {
             const now = new Date().getTime();
             const distance = unlockDateMs - now;
             
-            if (distance <= 0 || balance >= 1500) {
+            // Mở khóa nếu hết ngày HOẶC tài khoản >= 500 SWGT
+            if (distance <= 0 || balance >= 500) {
                 setIsUnlocked(true);
                 setTimeLeft({ days: 0, hours: 0, mins: 0 });
             } else {
@@ -265,8 +266,9 @@ function App() {
     };
 
     const handleWithdraw = () => {
-        if (!isUnlocked && balance < 1500) { 
-            return alert(`⏳ Bạn chưa hết thời gian mở khóa (${lockDaysLimit} ngày). Cày lên 1500 SWGT để được rút ngay nhé!`); 
+        // Chỉ cho phép rút khi đã mở khóa
+        if (!isUnlocked) { 
+            return alert(`⏳ Bạn chưa hết thời gian mở khóa (${lockDaysLimit} ngày). Cày lên 500 SWGT để được rút ngay nhé!`); 
         }
         const amount = Number(withdrawAmount);
         if (!amount || amount < 500) return alert("⚠️ Bạn cần rút tối thiểu 500 SWGT!");
@@ -775,9 +777,10 @@ function App() {
     };
 
     const renderWallet = () => {
+        // Khách hàng dưới 500 thì hiện Thanh Khoản VNĐ và Nạp Ghép Vốn
+        // Khách hàng từ 500 trở lên thì TỰ ĐỘNG KHÓA NẠP, mở khóa RÚT TIỀN nếu hết 15 ngày
         const isUnder500 = balance > 0 && balance < 500;
         
-        // CẬP NHẬT BIẾN ĐỂ TRÁNH LỖI TS6133
         const bidRate = 25400; // Tỷ giá thu mua VNĐ
         const askRate = 27000; // Tỷ giá ghép vốn USDT
 
@@ -812,67 +815,66 @@ function App() {
                     </div>
                 </div>
 
-                {/* 2. KHỐI ĐẾM NGƯỢC */}
+                {/* 2. KHỐI ĐẾM NGƯỢC (Luôn nằm trên cùng) */}
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⏳ Tình trạng Mở khóa ({lockDaysLimit} Ngày)</h3>
                     
                     {isUnlocked ? (
                         <div style={{ padding: '15px', backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, borderRadius: '10px', color: theme.green, fontWeight: 'bold', fontSize: '16px', textAlign: 'center' }}>
-                            {balance >= 1500 ? "🎉 ĐẶC QUYỀN 1500 SWGT: CỔNG RÚT ĐÃ MỞ!" : "🎉 CỔNG GIAO DỊCH SWGT ĐÃ MỞ!"}
+                            {balance >= 500 ? "🎉 ĐÃ ĐỦ ĐIỀU KIỆN: CỔNG RÚT MỞ!" : "🎉 TÀI KHOẢN ĐÃ MỞ KHÓA GIAO DỊCH!"}
                         </div>
                     ) : (
                         <div style={{ backgroundColor: '#000', padding: '20px', borderRadius: '10px', textAlign: 'center', border: `1px solid ${theme.border}` }}>
-                            <p style={{ color: theme.red, fontSize: '14px', margin: '0 0 15px 0', fontWeight: 'bold' }}>🔒 TÀI KHOẢN ĐANG BỊ KHÓA GIAO DỊCH</p>
+                            <p style={{ color: theme.red, fontSize: '14px', margin: '0 0 15px 0', fontWeight: 'bold' }}>🔒 TÀI KHOẢN ĐANG BỊ KHÓA RÚT TOKEN</p>
                             <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '10px' }}>
                                 <span style={{ color: theme.textLight, fontSize: '18px', fontWeight: 'bold' }}>Còn</span>
                                 <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.days} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Ngày</span></div>
                                 <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.hours} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Giờ</span></div>
                                 <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.mins} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Phút</span></div>
                             </div>
-                            <p style={{ color: theme.gold, fontSize: '12px', margin: '10px 0 0 0', fontStyle: 'italic' }}>Gợi ý: Cày đạt 1500 SWGT để mở khóa ngay lập tức!</p>
+                            <p style={{ color: theme.gold, fontSize: '12px', margin: '10px 0 0 0', fontStyle: 'italic' }}>Gợi ý: Cày đạt 500 SWGT để hệ thống tự động mở khóa ngay!</p>
                         </div>
                     )}
                 </div>
 
-                {/* 3. KHỐI HÀNH ĐỘNG RÚT/THANH KHOẢN */}
-                {isUnlocked && (
+                {/* 3. KHỐI HÀNH ĐỘNG DƯỚI 500 (VẪN CHO BÁN VNĐ VÀ NẠP TIỀN BẤT CHẤP THỜI GIAN KHÓA) */}
+                {isUnder500 ? (
                     <div style={{ animation: 'fadeIn 0.5s ease' }}>
-                        {isUnder500 ? (
-                            // --- GIAO DIỆN DÀNH CHO NGƯỜI DƯỚI 500 SWGT ---
-                            <>
-                                <div style={{ backgroundColor: 'rgba(52, 199, 89, 0.05)', borderRadius: '15px', padding: '20px', border: `1px solid ${theme.green}`, marginBottom: '15px' }}>
-                                    <h3 style={{ margin: '0 0 10px 0', color: theme.green, fontSize: '15px', textTransform: 'uppercase' }}>💸 THANH KHOẢN TỨC THÌ</h3>
-                                    <p style={{ color: theme.textLight, fontSize: '13px', margin: '0 0 15px 0', lineHeight: '1.5' }}>
-                                        BQT hỗ trợ thu mua số dư nhỏ ngay lập tức. Số dư <b>{balance} SWGT</b> của bạn có thể quy đổi thành: <b style={{color: theme.gold, fontSize: '16px'}}>{liquidateVND} VNĐ</b>
-                                    </p>
-                                    <input value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="Tên Ngân hàng (VD: Vietcombank)" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '10px', fontSize: '13px' }} />
-                                    <input value={accountName} onChange={(e) => setAccountName(e.target.value)} placeholder="Họ và Tên Chủ Tài Khoản" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '10px', fontSize: '13px' }} />
-                                    <input value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} placeholder="Số Tài Khoản Nhận Tiền" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '15px', fontSize: '13px' }} />
-                                    <button 
-                                        onClick={() => handleLiquidateVND(liquidateVND, isEligibleForVND)} 
-                                        style={{ width: '100%', backgroundColor: isEligibleForVND ? theme.green : '#333', color: isEligibleForVND ? '#fff' : theme.textDim, padding: '14px', borderRadius: '8px', fontWeight: 'bold', border: 'none', cursor: isEligibleForVND ? 'pointer' : 'not-allowed' }}
-                                    >
-                                        {isEligibleForVND ? `BÁN LẤY ${liquidateVND} VNĐ` : `🔒 CẦN ĐẠT MIN 5.000 VNĐ`}
-                                    </button>
-                                </div>
+                        <div style={{ backgroundColor: 'rgba(52, 199, 89, 0.05)', borderRadius: '15px', padding: '20px', border: `1px solid ${theme.green}`, marginBottom: '15px' }}>
+                            <h3 style={{ margin: '0 0 10px 0', color: theme.green, fontSize: '15px', textTransform: 'uppercase' }}>💸 THANH KHOẢN TỨC THÌ</h3>
+                            <p style={{ color: theme.textLight, fontSize: '13px', margin: '0 0 15px 0', lineHeight: '1.5' }}>
+                                Bạn chưa đủ 500 SWGT để rút Token. Tuy nhiên BQT hỗ trợ thu mua số dư nhỏ ngay lập tức. <br/><br/>Số dư <b>{balance} SWGT</b> quy đổi thành: <b style={{color: theme.gold, fontSize: '16px'}}>{liquidateVND} VNĐ</b>
+                            </p>
+                            <input value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="Tên Ngân hàng (VD: Vietcombank)" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '10px', fontSize: '13px' }} />
+                            <input value={accountName} onChange={(e) => setAccountName(e.target.value)} placeholder="Họ và Tên Chủ Tài Khoản" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '10px', fontSize: '13px' }} />
+                            <input value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} placeholder="Số Tài Khoản Nhận Tiền" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '15px', fontSize: '13px' }} />
+                            <button 
+                                onClick={() => handleLiquidateVND(liquidateVND, isEligibleForVND)} 
+                                style={{ width: '100%', backgroundColor: isEligibleForVND ? theme.green : '#333', color: isEligibleForVND ? '#fff' : theme.textDim, padding: '14px', borderRadius: '8px', fontWeight: 'bold', border: 'none', cursor: isEligibleForVND ? 'pointer' : 'not-allowed' }}
+                            >
+                                {isEligibleForVND ? `BÁN LẤY ${liquidateVND} VNĐ` : `🔒 CẦN ĐẠT MIN 5.000 VNĐ`}
+                            </button>
+                        </div>
 
-                                <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.05)', borderRadius: '15px', padding: '20px', border: `1px solid ${theme.gold}`, marginBottom: '20px' }}>
-                                    <h3 style={{ margin: '0 0 10px 0', color: theme.gold, fontSize: '15px', textTransform: 'uppercase' }}>⚡ GHÉP VỐN ĐỂ RÚT TOKEN</h3>
-                                    <p style={{ color: theme.textLight, fontSize: '13px', margin: '0 0 15px 0', lineHeight: '1.5' }}>
-                                        Bạn đang thiếu <b>{shortfall} SWGT</b> để đủ hạn mức rút về ví cá nhân (Min 500). Mua thêm từ quỹ OTC nội bộ để miễn phí Gas mạng lưới.
-                                    </p>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', backgroundColor: '#000', padding: '12px', borderRadius: '8px' }}>
-                                        <span style={{ color: theme.textDim, fontSize: '13px' }}>Chi phí ghép vốn:</span>
-                                        <div style={{ textAlign: 'right' }}>
-                                            <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '15px', display: 'block' }}>{costUSDT} USDT</span>
-                                            <span style={{ color: theme.gold, fontSize: '12px' }}>(~{costVND} VNĐ)</span>
-                                        </div>
-                                    </div>
-                                    <button onClick={() => handleTopUp(costUSDT, costVND)} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '14px', borderRadius: '8px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>NẠP {costUSDT} USDT ĐỂ RÚT</button>
+                        <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.05)', borderRadius: '15px', padding: '20px', border: `1px solid ${theme.gold}`, marginBottom: '20px' }}>
+                            <h3 style={{ margin: '0 0 10px 0', color: theme.gold, fontSize: '15px', textTransform: 'uppercase' }}>⚡ GHÉP VỐN ĐỂ RÚT TOKEN</h3>
+                            <p style={{ color: theme.textLight, fontSize: '13px', margin: '0 0 15px 0', lineHeight: '1.5' }}>
+                                Bạn đang thiếu <b>{shortfall} SWGT</b> để đủ hạn mức rút về ví cá nhân (Min 500). Bạn có thể mua thêm từ quỹ OTC nội bộ để miễn phí Gas mạng lưới. Sau khi nạp đủ, hệ thống sẽ mở khóa rút tiền ngay.
+                            </p>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', backgroundColor: '#000', padding: '12px', borderRadius: '8px' }}>
+                                <span style={{ color: theme.textDim, fontSize: '13px' }}>Chi phí nạp ghép vốn:</span>
+                                <div style={{ textAlign: 'right' }}>
+                                    <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '15px', display: 'block' }}>{costUSDT} USDT</span>
+                                    <span style={{ color: theme.gold, fontSize: '12px' }}>(~{costVND} VNĐ)</span>
                                 </div>
-                            </>
-                        ) : (
-                            // --- GIAO DIỆN RÚT TIỀN BÌNH THƯỜNG (Trên 500) ---
+                            </div>
+                            <button onClick={() => handleTopUp(costUSDT, costVND)} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '14px', borderRadius: '8px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>NẠP THÊM ĐỂ ĐỦ 500 SWGT</button>
+                        </div>
+                    </div>
+                ) : (
+                    // --- 4. KHỐI RÚT TIỀN TRÊN 500 (CHỈ HIỂN THỊ KHI ĐÃ UNLOCKED VÀ TRÊN 500) ---
+                    <div style={{ animation: 'fadeIn 0.5s ease' }}>
+                        {isUnlocked ? (
                             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', textAlign: 'center', border: `1px solid ${theme.border}`, marginBottom: '20px' }}>
                                 <p style={{ color: theme.textLight, fontSize: '14px', margin: '0 0 15px 0', fontWeight: 'bold' }}>👇 ĐIỀN SỐ LƯỢNG MUỐN RÚT 👇</p>
                                 <input 
@@ -882,16 +884,19 @@ function App() {
                                     onChange={(e) => setWithdrawAmount(e.target.value)}
                                     style={{ width: '100%', padding: '14px', borderRadius: '10px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '15px', fontSize: '15px', textAlign: 'center' }}
                                 />
-
-                                <button onClick={handleWithdraw} style={{ width: '100%', backgroundColor: balance >= 500 ? theme.green : '#333', color: balance >= 500 ? '#fff' : theme.textDim, padding: '16px', borderRadius: '12px', fontWeight: 'bold', border: 'none', fontSize: '16px', cursor: balance >= 500 ? 'pointer' : 'not-allowed', boxShadow: balance >= 500 ? '0 4px 15px rgba(52, 199, 89, 0.3)' : 'none' }}>
-                                    {balance >= 500 ? '💸 XÁC NHẬN RÚT TIỀN' : '🔒 CẦN TỐI THIỂU 500 KHẢ DỤNG'}
+                                <button onClick={handleWithdraw} style={{ width: '100%', backgroundColor: theme.green, color: '#fff', padding: '16px', borderRadius: '12px', fontWeight: 'bold', border: 'none', fontSize: '16px', cursor: 'pointer', boxShadow: '0 4px 15px rgba(52, 199, 89, 0.3)' }}>
+                                    💸 XÁC NHẬN RÚT TIỀN
                                 </button>
+                            </div>
+                        ) : (
+                            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', textAlign: 'center', border: `1px dashed ${theme.red}`, marginBottom: '20px' }}>
+                                <p style={{ color: theme.red, fontSize: '14px', margin: '0', fontWeight: 'bold' }}>Tài khoản của bạn đã đạt 500 SWGT nhưng chưa hết thời gian khóa 15 ngày. Vui lòng chờ đợi!</p>
                             </div>
                         )}
                     </div>
                 )}
 
-                {/* 4. KHỐI THIẾT LẬP THANH TOÁN */}
+                {/* 5. KHỐI THIẾT LẬP THANH TOÁN (LUÔN HIỆN) */}
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⚙️ Thiết lập thanh toán</h3>
                     
