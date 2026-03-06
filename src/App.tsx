@@ -781,11 +781,11 @@ function App() {
         const bidRate = 25400; // Tỷ giá thu mua VNĐ
         const askRate = 27000; // Tỷ giá ghép vốn USDT
 
-        const liquidateVNDNum = Math.floor(balance * 0.008 * bidRate); 
+        const liquidateVNDNum = Math.floor(balance * 0.007 * bidRate); 
         const liquidateVND = liquidateVNDNum.toLocaleString('vi-VN');
         const shortfall = 500 - balance;
-        const costUSDT = (shortfall * 0.020).toFixed(2);
-        const costVND = Math.floor(shortfall * 0.020 * askRate).toLocaleString('vi-VN'); 
+        const costUSDT = (shortfall * 0.022).toFixed(2);
+        const costVND = Math.floor(shortfall * 0.022 * askRate).toLocaleString('vi-VN'); 
         
         const isEligibleForVND = liquidateVNDNum >= 5000;
 
