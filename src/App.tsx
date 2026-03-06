@@ -712,8 +712,8 @@ function App() {
                 </div>
 
                 <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '15px', marginBottom: '25px', border: `1px solid ${theme.border}`}}>
-                    <h4 style={{margin: '0 0 8px 0', color: theme.red, fontSize: '15px'}}>🔴 KHÁCH NGOÀI HỆ THỐNG (CROSSLINE)</h4>
-                    <p style={{fontSize: '13px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Anh em thuộc tuyến Leader khác nhưng vẫn muốn tham gia Group VIP @swctradings của Admin để nhận phím kèo & tài liệu độc quyền.</p>
+                    <h4 style={{margin: '0 0 8px 0', color: theme.red, fontSize: '15px'}}>🔴 THÀNH VIÊN NGOÀI HỆ THỐNG (CROSSLINE)</h4>
+                    <p style={{fontSize: '13px', color: theme.textDim, margin: '0 0 15px 0', lineHeight: '1.5'}}>Anh em thuộc tuyến ngoài nhưng vẫn muốn tham gia Group Kín của Admin để nhận thông tin & tài liệu độc quyền.</p>
                     <div style={{ backgroundColor: '#000', padding: '12px', borderRadius: '8px', marginBottom: '15px' }}>
                         <p style={{ margin: 0, color: theme.gold, fontSize: '14px', fontWeight: 'bold', textAlign: 'center' }}>PHÍ BẢO TRỢ: 2000 SWGT / NĂM</p>
                     </div>
