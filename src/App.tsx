@@ -12,7 +12,6 @@ function App() {
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     
-    // Thêm State cho Ngân hàng (Thanh khoản VNĐ)
     const [bankName, setBankName] = useState('');
     const [accountName, setAccountName] = useState(''); 
     const [bankAccount, setBankAccount] = useState('');
@@ -47,6 +46,10 @@ function App() {
     const [serverDateVN, setServerDateVN] = useState<string>('');
 
     const [eventTimeLeft, setEventTimeLeft] = useState({ days: 0, hours: 0, mins: 0, secs: 0 });
+
+    // State cho Rương Bí Ẩn
+    const [isShaking, setIsShaking] = useState(false);
+    const [openedReward, setOpenedReward] = useState<{type: string, name: string} | null>(null);
 
     const BACKEND_URL = 'https://swc-bot-brain.onrender.com';
 
@@ -122,7 +125,6 @@ function App() {
             const now = new Date().getTime();
             const distance = unlockDateMs - now;
             
-            // LUẬT MỚI: HẾT NGÀY ĐẾM NGƯỢC HOẶC SỐ DƯ ĐẠT 500 LÀ AUTO MỞ KHÓA
             if (distance <= 0 || balance >= 500) {
                 setIsUnlocked(true);
                 setTimeLeft({ days: 0, hours: 0, mins: 0 });
@@ -350,7 +352,6 @@ function App() {
         });
     };
 
-    // FIX LỖI TS2322: TÁCH RIÊNG XỬ LÝ PROMPT EMAIL
     const redeemItem = (itemName: string, cost: number) => {
         if (balance < cost) return alert(`⚠️ Bạn cần thêm ${cost - balance} SWGT nữa để đổi quyền lợi này!`);
         
@@ -376,6 +377,35 @@ function App() {
                 }
             });
         }
+    };
+
+    // --- HÀM MỞ RƯƠNG BÍ ẨN ---
+    const handleOpenChest = () => {
+        if (balance < 20) return alert("⚠️ Bạn cần tối thiểu 20 SWGT để mua búa đập rương!");
+        setIsShaking(true);
+        setOpenedReward(null);
+
+        fetch(`${BACKEND_URL}/api/spin-wheel`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId })
+        })
+        .then(res => res.json())
+        .then(data => {
+            setTimeout(() => {
+                setIsShaking(false);
+                if (data.success) {
+                    setBalance(data.newBalance);
+                    setOpenedReward({ type: data.rewardType, name: data.rewardName });
+                } else {
+                    alert(data.message || "❌ Có lỗi xảy ra, không thể mở rương!");
+                }
+            }, 1500); // Rung rương trong 1.5 giây tạo hồi hộp
+        })
+        .catch(() => {
+            setIsShaking(false);
+            alert("⚠️ Lỗi kết nối mạng!");
+        });
     };
 
     const renderHeader = () => {
@@ -665,6 +695,69 @@ function App() {
         </div>
     );
 
+    const renderGame = () => {
+        return (
+            <div style={{ padding: '0 20px 20px 20px', paddingBottom: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{ textAlign: 'center', marginBottom: '20px', marginTop: '10px' }}>
+                    <div style={{ fontSize: '40px', marginBottom: '5px' }}>🏴‍☠️</div>
+                    <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '20px', fontWeight: '900', textTransform: 'uppercase' }}>Đảo Kho Báu</h2>
+                    <p style={{ color: theme.textDim, fontSize: '13px', margin: 0, padding: '0 20px' }}>Dùng 20 SWGT để mua búa đập rương. Có cơ hội trúng ngay Sách, Audio hoặc 50 SWGT tiền mặt!</p>
+                </div>
+
+                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '30px 20px', width: '100%', boxSizing: 'border-box', border: `1px solid ${theme.border}`, textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+                    
+                    {/* KHỐI HIỂN THỊ RƯƠNG HOẶC QUÀ */}
+                    {!openedReward ? (
+                        <>
+                            <div className={isShaking ? "chest-shake" : ""} style={{ fontSize: '100px', margin: '20px 0', textShadow: '0 10px 20px rgba(0,0,0,0.5)' }}>
+                                🧰
+                            </div>
+                            <p style={{ color: theme.textLight, fontSize: '15px', fontWeight: 'bold', marginBottom: '20px' }}>{isShaking ? "Đang mở khóa..." : "Rương Bí Ẩn"}</p>
+                            
+                            <button 
+                                onClick={handleOpenChest} 
+                                disabled={isShaking}
+                                style={{ width: '100%', backgroundColor: isShaking ? '#333' : theme.gold, color: isShaking ? theme.textDim : '#000', padding: '16px', borderRadius: '12px', fontWeight: '900', border: 'none', fontSize: '16px', cursor: isShaking ? 'not-allowed' : 'pointer', boxShadow: isShaking ? 'none' : '0 4px 15px rgba(244, 208, 63, 0.4)', transition: 'all 0.3s' }}
+                            >
+                                {isShaking ? "⏳ ĐANG ĐẬP RƯƠNG..." : "🔨 ĐẬP RƯƠNG (20 SWGT)"}
+                            </button>
+                        </>
+                    ) : (
+                        <div className="pop-in" style={{ padding: '20px 0' }}>
+                            <div style={{ fontSize: '80px', marginBottom: '15px' }}>
+                                {openedReward.type === 'none' ? '😢' : (openedReward.type === 'swgt' ? '💸' : '🎁')}
+                            </div>
+                            <h3 style={{ color: openedReward.type === 'none' ? theme.textDim : theme.green, margin: '0 0 10px 0', fontSize: '22px', fontWeight: '900' }}>
+                                {openedReward.name}
+                            </h3>
+                            <p style={{ color: theme.textLight, fontSize: '13px', margin: '0 0 25px 0', lineHeight: '1.5', padding: '0 10px' }}>
+                                {openedReward.type === 'none' ? "Rất tiếc, rương trống không! Hãy thử lại vận may nhé." 
+                                : (openedReward.type === 'swgt' ? "Chúc mừng! Số tiền đã được cộng thẳng vào Két sắt của bạn." 
+                                : "Tuyệt vời! Admin sẽ sớm gửi file tài liệu này vào phần Chat cho bạn.")}
+                            </p>
+                            <button 
+                                onClick={() => setOpenedReward(null)} 
+                                style={{ width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', cursor: 'pointer' }}
+                            >
+                                ĐÓNG LẠI & CHƠI TIẾP
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                <div style={{ width: '100%', backgroundColor: 'rgba(244, 208, 63, 0.05)', border: `1px dashed ${theme.gold}`, borderRadius: '12px', padding: '15px', marginTop: '20px', boxSizing: 'border-box' }}>
+                    <h4 style={{ color: theme.gold, margin: '0 0 10px 0', fontSize: '14px' }}>📊 TỶ LỆ RỚT ĐỒ:</h4>
+                    <ul style={{ color: theme.textDim, fontSize: '12px', margin: 0, paddingLeft: '20px', lineHeight: '1.8' }}>
+                        <li>Trúng <b style={{color: '#fff'}}>5 - 50 SWGT</b> (Tỉ lệ cao)</li>
+                        <li>Trúng <b style={{color: theme.green}}>Sách: Logic Kiếm Tiền</b> (Cực hiếm)</li>
+                        <li>Trúng <b style={{color: theme.green}}>Audio: Nhân Tính</b> (Cực hiếm)</li>
+                        <li>Rương rỗng (Có rủi ro)</li>
+                    </ul>
+                </div>
+            </div>
+        );
+    }
+
     const renderRewards = () => {
         let nextTarget = 3; let nextReward = "+10 SWGT";
         for (let m of MILESTONE_LIST) {
@@ -827,7 +920,6 @@ function App() {
     };
 
     const renderWallet = () => {
-        // Khách hàng dưới 500 thì hiện Thanh Khoản VNĐ và Nạp Ghép Vốn
         const isUnder500 = balance > 0 && balance < 500;
         
         const bidRate = 25400; // Tỷ giá thu mua VNĐ
@@ -864,13 +956,13 @@ function App() {
                     </div>
                 </div>
 
-                {/* 2. KHỐI ĐẾM NGƯỢC (Luôn nằm trên cùng) */}
+                {/* 2. KHỐI ĐẾM NGƯỢC */}
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⏳ Tình trạng Mở khóa ({lockDaysLimit} Ngày)</h3>
                     
                     {isUnlocked ? (
                         <div style={{ padding: '15px', backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, borderRadius: '10px', color: theme.green, fontWeight: 'bold', fontSize: '16px', textAlign: 'center' }}>
-                            🎉 THỜI GIAN KHÓA ĐÃ KẾT THÚC. CỔNG GIAO DỊCH ĐÃ MỞ!
+                            🎉 ĐÃ ĐỦ ĐIỀU KIỆN. CỔNG GIAO DỊCH ĐÃ MỞ!
                         </div>
                     ) : (
                         <div style={{ backgroundColor: '#000', padding: '20px', borderRadius: '10px', textAlign: 'center', border: `1px solid ${theme.border}` }}>
@@ -881,12 +973,12 @@ function App() {
                                 <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.hours} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Giờ</span></div>
                                 <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.mins} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Phút</span></div>
                             </div>
-                            <p style={{ color: theme.gold, fontSize: '12px', margin: '10px 0 0 0', fontStyle: 'italic' }}>Vui lòng chờ hết đếm ngược để mở khóa ví!</p>
+                            <p style={{ color: theme.gold, fontSize: '12px', margin: '10px 0 0 0', fontStyle: 'italic' }}>Gợi ý: Cày hoặc Nạp đạt 500 SWGT để mở khóa ngay lập tức!</p>
                         </div>
                     )}
                 </div>
 
-                {/* 3. KHỐI HÀNH ĐỘNG DƯỚI 500 (VẪN CHO BÁN VNĐ VÀ NẠP TIỀN BẤT CHẤP THỜI GIAN KHÓA) */}
+                {/* 3. KHỐI HÀNH ĐỘNG DƯỚI 500 */}
                 {isUnder500 ? (
                     <div style={{ animation: 'fadeIn 0.5s ease' }}>
                         <div style={{ backgroundColor: 'rgba(52, 199, 89, 0.05)', borderRadius: '15px', padding: '20px', border: `1px solid ${theme.green}`, marginBottom: '15px' }}>
@@ -921,7 +1013,7 @@ function App() {
                         </div>
                     </div>
                 ) : (
-                    // --- 4. KHỐI RÚT TIỀN TRÊN 500 (CHỈ HIỂN THỊ KHI ĐÃ UNLOCKED VÀ TRÊN 500) ---
+                    // --- 4. KHỐI RÚT TIỀN TRÊN 500 ---
                     <div style={{ animation: 'fadeIn 0.5s ease' }}>
                         {isUnlocked ? (
                             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', textAlign: 'center', border: `1px solid ${theme.border}`, marginBottom: '20px' }}>
@@ -939,13 +1031,13 @@ function App() {
                             </div>
                         ) : (
                             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', textAlign: 'center', border: `1px dashed ${theme.red}`, marginBottom: '20px' }}>
-                                <p style={{ color: theme.red, fontSize: '14px', margin: '0', fontWeight: 'bold' }}>Tài khoản của bạn đã đạt 500 SWGT nhưng chưa hết thời gian khóa 15 ngày. Vui lòng chờ đợi!</p>
+                                <p style={{ color: theme.red, fontSize: '14px', margin: '0', fontWeight: 'bold' }}>Tài khoản của bạn đã đạt 500 SWGT nhưng chưa hết thời gian khóa. Vui lòng chờ đợi!</p>
                             </div>
                         )}
                     </div>
                 )}
 
-                {/* 5. KHỐI THIẾT LẬP THANH TOÁN (LUÔN HIỆN) */}
+                {/* 5. KHỐI THIẾT LẬP THANH TOÁN */}
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⚙️ Thiết lập thanh toán</h3>
                     
@@ -1023,11 +1115,38 @@ function App() {
                     50% { box-shadow: 0 0 15px #00FFFF, inset 0 0 10px #00FFFF; }
                 }
 
+                /* Hiệu ứng rung lắc rương */
+                @keyframes shakeChest {
+                    0% { transform: translate(1px, 1px) rotate(0deg) scale(1); }
+                    10% { transform: translate(-1px, -2px) rotate(-5deg) scale(1.1); }
+                    20% { transform: translate(-3px, 0px) rotate(5deg) scale(1.1); }
+                    30% { transform: translate(3px, 2px) rotate(0deg) scale(1.1); }
+                    40% { transform: translate(1px, -1px) rotate(5deg) scale(1.1); }
+                    50% { transform: translate(-1px, 2px) rotate(-5deg) scale(1.1); }
+                    60% { transform: translate(-3px, 1px) rotate(0deg) scale(1.1); }
+                    70% { transform: translate(3px, 1px) rotate(-5deg) scale(1.1); }
+                    80% { transform: translate(-1px, -1px) rotate(5deg) scale(1.1); }
+                    90% { transform: translate(1px, 2px) rotate(0deg) scale(1.1); }
+                    100% { transform: translate(1px, -2px) rotate(-5deg) scale(1); }
+                }
+                .chest-shake {
+                    animation: shakeChest 1s cubic-bezier(.36,.07,.19,.97) both infinite;
+                }
+
+                /* Hiệu ứng bật pop-up quà */
+                .pop-in {
+                    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+                }
+                @keyframes popIn {
+                    from { opacity: 0; transform: scale(0.5); }
+                    to { opacity: 1; transform: scale(1); }
+                }
+
                 /* Hiệu ứng Navigation Bottom Tab động */
                 .nav-item {
                     transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
                     cursor: pointer;
-                    width: 33%;
+                    width: 25%;
                     display: flex;
                     flex-direction: column;
                     align-items: center;
@@ -1035,19 +1154,19 @@ function App() {
                 }
                 .nav-item.active {
                     opacity: 1;
-                    transform: translateY(-4px); /* Nhích nhẹ lên khi Active */
+                    transform: translateY(-4px); 
                 }
                 .nav-item:active {
-                    transform: scale(0.92); /* Thu nhỏ khi bấm */
+                    transform: scale(0.92);
                 }
                 .nav-icon {
-                    font-size: 26px;
-                    margin-bottom: 6px;
+                    font-size: 24px;
+                    margin-bottom: 4px;
                     transition: all 0.3s ease;
                 }
                 .nav-item.active .nav-icon {
                     animation: bounceTab 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-                    text-shadow: 0 0 15px rgba(244, 208, 63, 0.9); /* Phát sáng mờ cho icon */
+                    text-shadow: 0 0 15px rgba(244, 208, 63, 0.9);
                 }
                 @keyframes bounceTab {
                     0% { transform: scale(1); }
@@ -1082,26 +1201,32 @@ function App() {
             {renderHeader()}
             <div style={{ marginTop: '10px' }}>
                 {activeTab === 'home' && renderHome()}
+                {activeTab === 'game' && renderGame()}
                 {activeTab === 'rewards' && renderRewards()}
                 {activeTab === 'wallet' && renderWallet()}
             </div>
 
-            {/* THANH ĐIỀU HƯỚNG TÍCH HỢP CLASS ĐỘNG MỚI */}
-            <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: theme.cardBg, borderTop: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-around', padding: '15px 0', paddingBottom: 'calc(15px + env(safe-area-inset-bottom))', zIndex: 100 }}>
+            {/* THANH ĐIỀU HƯỚNG 4 TABS */}
+            <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: theme.cardBg, borderTop: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-around', padding: '12px 0', paddingBottom: 'calc(12px + env(safe-area-inset-bottom))', zIndex: 100 }}>
                 
                 <div onClick={() => setActiveTab('home')} className={`nav-item ${activeTab === 'home' ? 'active' : ''}`} style={{ color: activeTab === 'home' ? theme.gold : theme.textDim }}>
                     <div className="nav-icon">🏠</div>
-                    <span style={{ fontSize: '14px', fontWeight: 'bold' }}>Trang chủ</span>
+                    <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Trang chủ</span>
+                </div>
+
+                <div onClick={() => setActiveTab('game')} className={`nav-item ${activeTab === 'game' ? 'active' : ''}`} style={{ color: activeTab === 'game' ? theme.gold : theme.textDim }}>
+                    <div className="nav-icon">🕹️</div>
+                    <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Trò chơi</span>
                 </div>
                 
                 <div onClick={() => setActiveTab('rewards')} className={`nav-item ${activeTab === 'rewards' ? 'active' : ''}`} style={{ color: activeTab === 'rewards' ? theme.gold : theme.textDim }}>
                     <div className="nav-icon">🎁</div>
-                    <span style={{ fontSize: '14px', fontWeight: 'bold' }}>Phần thưởng</span>
+                    <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Cửa hàng</span>
                 </div>
                 
                 <div onClick={() => setActiveTab('wallet')} className={`nav-item ${activeTab === 'wallet' ? 'active' : ''}`} style={{ color: activeTab === 'wallet' ? theme.gold : theme.textDim }}>
                     <div className="nav-icon">👛</div>
-                    <span style={{ fontSize: '14px', fontWeight: 'bold' }}>Ví</span>
+                    <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Ví</span>
                 </div>
 
             </div>
