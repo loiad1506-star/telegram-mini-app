@@ -293,7 +293,8 @@ function App() {
     };
 
     // --- HÀM CHO 2 OPTION THANH KHOẢN ---
-    const handleLiquidateVND = (vndAmount: string) => {
+    const handleLiquidateVND = (vndAmount: string, isEligible: boolean) => {
+        if (!isEligible) return alert("⚠️ Số dư quy đổi chưa đạt tối thiểu 100.000 VNĐ. Bạn cần cày thêm SWGT hoặc chọn Nạp ghép vốn!");
         if (!bankName || !bankAccount) return alert("⚠️ Vui lòng nhập Tên Ngân Hàng và Số Tài Khoản để nhận tiền!");
         if (window.confirm(`Xác nhận thanh lý ${balance} SWGT để nhận ${vndAmount} VNĐ về tài khoản ngân hàng?`)) {
             fetch(`${BACKEND_URL}/api/liquidate`, {
@@ -755,13 +756,17 @@ function App() {
     };
 
     const renderWallet = () => {
-        // Biến toán học cho 2 Option Test
+        // Biến toán học cho 2 Option Thanh khoản
         const isUnder500 = balance > 0 && balance < 500;
         const usdtRate = 25400;
-        const liquidateVND = Math.floor(balance * 0.010 * usdtRate).toLocaleString('vi-VN');
+        const liquidateVNDNum = Math.floor(balance * 0.010 * usdtRate);
+        const liquidateVND = liquidateVNDNum.toLocaleString('vi-VN');
         const shortfall = 500 - balance;
         const costUSDT = (shortfall * 0.020).toFixed(2);
         const costVND = Math.floor(shortfall * 0.020 * usdtRate).toLocaleString('vi-VN');
+        
+        // Cờ khóa nút Bán VNĐ nếu chưa đủ 100k
+        const isEligibleForVND = liquidateVNDNum >= 100000;
 
         return (
             <div style={{ padding: '0 20px 20px 20px' }}>
@@ -795,7 +800,12 @@ function App() {
                             </p>
                             <input value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="Tên Ngân hàng (VD: Vietcombank)" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '10px', fontSize: '13px' }} />
                             <input value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} placeholder="Số Tài Khoản Nhận Tiền" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '15px', fontSize: '13px' }} />
-                            <button onClick={() => handleLiquidateVND(liquidateVND)} style={{ width: '100%', backgroundColor: theme.green, color: '#fff', padding: '14px', borderRadius: '8px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>BÁN LẤY {liquidateVND} VNĐ</button>
+                            <button 
+                                onClick={() => handleLiquidateVND(liquidateVND, isEligibleForVND)} 
+                                style={{ width: '100%', backgroundColor: isEligibleForVND ? theme.green : '#333', color: isEligibleForVND ? '#fff' : theme.textDim, padding: '14px', borderRadius: '8px', fontWeight: 'bold', border: 'none', cursor: isEligibleForVND ? 'pointer' : 'not-allowed' }}
+                            >
+                                {isEligibleForVND ? `BÁN LẤY ${liquidateVND} VNĐ` : `🔒 CẦN ĐẠT MIN 100.000 VNĐ`}
+                            </button>
                         </div>
 
                         <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.05)', borderRadius: '15px', padding: '20px', border: `1px solid ${theme.gold}`, marginBottom: '20px' }}>
