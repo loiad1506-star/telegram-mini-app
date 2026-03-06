@@ -664,20 +664,37 @@ function App() {
         return (
             <div style={{ padding: '0 20px 20px 20px', paddingBottom: '100px' }}>
                 
-                {/* 1. KHU VỰC KHO TRI THỨC (CHỈ HIỂN THỊ LOGIC KIẾM TIỀN) */}
+                {/* 1. KHU VỰC KHO TRI THỨC CẬP NHẬT MỚI NHẤT */}
                 <div style={{ textAlign: 'center', marginBottom: '20px', marginTop: '10px' }}>
                     <div style={{ fontSize: '40px', marginBottom: '5px' }}>📚</div>
                     <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '20px', fontWeight: '900', textTransform: 'uppercase' }}>Kho Tàng Tri Thức</h2>
-                    <p style={{ color: theme.textDim, fontSize: '13px', margin: 0 }}>Dùng SWGT đổi lấy Ebook tuyệt mật.</p>
+                    <p style={{ color: theme.textDim, fontSize: '13px', margin: 0 }}>Dùng SWGT đổi lấy Ebook / Audio tuyệt mật.</p>
                 </div>
 
-                <div style={{ marginBottom: '30px' }}>
+                <div style={{ marginBottom: '15px' }}>
                     <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '12px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
                         <div style={{ fontSize: '40px', marginBottom: '10px' }}>📘</div>
                         <h4 style={{ margin: '0 0 5px 0', color: theme.textLight, fontSize: '16px' }}>Bản Gốc: Logic Kiếm Tiền</h4>
                         <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 10px 0' }}>Bí mật dòng tiền của giới tinh hoa.</p>
-                        <p style={{ color: theme.gold, fontWeight: 'bold', fontSize: '16px', margin: '0 0 15px 0' }}>200 SWGT</p>
-                        <button onClick={() => redeemItem('Ebook Logic Kiếm Tiền', 200)} style={{ backgroundColor: '#5E92F3', color: '#fff', border: 'none', padding: '12px 0', width: '100%', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}>ĐỔI NGAY</button>
+                        <p style={{ color: theme.gold, fontWeight: 'bold', fontSize: '16px', margin: '0 0 15px 0' }}>300 SWGT</p>
+                        <button onClick={() => redeemItem('Ebook Logic Kiếm Tiền', 300)} style={{ backgroundColor: '#5E92F3', color: '#fff', border: 'none', padding: '12px 0', width: '100%', borderRadius: '8px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}>ĐỔI NGAY</button>
+                    </div>
+                </div>
+
+                {/* KHỐI AUDIO 2 CỘT */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '30px' }}>
+                    <div style={{ backgroundColor: theme.cardBg, padding: '15px', borderRadius: '12px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
+                        <div style={{ fontSize: '30px', marginBottom: '10px' }}>🎧</div>
+                        <h4 style={{ margin: '0 0 5px 0', color: theme.textLight, fontSize: '13px', height: '32px' }}>Audio: Nhân Tính Đen Trắng</h4>
+                        <p style={{ color: theme.gold, fontWeight: 'bold', fontSize: '14px', margin: '0 0 10px 0' }}>200 SWGT</p>
+                        <button onClick={() => redeemItem('Audio Nhân Tính Đen Trắng', 200)} style={{ backgroundColor: '#5E92F3', color: '#fff', border: 'none', padding: '8px 0', width: '100%', borderRadius: '6px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}>ĐỔI NGAY</button>
+                    </div>
+                    
+                    <div style={{ backgroundColor: theme.cardBg, padding: '15px', borderRadius: '12px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
+                        <div style={{ fontSize: '30px', marginBottom: '10px' }}>🎧</div>
+                        <h4 style={{ margin: '0 0 5px 0', color: theme.textLight, fontSize: '13px', height: '32px' }}>Audio: Tuyệt Mật Nhân Tính</h4>
+                        <p style={{ color: theme.gold, fontWeight: 'bold', fontSize: '14px', margin: '0 0 10px 0' }}>200 SWGT</p>
+                        <button onClick={() => redeemItem('Audio Tuyệt Mật Nhân Tính', 200)} style={{ backgroundColor: '#5E92F3', color: '#fff', border: 'none', padding: '8px 0', width: '100%', borderRadius: '6px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}>ĐỔI NGAY</button>
                     </div>
                 </div>
 
@@ -778,9 +795,8 @@ function App() {
     const renderWallet = () => {
         const isUnder500 = balance > 0 && balance < 500;
         
-        // GIÁ THU MUA VÀ BÁN RA (Ẩn tỷ giá, chỉ hiện VNĐ)
-        const bidRate = 25400; 
-        const askRate = 27000; 
+        const bidRate = 25400; // Tỷ giá thu mua VNĐ
+        const askRate = 27000; // Tỷ giá ghép vốn USDT
 
         const liquidateVNDNum = Math.floor(balance * 0.007 * bidRate); 
         const liquidateVND = liquidateVNDNum.toLocaleString('vi-VN');
@@ -813,7 +829,7 @@ function App() {
                     </div>
                 </div>
 
-                {/* 2. KHỐI ĐẾM NGƯỢC */}
+                {/* 2. KHỐI ĐẾM NGƯỢC (Luôn nằm trên cùng) */}
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⏳ Tình trạng Mở khóa ({lockDaysLimit} Ngày)</h3>
                     
@@ -830,12 +846,12 @@ function App() {
                                 <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.hours} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Giờ</span></div>
                                 <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.mins} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Phút</span></div>
                             </div>
-                            <p style={{ color: theme.gold, fontSize: '12px', margin: '10px 0 0 0', fontStyle: 'italic' }}>Vui lòng chờ hết đếm ngược để hệ thống mở khóa ví!</p>
+                            <p style={{ color: theme.gold, fontSize: '12px', margin: '10px 0 0 0', fontStyle: 'italic' }}>Vui lòng chờ hết đếm ngược để mở khóa ví!</p>
                         </div>
                     )}
                 </div>
 
-                {/* 3. KHỐI HÀNH ĐỘNG DƯỚI 500 (HIỆN NÚT THANH LÝ VÀ GHÉP VỐN) */}
+                {/* 3. KHỐI HÀNH ĐỘNG DƯỚI 500 (VẪN CHO BÁN VNĐ VÀ NẠP TIỀN BẤT CHẤP THỜI GIAN KHÓA) */}
                 {isUnder500 ? (
                     <div style={{ animation: 'fadeIn 0.5s ease' }}>
                         <div style={{ backgroundColor: 'rgba(52, 199, 89, 0.05)', borderRadius: '15px', padding: '20px', border: `1px solid ${theme.green}`, marginBottom: '15px' }}>
