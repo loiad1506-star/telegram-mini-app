@@ -268,6 +268,9 @@ function App() {
     };
 
     const handleWithdraw = () => {
+        // 🔥 THÊM DÒNG NÀY ĐỂ CHẶN RÚT TIỀN (Chặn hoàn toàn Logic)
+        return alert("🚧 Cổng rút Token hiện đang tạm đóng để bảo trì hoặc nâng cấp. Vui lòng quay lại sau!");
+
         if (!isUnlocked) { 
             return alert(`⏳ Bạn chưa hết thời gian mở khóa (${lockDaysLimit} ngày). Cày lên 500 SWGT để hệ thống mở khóa ngay nhé!`); 
         }
@@ -637,6 +640,41 @@ function App() {
                     <p style={{ margin: '5px 0 0 0', color: theme.textDim, fontSize: '11px' }}>Loại TK</p>
                 </div>
             </div>
+
+            {/* KHU VỰC ĐIỂM DANH ĐÃ BỊ TẠM ẨN BẰNG COMMENT */}
+            {/* <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', textAlign: 'center', border: `1px solid ${theme.border}`, marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <h3 style={{ margin: 0, color: '#fff', fontSize: '16px' }}>📅 Điểm Danh Hàng Ngày</h3>
+                    <span style={{ color: theme.gold, fontSize: '13px', fontWeight: 'bold' }}>🔥 Chuỗi: {checkInStreak}/7</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', overflowX: 'auto', paddingBottom: '5px' }}>
+                    {[1, 2, 3, 4, 5, 6, 7].map((day, idx) => {
+                        const isClaimed = isCheckedInToday ? day <= checkInStreak : day < checkInStreak;
+                        const isToday = isCheckedInToday ? day === checkInStreak : day === checkInStreak + 1;
+                        let bgColor = '#000'; let textColor = theme.textDim; let borderColor = theme.border;
+                        if (isClaimed) { bgColor = 'rgba(52, 199, 89, 0.1)'; textColor = theme.green; borderColor = theme.green; }
+                        else if (isToday) { bgColor = 'rgba(244, 208, 63, 0.1)'; textColor = theme.gold; borderColor = theme.gold; }
+
+                        return (
+                            <div key={day} style={{ minWidth: '40px', backgroundColor: bgColor, borderRadius: '8px', padding: '8px 5px', border: `1px solid ${borderColor}`, position: 'relative' }}>
+                                {isClaimed && <div style={{position:'absolute', top:'-6px', right:'-6px', background:'#0F0F0F', borderRadius:'50%', fontSize:'14px', zIndex: 5}}>✅</div>}
+                                <p style={{ margin: '0 0 5px 0', fontSize: '11px', color: textColor }}>Ngày {day}</p>
+                                <p style={{ margin: 0, fontSize: '11px', fontWeight: 'bold', color: textColor }}>
+                                    {isClaimed ? 'Đã nhận' : `+${STREAK_REWARDS[idx]}`}
+                                </p>
+                            </div>
+                        );
+                    })}
+                </div>
+                <button 
+                    onClick={(e) => handleCheckIn(e)} 
+                    disabled={isCheckedInToday}
+                    style={{ width: '100%', backgroundColor: isCheckedInToday ? '#333' : theme.green, color: isCheckedInToday ? theme.textDim : '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: isCheckedInToday ? 'not-allowed' : 'pointer', fontSize: '15px', transition: 'all 0.3s' }}
+                >
+                    {isCheckedInToday ? "✅ ĐÃ NHẬN HÔM NAY" : "✋ BẤM ĐIỂM DANH NGAY"}
+                </button>
+            </div>
+            */}
 
             {/* KHỐI HƯỚNG DẪN CỘNG ĐỒNG */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
@@ -1010,18 +1048,15 @@ function App() {
                     // --- 4. KHỐI RÚT TIỀN TRÊN 500 ---
                     <div style={{ animation: 'fadeIn 0.5s ease' }}>
                         {isUnlocked ? (
-                            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', textAlign: 'center', border: `1px solid ${theme.border}`, marginBottom: '20px' }}>
-                                <p style={{ color: theme.textLight, fontSize: '14px', margin: '0 0 15px 0', fontWeight: 'bold' }}>👇 ĐIỀN SỐ LƯỢNG MUỐN RÚT 👇</p>
-                                <input 
-                                    type="number" 
-                                    placeholder="Nhập số dư Khả dụng..." 
-                                    value={withdrawAmount}
-                                    onChange={(e) => setWithdrawAmount(e.target.value)}
-                                    style={{ width: '100%', padding: '14px', borderRadius: '10px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '15px', fontSize: '15px', textAlign: 'center' }}
-                                />
-                                <button onClick={handleWithdraw} style={{ width: '100%', backgroundColor: theme.green, color: '#fff', padding: '16px', borderRadius: '12px', fontWeight: 'bold', border: 'none', fontSize: '16px', cursor: 'pointer', boxShadow: '0 4px 15px rgba(52, 199, 89, 0.3)' }}>
-                                    💸 XÁC NHẬN RÚT TIỀN
-                                </button>
+                            /* 🔥 GIAO DIỆN TẠM KHÓA BẢO TRÌ 🔥 */
+                            <div style={{ backgroundColor: 'rgba(255, 59, 48, 0.05)', borderRadius: '15px', padding: '20px', textAlign: 'center', border: `1px dashed ${theme.red}`, marginBottom: '20px' }}>
+                                <div style={{ fontSize: '30px', marginBottom: '10px' }}>🚧</div>
+                                <h3 style={{ margin: '0 0 10px 0', color: theme.red, fontSize: '15px', textTransform: 'uppercase', fontWeight: 'bold' }}>
+                                    TẠM ĐÓNG CỔNG RÚT TIỀN
+                                </h3>
+                                <p style={{ color: theme.textLight, fontSize: '13px', margin: 0, lineHeight: '1.5' }}>
+                                    Hệ thống đang tạm khóa chức năng rút Token để bảo trì và nâng cấp. Số dư của bạn vẫn an toàn, vui lòng quay lại sau!
+                                </p>
                             </div>
                         ) : (
                             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', textAlign: 'center', border: `1px dashed ${theme.red}`, marginBottom: '20px' }}>
