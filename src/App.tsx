@@ -400,7 +400,6 @@ function App() {
                         name: data.rewardName || (data.reward > 0 ? `${data.reward} SWGT` : 'Chúc bạn may mắn lần sau!') 
                     });
 
-                    // NẾU TRÚNG ĐỒ HIẾM HOẶC TRÚNG VÉ VIP -> HIỆN POPUP HỎI MAIL
                     if (data.rewardType === 'ebook' || data.rewardType === 'audio') {
                         setTimeout(() => {
                             const emailInput = window.prompt(`🎉 Chúc mừng bạn đã trúng ${data.rewardName}!\n\n📧 Vui lòng nhập GMAIL của bạn để Admin gửi tài liệu này cho bạn nhé:`);
@@ -637,41 +636,6 @@ function App() {
                     </h3>
                     <p style={{ margin: '5px 0 0 0', color: theme.textDim, fontSize: '11px' }}>Loại TK</p>
                 </div>
-            </div>
-
-            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', textAlign: 'center', border: `1px solid ${theme.border}`, marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                    <h3 style={{ margin: 0, color: '#fff', fontSize: '16px' }}>📅 Điểm Danh Hàng Ngày</h3>
-                    <span style={{ color: theme.gold, fontSize: '13px', fontWeight: 'bold' }}>🔥 Chuỗi: {checkInStreak}/7</span>
-                </div>
-                
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', overflowX: 'auto', paddingBottom: '5px' }}>
-                    {[1, 2, 3, 4, 5, 6, 7].map((day, idx) => {
-                        const isClaimed = isCheckedInToday ? day <= checkInStreak : day < checkInStreak;
-                        const isToday = isCheckedInToday ? day === checkInStreak : day === checkInStreak + 1;
-                        let bgColor = '#000'; let textColor = theme.textDim; let borderColor = theme.border;
-                        if (isClaimed) { bgColor = 'rgba(52, 199, 89, 0.1)'; textColor = theme.green; borderColor = theme.green; }
-                        else if (isToday) { bgColor = 'rgba(244, 208, 63, 0.1)'; textColor = theme.gold; borderColor = theme.gold; }
-
-                        return (
-                            <div key={day} style={{ minWidth: '40px', backgroundColor: bgColor, borderRadius: '8px', padding: '8px 5px', border: `1px solid ${borderColor}`, position: 'relative' }}>
-                                {isClaimed && <div style={{position:'absolute', top:'-6px', right:'-6px', background:'#0F0F0F', borderRadius:'50%', fontSize:'14px', zIndex: 5}}>✅</div>}
-                                <p style={{ margin: '0 0 5px 0', fontSize: '11px', color: textColor }}>Ngày {day}</p>
-                                <p style={{ margin: 0, fontSize: '11px', fontWeight: 'bold', color: textColor }}>
-                                    {isClaimed ? 'Đã nhận' : `+${STREAK_REWARDS[idx]}`}
-                                </p>
-                            </div>
-                        );
-                    })}
-                </div>
-
-                <button 
-                    onClick={(e) => handleCheckIn(e)} 
-                    disabled={isCheckedInToday}
-                    style={{ width: '100%', backgroundColor: isCheckedInToday ? '#333' : theme.green, color: isCheckedInToday ? theme.textDim : '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: isCheckedInToday ? 'not-allowed' : 'pointer', fontSize: '15px', transition: 'all 0.3s' }}
-                >
-                    {isCheckedInToday ? "✅ ĐÃ NHẬN HÔM NAY" : "✋ BẤM ĐIỂM DANH NGAY"}
-                </button>
             </div>
 
             {/* KHỐI HƯỚNG DẪN CỘNG ĐỒNG */}
@@ -1265,6 +1229,3 @@ function App() {
 }
 
 export default App;
-
-
-
