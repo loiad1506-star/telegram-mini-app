@@ -12,7 +12,6 @@ function App() {
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     
-    // Thêm State cho Ngân hàng (Thanh khoản VNĐ)
     const [bankName, setBankName] = useState('');
     const [accountName, setAccountName] = useState(''); 
     const [bankAccount, setBankAccount] = useState('');
@@ -47,6 +46,9 @@ function App() {
     const [serverDateVN, setServerDateVN] = useState<string>('');
 
     const [eventTimeLeft, setEventTimeLeft] = useState({ days: 0, hours: 0, mins: 0, secs: 0 });
+
+    const [isSpinning, setIsSpinning] = useState(false);
+    const [spinResultMsg, setSpinResultMsg] = useState('');
 
     const BACKEND_URL = 'https://swc-bot-brain.onrender.com';
 
@@ -122,7 +124,6 @@ function App() {
             const now = new Date().getTime();
             const distance = unlockDateMs - now;
             
-            // LUẬT MỚI: HẾT NGÀY ĐẾM NGƯỢC HOẶC SỐ DƯ ĐẠT 500 LÀ AUTO MỞ KHÓA
             if (distance <= 0 || balance >= 500) {
                 setIsUnlocked(true);
                 setTimeLeft({ days: 0, hours: 0, mins: 0 });
@@ -218,28 +219,7 @@ function App() {
         return "Tân Binh 🔰";
     };
 
-    const handleCheckIn = (e: React.MouseEvent) => {
-        if (isCheckedInToday) return;
-        const rect = e.currentTarget.getBoundingClientRect();
-        const floatX = rect.left + rect.width / 2;
-        const floatY = rect.top;
-
-        fetch(`${BACKEND_URL}/api/checkin`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId })
-        }).then(res => res.json()).then(data => {
-            if (data.success) {
-                setBalance(data.balance);
-                setLastCheckIn(data.lastCheckInDate);
-                setCheckInStreak(data.streak);
-                triggerFloatAnim(data.reward, floatX, floatY); 
-                alert(`🔥 Điểm danh thành công (Chuỗi ${data.streak} ngày)!\nBạn nhận được +${data.reward} SWGT.`);
-                fetchUserData(userId); 
-            } else { alert(data.message || "❌ Hôm nay bạn đã điểm danh rồi!"); }
-        }).catch(() => alert("⚠️ Mạng chậm, vui lòng thử lại sau giây lát!"));
-    };
-
+    // Hàm gọi nạp/rút/điểm danh (đã bị khóa ở UI nên các hàm này tạm thời không được kích hoạt từ nút bấm)
     const handleClaimGiftCode = () => {
         if (!giftCodeInput.trim()) return alert("⚠️ Vui lòng nhập mã Giftcode!");
         fetch(`${BACKEND_URL}/api/claim-giftcode`, {
@@ -265,71 +245,6 @@ function App() {
         }).then(() => alert('✅ Đã lưu thông tin thanh toán thành công!'));
     };
 
-    const handleWithdraw = () => {
-        if (!isUnlocked) { 
-            return alert(`⏳ Bạn chưa hết thời gian mở khóa (${lockDaysLimit} ngày). Cày lên 500 SWGT để hệ thống mở khóa ngay nhé!`); 
-        }
-        const amount = Number(withdrawAmount);
-        if (!amount || amount < 500) return alert("⚠️ Bạn cần rút tối thiểu 500 SWGT!");
-        if (amount > balance) return alert("⚠️ Số dư của bạn không đủ để rút mức này!");
-        if (withdrawMethod === 'gate' && !gatecode) return alert("⚠️ Bạn chọn rút qua Gate.io nhưng chưa nhập Gatecode/UID ở bên dưới!");
-        if (withdrawMethod === 'erc20' && !wallet) return alert("⚠️ Bạn chọn rút qua ERC20 nhưng chưa nhập ví ở bên dưới!");
-
-        let confirmMsg = `Xác nhận rút ${amount} SWGT qua mạng Gate.io (Miễn phí)?`;
-        if (withdrawMethod === 'erc20') confirmMsg = `Xác nhận rút ${amount} SWGT qua ví ERC20?\n\n⚠️ LƯU Ý: Phí rút mạng ERC20 là 70 SWGT. Bạn sẽ bị trừ phí từ số tiền rút. Bạn có chắc chắn không?`;
-
-        if (window.confirm(confirmMsg)) {
-            fetch(`${BACKEND_URL}/api/withdraw`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, amount, withdrawMethod }) 
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.success) {
-                    setBalance(data.balance); setWithdrawAmount(''); 
-                    alert(`✅ Yêu cầu rút tiền đã được gửi thành công!\nCổng rút Token SWGT đã mở, Admin sẽ xử lý và chuyển Token cho bạn sớm nhất.`);
-                } else { alert(data.message || "❌ Lỗi xử lý!"); }
-            });
-        }
-    };
-
-    const handleLiquidateVND = (vndAmount: string, isEligible: boolean) => {
-        if (!isEligible) return alert("⚠️ Số dư quy đổi chưa đạt tối thiểu 5.000 VNĐ.");
-        if (!bankName || !bankAccount || !accountName) return alert("⚠️ Vui lòng nhập Tên Ngân Hàng, Chủ Tài Khoản và Số Tài Khoản để nhận tiền!");
-        if (window.confirm(`Xác nhận thanh lý ${balance} SWGT để nhận ${vndAmount} VNĐ về tài khoản ngân hàng?`)) {
-            fetch(`${BACKEND_URL}/api/liquidate`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, vndAmount, bankName, accountName, bankAccount }) 
-            }).then(res => res.json()).then(data => {
-                if(data.success) {
-                    setBalance(data.balance); setBankName(''); setBankAccount(''); setAccountName('');
-                    alert(`✅ Lệnh thanh khoản đã gửi! Vui lòng chờ Admin chuyển khoản cho bạn.`);
-                } else { alert(data.message); }
-            });
-        }
-    };
-
-    const handleTopUp = (usdtAmount: string, vndAmount: string) => {
-        if (window.confirm(`Bạn muốn nộp thêm số tiền tương đương ${usdtAmount} USDT để đủ 500 SWGT rút Token về ví?`)) {
-            fetch(`${BACKEND_URL}/api/topup`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, usdtAmount, vndAmount }) 
-            }).then(res => res.json()).then(data => {
-                if(data.success) {
-                    alert(`✅ Yêu cầu đã ghi nhận! Bot Telegram vừa gửi tin nhắn hướng dẫn thanh toán cho bạn.`);
-                }
-            });
-        }
-    };
-
-    const handleCopyLink = () => {
-        const link = `https://t.me/Dau_Tu_SWC_bot?start=${userId || 'ref'}`;
-        navigator.clipboard.writeText(link).then(() => alert('✅ Đã sao chép link giới thiệu thành công!')).catch(() => alert('❌ Lỗi sao chép!'));
-    };
-
     const handleClaimMilestone = (milestoneReq: number, reward: number, e: React.MouseEvent) => {
         const rect = e.currentTarget.getBoundingClientRect();
         const floatX = rect.left + rect.width / 2;
@@ -350,7 +265,6 @@ function App() {
         });
     };
 
-    // FIX LỖI TS2322: TÁCH RIÊNG XỬ LÝ PROMPT EMAIL
     const redeemItem = (itemName: string, cost: number) => {
         if (balance < cost) return alert(`⚠️ Bạn cần thêm ${cost - balance} SWGT nữa để đổi quyền lợi này!`);
         
@@ -377,6 +291,47 @@ function App() {
             });
         }
     };
+
+    const handleSpin = () => {
+        if (balance < 20) return alert("⚠️ Bạn không đủ 20 SWGT để mua vé quay!");
+        if (isSpinning) return;
+
+        setIsSpinning(true);
+        setSpinResultMsg('Đang quay...');
+
+        fetch(`${BACKEND_URL}/api/spin`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId })
+        })
+        .then(res => res.json())
+        .then(data => {
+            setTimeout(() => {
+                setIsSpinning(false);
+                if (data.success) {
+                    setBalance(data.balance);
+                    setSpinResultMsg(`🎉 Kết quả: ${data.rewardName}`);
+                    
+                    if (data.rewardType === 'item') {
+                        alert(`🎁 JACKPOT: Chúc mừng bạn đã trúng [${data.rewardName}]!\nAdmin sẽ chủ động liên hệ gửi File cho bạn qua Telegram ngay lập tức!`);
+                    } else if (data.rewardType === 'swgt' && data.rewardValue > 0) {
+                        alert(`💰 Chúc mừng! Bạn quay trúng ${data.rewardName}! Số dư đã được cập nhật.`);
+                    } else {
+                        alert(`😭 Rất tiếc, bạn quay trúng ô mất lượt. Chúc bạn may mắn lần sau!`);
+                    }
+                } else {
+                    setSpinResultMsg('Lỗi quay thưởng!');
+                    alert(data.message);
+                }
+            }, 1500);
+        })
+        .catch(() => {
+            setIsSpinning(false);
+            setSpinResultMsg('Lỗi mạng!');
+            alert("⚠️ Mạng chậm, vui lòng thử lại!");
+        });
+    };
+
 
     const renderHeader = () => {
         const isFireEffect = (Number(userId || 1) % 2) !== 0; 
@@ -617,12 +572,12 @@ function App() {
                     })}
                 </div>
 
+                {/* --- KHÓA NÚT ĐIỂM DANH --- */}
                 <button 
-                    onClick={(e) => handleCheckIn(e)} 
-                    disabled={isCheckedInToday}
-                    style={{ width: '100%', backgroundColor: isCheckedInToday ? '#333' : theme.green, color: isCheckedInToday ? theme.textDim : '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: isCheckedInToday ? 'not-allowed' : 'pointer', fontSize: '15px', transition: 'all 0.3s' }}
+                    onClick={() => alert("⛔ Chức năng Điểm danh đang tạm thời bảo trì!")}
+                    style={{ width: '100%', backgroundColor: '#333', color: theme.textDim, padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'not-allowed', fontSize: '15px', transition: 'all 0.3s' }}
                 >
-                    {isCheckedInToday ? "✅ ĐÃ NHẬN HÔM NAY" : "✋ BẤM ĐIỂM DANH NGAY"}
+                    ⛔ TẠM KHÓA ĐIỂM DANH
                 </button>
             </div>
 
@@ -675,7 +630,36 @@ function App() {
         return (
             <div style={{ padding: '0 20px 20px 20px', paddingBottom: '100px' }}>
                 
-                {/* 1. KHU VỰC KHO TRI THỨC MỚI (4 NHÓM TĂNG DẦN) */}
+                {/* 0. MINI GAME: VÒNG QUAY NHÂN PHẨM (VẪN MỞ ĐỂ KHÁCH CHƠI) */}
+                <div style={{ backgroundColor: '#1C1C1E', borderRadius: '15px', padding: '20px', border: `2px solid ${theme.gold}`, marginBottom: '30px', textAlign: 'center', boxShadow: '0 0 20px rgba(244, 208, 63, 0.2)' }}>
+                    <div style={{ fontSize: '45px', marginBottom: '10px', animation: isSpinning ? 'spin 0.5s linear infinite' : 'none' }}>
+                        🎡
+                    </div>
+                    <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '18px', fontWeight: '900', textTransform: 'uppercase' }}>Vòng Quay Nhân Phẩm</h2>
+                    <p style={{ color: theme.textLight, fontSize: '13px', margin: '0 0 15px 0', lineHeight: '1.5' }}>
+                        Thử vận may - Rinh ngay Jackpot!<br/>Phí quay: <b style={{color: theme.gold}}>20 SWGT/lượt</b>.
+                    </p>
+                    
+                    <div style={{ backgroundColor: '#000', padding: '10px', borderRadius: '8px', marginBottom: '15px', border: `1px dashed ${theme.border}` }}>
+                        <p style={{ color: theme.green, fontSize: '12px', margin: 0, fontWeight: 'bold' }}>
+                            {spinResultMsg || "Giải thưởng: Lên đến 100 SWGT hoặc Combo Sách VIP!"}
+                        </p>
+                    </div>
+
+                    <button 
+                        onClick={handleSpin} 
+                        disabled={isSpinning}
+                        style={{ 
+                            width: '100%', backgroundColor: isSpinning ? '#333' : theme.gold, color: isSpinning ? theme.textDim : '#000', 
+                            padding: '12px 0', borderRadius: '8px', fontWeight: '900', fontSize: '15px', cursor: isSpinning ? 'not-allowed' : 'pointer',
+                            boxShadow: isSpinning ? 'none' : '0 4px 10px rgba(244, 208, 63, 0.4)', transition: 'all 0.2s'
+                        }}
+                    >
+                        {isSpinning ? "ĐANG QUAY..." : "QUAY NGAY (20 SWGT)"}
+                    </button>
+                </div>
+
+                {/* 1. KHU VỰC KHO TRI THỨC (CỬA HÀNG - VẪN MỞ) */}
                 <div style={{ textAlign: 'center', marginBottom: '20px', marginTop: '10px' }}>
                     <div style={{ fontSize: '40px', marginBottom: '5px' }}>📚</div>
                     <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '20px', fontWeight: '900', textTransform: 'uppercase' }}>Kho Tàng Tri Thức</h2>
@@ -683,7 +667,7 @@ function App() {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '30px' }}>
-                    {/* Nhóm 1: 100 SWGT */}
+                    {/* Nhóm 1 */}
                     <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '12px', border: `1px solid ${theme.border}`, position: 'relative', overflow: 'hidden' }}>
                         <div style={{ position: 'absolute', top: 0, right: 0, backgroundColor: '#333', color: '#fff', padding: '5px 15px', borderBottomLeftRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}>CẤP ĐỘ 1</div>
                         <div style={{ fontSize: '30px', marginBottom: '10px' }}>🎧</div>
@@ -695,7 +679,7 @@ function App() {
                         </div>
                     </div>
 
-                    {/* Nhóm 2: 200 SWGT */}
+                    {/* Nhóm 2 */}
                     <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '12px', border: `1px solid ${theme.border}`, position: 'relative', overflow: 'hidden' }}>
                         <div style={{ position: 'absolute', top: 0, right: 0, backgroundColor: '#5E92F3', color: '#fff', padding: '5px 15px', borderBottomLeftRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}>CẤP ĐỘ 2</div>
                         <div style={{ fontSize: '30px', marginBottom: '10px' }}>🎧 🎧</div>
@@ -707,7 +691,7 @@ function App() {
                         </div>
                     </div>
 
-                    {/* Nhóm 3: 300 SWGT */}
+                    {/* Nhóm 3 */}
                     <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '12px', border: `1px solid ${theme.green}`, position: 'relative', overflow: 'hidden' }}>
                         <div style={{ position: 'absolute', top: 0, right: 0, backgroundColor: theme.green, color: '#fff', padding: '5px 15px', borderBottomLeftRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}>CẤP ĐỘ 3</div>
                         <div style={{ fontSize: '30px', marginBottom: '10px' }}>📘 🎧 🎧</div>
@@ -719,7 +703,7 @@ function App() {
                         </div>
                     </div>
 
-                    {/* Nhóm 4: 400 SWGT */}
+                    {/* Nhóm 4 */}
                     <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.1)', padding: '20px', borderRadius: '12px', border: `1px solid ${theme.gold}`, position: 'relative', overflow: 'hidden' }}>
                         <div style={{ position: 'absolute', top: 0, right: 0, backgroundColor: theme.gold, color: '#000', padding: '5px 15px', borderBottomLeftRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}>VIP</div>
                         <div style={{ fontSize: '30px', marginBottom: '10px' }}>👑 📚</div>
@@ -754,93 +738,28 @@ function App() {
                     <button onClick={() => redeemItem('Vé vào Group VIP @swctradings (Khách Crossline)', 2000)} style={{backgroundColor: '#333', color: theme.gold, border: `1px solid ${theme.gold}`, padding: '10px 0', width: '100%', borderRadius: '8px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'}}>DÙNG 2000 SWGT ĐỂ VÀO NHÓM</button>
                 </div>
 
-                {/* 3. KHU VỰC NHIỆM VỤ CŨ & BẢNG XẾP HẠNG */}
-                <h3 style={{color: '#fff', paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🚀 9 CỘT MỐC THƯỞNG NÓNG</h3>
-                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '10px' }}>
-                        <div>
-                            <p style={{ margin: 0, color: theme.textDim, fontSize: '13px' }}>Đã giới thiệu</p>
-                            <h2 style={{ margin: 0, color: theme.textLight, fontSize: '24px' }}>{referrals} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>người</span></h2>
-                        </div>
-                        <div style={{ textAlign: 'right' }}>
-                            <p style={{ margin: 0, color: theme.gold, fontSize: '12px' }}>Tiếp: {nextTarget} người</p>
-                            <p style={{ margin: 0, color: theme.green, fontSize: '12px', fontWeight: 'bold' }}>Thưởng {nextReward}</p>
-                        </div>
-                    </div>
-                    <div style={{ width: '100%', height: '10px', backgroundColor: '#333', borderRadius: '5px', overflow: 'hidden', marginBottom: '15px' }}>
-                        <div style={{ width: `${progressPercent}%`, height: '100%', backgroundColor: theme.gold }}></div>
-                    </div>
-
-                    <div style={{ display: 'flex', overflowX: 'auto', gap: '10px', paddingBottom: '10px' }}>
-                        {MILESTONE_LIST.map((m) => {
-                            const isClaimed = milestones[m.key];
-                            const canClaim = referrals >= m.req && !isClaimed;
-                            return (
-                                <div key={m.req} style={{ minWidth: '105px', backgroundColor: '#000', borderRadius: '10px', padding: '12px 8px', border: `1px solid ${theme.border}`, textAlign: 'center' }}>
-                                    <p style={{ color: theme.textLight, fontSize: '12px', fontWeight: 'bold', margin: '0 0 2px 0' }}>Mốc {m.req}</p>
-                                    <p style={{ color: theme.gold, fontSize: '12px', fontWeight: '900', margin: '0 0 10px 0' }}>+{m.reward}</p>
-                                    <button 
-                                        onClick={(e) => handleClaimMilestone(m.req, m.reward, e)} 
-                                        disabled={!canClaim}
-                                        style={{ width: '100%', backgroundColor: isClaimed ? '#333' : (canClaim ? theme.green : '#333'), color: isClaimed ? theme.textDim : '#fff', border: 'none', padding: '7px 0', borderRadius: '6px', fontWeight: 'bold', fontSize: '11px', cursor: canClaim ? 'pointer' : 'not-allowed' }}>
-                                        {isClaimed ? 'ĐÃ NHẬN' : 'NHẬN'}
-                                    </button>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-                
+                {/* --- KHÓA MÃ GIFTCODE VÀ LINK MỜI --- */}
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
-                    <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>🎟️ Nhập Mã Giftcode</h3>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        <input 
-                            value={giftCodeInput} 
-                            onChange={(e) => setGiftCodeInput(e.target.value)} 
-                            placeholder="Nhập mã săn được..." 
-                            style={{ flex: 1, padding: '14px', borderRadius: '10px', border: `1px solid ${theme.green}`, backgroundColor: '#000', color: theme.gold, fontSize: '14px', textTransform: 'uppercase', boxSizing: 'border-box' }} 
-                        />
-                        <button onClick={handleClaimGiftCode} style={{ backgroundColor: theme.green, color: '#fff', padding: '0 20px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
-                            NHẬN
-                        </button>
+                    <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>🔗 Link Lan Tỏa (Đang bảo trì)</h3>
+                    <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '8px', color: theme.textDim, fontSize: '13px', textAlign: 'center', marginBottom: '15px', border: `1px dashed ${theme.red}` }}>
+                        Tính năng mời bạn bè đang được BQT tạm khóa để kiểm tra và đối soát dữ liệu sau đợt thanh trừng.
                     </div>
-                </div>
-
-                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
-                    <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>🔗 Link Lan Tỏa</h3>
-                    <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '8px', color: theme.gold, fontSize: '13px', wordBreak: 'break-all', marginBottom: '15px', border: `1px dashed ${theme.border}` }}>
-                        https://t.me/Dau_Tu_SWC_bot?start={userId || 'ref'}
-                    </div>
-                    <button onClick={handleCopyLink} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>📋 COPY LINK MỜI</button>
+                    <button disabled style={{ width: '100%', backgroundColor: '#333', color: theme.textDim, padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'not-allowed' }}>⛔ TẠM KHÓA LINK MỜI</button>
                 </div>
 
                 <h3 style={{color: theme.gold, paddingBottom: '10px', marginBottom: '15px', fontSize: '17px', textAlign: 'center', fontWeight: '900'}}>🤝 BẢNG VÀNG ĐẠI SỨ</h3>
                 {renderWealthBoard()}
 
                 <div style={{ textAlign: 'center', paddingTop: '5px', marginBottom: '25px' }}>
-                    <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', textDecoration: 'none', boxSizing: 'border-box' }}>
-                        ✈️ CHIA SẺ LINK ĐỂ ĐUA TOP NGAY
-                    </a>
+                    <button disabled style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', backgroundColor: '#333', color: theme.textDim, padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', cursor: 'not-allowed' }}>
+                        ⛔ TẠM KHÓA TÍNH NĂNG CHIA SẺ
+                    </button>
                 </div>
             </div>
         );
     };
 
     const renderWallet = () => {
-        // Khách hàng dưới 500 thì hiện Thanh Khoản VNĐ và Nạp Ghép Vốn
-        const isUnder500 = balance > 0 && balance < 500;
-        
-        const bidRate = 25400; // Tỷ giá thu mua VNĐ
-        const askRate = 27000; // Tỷ giá ghép vốn USDT
-
-        const liquidateVNDNum = Math.floor(balance * 0.007 * bidRate); 
-        const liquidateVND = liquidateVNDNum.toLocaleString('vi-VN');
-        const shortfall = 500 - balance;
-        const costUSDT = (shortfall * 0.022).toFixed(2);
-        const costVND = Math.floor(shortfall * 0.022 * askRate).toLocaleString('vi-VN'); 
-        
-        const isEligibleForVND = liquidateVNDNum >= 5000;
-
         return (
             <div style={{ padding: '0 20px 20px 20px' }}>
                 {/* 1. KHỐI HIỂN THỊ SỐ DƯ */}
@@ -864,13 +783,13 @@ function App() {
                     </div>
                 </div>
 
-                {/* 2. KHỐI ĐẾM NGƯỢC (Luôn nằm trên cùng) */}
+                {/* 2. KHỐI ĐẾM NGƯỢC */}
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⏳ Tình trạng Mở khóa ({lockDaysLimit} Ngày)</h3>
                     
                     {isUnlocked ? (
                         <div style={{ padding: '15px', backgroundColor: 'rgba(52, 199, 89, 0.1)', border: `1px dashed ${theme.green}`, borderRadius: '10px', color: theme.green, fontWeight: 'bold', fontSize: '16px', textAlign: 'center' }}>
-                            🎉 THỜI GIAN KHÓA ĐÃ KẾT THÚC. CỔNG GIAO DỊCH ĐÃ MỞ!
+                            🎉 ĐÃ ĐỦ ĐIỀU KIỆN. CỔNG GIAO DỊCH SẼ SỚM MỞ!
                         </div>
                     ) : (
                         <div style={{ backgroundColor: '#000', padding: '20px', borderRadius: '10px', textAlign: 'center', border: `1px solid ${theme.border}` }}>
@@ -881,71 +800,26 @@ function App() {
                                 <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.hours} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Giờ</span></div>
                                 <div style={{ padding: '5px 10px', backgroundColor: '#222', borderRadius: '6px', color: theme.gold, fontSize: '18px', fontWeight: 'bold' }}>{timeLeft.mins} <span style={{fontSize:'12px', color: theme.textDim, fontWeight:'normal'}}>Phút</span></div>
                             </div>
-                            <p style={{ color: theme.gold, fontSize: '12px', margin: '10px 0 0 0', fontStyle: 'italic' }}>Vui lòng chờ hết đếm ngược để mở khóa ví!</p>
+                            <p style={{ color: theme.gold, fontSize: '12px', margin: '10px 0 0 0', fontStyle: 'italic' }}>Tất cả giao dịch đang tạm dừng để đối soát dữ liệu!</p>
                         </div>
                     )}
                 </div>
 
-                {/* 3. KHỐI HÀNH ĐỘNG DƯỚI 500 (VẪN CHO BÁN VNĐ VÀ NẠP TIỀN BẤT CHẤP THỜI GIAN KHÓA) */}
-                {isUnder500 ? (
-                    <div style={{ animation: 'fadeIn 0.5s ease' }}>
-                        <div style={{ backgroundColor: 'rgba(52, 199, 89, 0.05)', borderRadius: '15px', padding: '20px', border: `1px solid ${theme.green}`, marginBottom: '15px' }}>
-                            <h3 style={{ margin: '0 0 10px 0', color: theme.green, fontSize: '15px', textTransform: 'uppercase' }}>💸 THANH KHOẢN TỨC THÌ</h3>
-                            <p style={{ color: theme.textLight, fontSize: '13px', margin: '0 0 15px 0', lineHeight: '1.5' }}>
-                                Bạn chưa đủ 500 SWGT để rút Token. Tuy nhiên BQT hỗ trợ thu mua số dư nhỏ ngay lập tức. <br/><br/>Số dư <b>{balance} SWGT</b> quy đổi thành: <b style={{color: theme.gold, fontSize: '16px'}}>{liquidateVND} VNĐ</b>
-                            </p>
-                            <input value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="Tên Ngân hàng (VD: Vietcombank)" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '10px', fontSize: '13px' }} />
-                            <input value={accountName} onChange={(e) => setAccountName(e.target.value)} placeholder="Họ và Tên Chủ Tài Khoản" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '10px', fontSize: '13px' }} />
-                            <input value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} placeholder="Số Tài Khoản Nhận Tiền" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '15px', fontSize: '13px' }} />
-                            <button 
-                                onClick={() => handleLiquidateVND(liquidateVND, isEligibleForVND)} 
-                                style={{ width: '100%', backgroundColor: isEligibleForVND ? theme.green : '#333', color: isEligibleForVND ? '#fff' : theme.textDim, padding: '14px', borderRadius: '8px', fontWeight: 'bold', border: 'none', cursor: isEligibleForVND ? 'pointer' : 'not-allowed' }}
-                            >
-                                {isEligibleForVND ? `BÁN LẤY ${liquidateVND} VNĐ` : `🔒 CẦN ĐẠT MIN 5.000 VNĐ`}
-                            </button>
-                        </div>
-
-                        <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.05)', borderRadius: '15px', padding: '20px', border: `1px solid ${theme.gold}`, marginBottom: '20px' }}>
-                            <h3 style={{ margin: '0 0 10px 0', color: theme.gold, fontSize: '15px', textTransform: 'uppercase' }}>⚡ GHÉP VỐN ĐỂ RÚT TOKEN</h3>
-                            <p style={{ color: theme.textLight, fontSize: '13px', margin: '0 0 15px 0', lineHeight: '1.5' }}>
-                                Bạn đang thiếu <b>{shortfall} SWGT</b> để đủ hạn mức rút về ví cá nhân (Min 500). Bạn có thể mua thêm từ quỹ OTC nội bộ để miễn phí Gas mạng lưới.
-                            </p>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', backgroundColor: '#000', padding: '12px', borderRadius: '8px' }}>
-                                <span style={{ color: theme.textDim, fontSize: '13px' }}>Chi phí nạp ghép vốn:</span>
-                                <div style={{ textAlign: 'right' }}>
-                                    <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '15px', display: 'block' }}>{costUSDT} USDT</span>
-                                    <span style={{ color: theme.gold, fontSize: '12px' }}>(~{costVND} VNĐ)</span>
-                                </div>
-                            </div>
-                            <button onClick={() => handleTopUp(costUSDT, costVND)} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '14px', borderRadius: '8px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>NẠP THÊM ĐỂ ĐỦ 500 SWGT</button>
-                        </div>
+                {/* --- 3. THÔNG BÁO BẢO TRÌ GIAO DỊCH ĐÈ LÊN FORM NẠP/RÚT --- */}
+                <div style={{ animation: 'fadeIn 0.5s ease' }}>
+                    <div style={{ backgroundColor: 'rgba(255, 59, 48, 0.05)', border: `1px dashed ${theme.red}`, borderRadius: '15px', padding: '25px 20px', textAlign: 'center', marginBottom: '25px' }}>
+                        <div style={{ fontSize: '40px', marginBottom: '10px' }}>🚧</div>
+                        <h3 style={{ margin: '0 0 15px 0', color: theme.red, fontSize: '16px', fontWeight: '900', textTransform: 'uppercase' }}>
+                            CỔNG GIAO DỊCH TẠM ĐÓNG
+                        </h3>
+                        <p style={{ margin: 0, color: theme.textLight, fontSize: '14px', lineHeight: '1.6' }}>
+                            Các chức năng <b>Rút Token, Thanh khoản VNĐ và Ghép vốn</b> đang được BQT tạm thời khóa lại để tiến hành tổng kiểm toán hệ thống sau đợt thanh trừng.<br/><br/>
+                            Mọi dữ liệu tài sản của bạn vẫn an toàn tuyệt đối. Cổng giao dịch sẽ sớm được mở lại. Cảm ơn sự kiên nhẫn của bạn!
+                        </p>
                     </div>
-                ) : (
-                    // --- 4. KHỐI RÚT TIỀN TRÊN 500 (CHỈ HIỂN THỊ KHI ĐÃ UNLOCKED VÀ TRÊN 500) ---
-                    <div style={{ animation: 'fadeIn 0.5s ease' }}>
-                        {isUnlocked ? (
-                            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', textAlign: 'center', border: `1px solid ${theme.border}`, marginBottom: '20px' }}>
-                                <p style={{ color: theme.textLight, fontSize: '14px', margin: '0 0 15px 0', fontWeight: 'bold' }}>👇 ĐIỀN SỐ LƯỢNG MUỐN RÚT 👇</p>
-                                <input 
-                                    type="number" 
-                                    placeholder="Nhập số dư Khả dụng..." 
-                                    value={withdrawAmount}
-                                    onChange={(e) => setWithdrawAmount(e.target.value)}
-                                    style={{ width: '100%', padding: '14px', borderRadius: '10px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '15px', fontSize: '15px', textAlign: 'center' }}
-                                />
-                                <button onClick={handleWithdraw} style={{ width: '100%', backgroundColor: theme.green, color: '#fff', padding: '16px', borderRadius: '12px', fontWeight: 'bold', border: 'none', fontSize: '16px', cursor: 'pointer', boxShadow: '0 4px 15px rgba(52, 199, 89, 0.3)' }}>
-                                    💸 XÁC NHẬN RÚT TIỀN
-                                </button>
-                            </div>
-                        ) : (
-                            <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', textAlign: 'center', border: `1px dashed ${theme.red}`, marginBottom: '20px' }}>
-                                <p style={{ color: theme.red, fontSize: '14px', margin: '0', fontWeight: 'bold' }}>Tài khoản của bạn đã đạt 500 SWGT nhưng chưa hết thời gian khóa 15 ngày. Vui lòng chờ đợi!</p>
-                            </div>
-                        )}
-                    </div>
-                )}
+                </div>
 
-                {/* 5. KHỐI THIẾT LẬP THANH TOÁN (LUÔN HIỆN) */}
+                {/* 4. KHỐI THIẾT LẬP THANH TOÁN (VẪN CHO PHÉP CẬP NHẬT THÔNG TIN) */}
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⚙️ Thiết lập thanh toán</h3>
                     
@@ -1110,4 +984,3 @@ function App() {
 }
 
 export default App;
-
