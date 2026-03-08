@@ -46,8 +46,6 @@ function App() {
     const [animations, setAnimations] = useState<{id: number, text: string, x: number, y: number}[]>([]);
     const [serverDateVN, setServerDateVN] = useState<string>('');
 
-    const [eventTimeLeft, setEventTimeLeft] = useState({ days: 0, hours: 0, mins: 0, secs: 0 });
-
     const [isShaking, setIsShaking] = useState(false);
     const [openedReward, setOpenedReward] = useState<{type: string, name: string} | null>(null);
 
@@ -87,37 +85,6 @@ function App() {
             setAnimations(prev => prev.filter(a => a.id !== newAnim.id));
         }, 1000);
     };
-
-    useEffect(() => {
-        const calculateNextSunday = () => {
-            const now = new Date();
-            const dayOfWeek = now.getDay();
-            const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
-            const nextSunday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysUntilSunday);
-            nextSunday.setHours(23, 59, 59, 999);
-            return nextSunday.getTime();
-        };
-
-        const targetTime = calculateNextSunday();
-
-        const eventInterval = setInterval(() => {
-            const now = new Date().getTime();
-            const distance = targetTime - now;
-
-            if (distance <= 0) {
-                setEventTimeLeft({ days: 0, hours: 0, mins: 0, secs: 0 });
-            } else {
-                setEventTimeLeft({
-                    days: Math.floor(distance / (1000 * 60 * 60 * 24)),
-                    hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-                    mins: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
-                    secs: Math.floor((distance % (1000 * 60)) / 1000)
-                });
-            }
-        }, 1000);
-
-        return () => clearInterval(eventInterval);
-    }, []);
 
     useEffect(() => {
         if (!unlockDateMs) return;
@@ -221,14 +188,7 @@ function App() {
     };
 
     const handleCheckIn = (e: React.MouseEvent) => {
-        // [ĐÃ KHÓA TÍNH NĂNG]
         return alert("🚧 Tính năng Điểm danh hiện đang được tạm khóa để nâng cấp hệ thống!");
-        
-        /* Bỏ qua logic cũ
-        if (isCheckedInToday) return;
-        const rect = e.currentTarget.getBoundingClientRect();
-        // ...
-        */
     };
 
     const handleClaimGiftCode = () => {
@@ -286,23 +246,11 @@ function App() {
     };
 
     const handleLiquidateVND = (vndAmount: string, isEligible: boolean) => {
-        // [ĐÃ KHÓA TÍNH NĂNG]
         return alert("🚧 Tính năng Thanh khoản hiện đang được tạm khóa để bảo trì!");
-        
-        /* Bỏ qua logic cũ
-        if (!isEligible) return alert("⚠️ Số dư quy đổi chưa đạt tối thiểu 5.000 VNĐ.");
-        // ...
-        */
     };
 
     const handleTopUp = (usdtAmount: string, vndAmount: string) => {
-        // [ĐÃ KHÓA TÍNH NĂNG]
         return alert("🚧 Tính năng Nạp ghép vốn hiện đang được tạm khóa để bảo trì!");
-        
-        /* Bỏ qua logic cũ
-        if (window.confirm(`Bạn muốn nộp thêm số tiền tương đương ${usdtAmount} USDT để đủ 500 SWGT rút Token về ví?`)) {
-        // ...
-        */
     };
 
     const handleCopyLink = () => {
@@ -575,25 +523,26 @@ function App() {
     const renderHome = () => (
         <div style={{ padding: '0 20px 20px 20px' }}>
             
-            <div style={{ backgroundColor: 'rgba(255, 59, 48, 0.1)', border: `1px dashed ${theme.red}`, borderRadius: '15px', padding: '20px', textAlign: 'center', marginBottom: '20px', animation: 'pulseGlowRed 2s infinite' }}>
-                <h3 style={{ margin: '0 0 10px 0', color: theme.red, fontSize: '16px', fontWeight: '900', textTransform: 'uppercase' }}>
-                    🚨 CẢNH BÁO: ĐÓNG CỔNG KHAI THÁC SWGT MIỄN PHÍ
+            {/* KHỐI CẢNH BÁO ĐÃ CHUYỂN SANG TRẠNG THÁI KHÓA */}
+            <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: `1px solid ${theme.border}`, borderRadius: '15px', padding: '20px', textAlign: 'center', marginBottom: '20px' }}>
+                <h3 style={{ margin: '0 0 10px 0', color: theme.textDim, fontSize: '16px', fontWeight: '900', textTransform: 'uppercase' }}>
+                    🔒 ĐÃ ĐÓNG CỔNG KHAI THÁC
                 </h3>
-                <p style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '13px', lineHeight: '1.5' }}>
-                    99% Tổng cung Airdrop đã được khai thác. Hệ thống sẽ chính thức đóng cổng khai thác vào <b style={{color: theme.gold}}>23:59 Chủ Nhật Tuần Này!</b>
+                <p style={{ margin: '0 0 15px 0', color: theme.textDim, fontSize: '13px', lineHeight: '1.5' }}>
+                    Sự kiện Airdrop khai thác SWGT miễn phí đã chính thức kết thúc. Cảm ơn bạn đã đồng hành cùng cộng đồng!
                 </p>
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
-                    <div style={{ padding: '10px 12px', backgroundColor: theme.red, borderRadius: '8px', color: '#fff', fontWeight: '900', fontSize: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        {eventTimeLeft.days} <span style={{fontSize:'10px', fontWeight:'normal', textTransform:'uppercase'}}>Ngày</span>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', opacity: 0.5 }}>
+                    <div style={{ padding: '10px 12px', backgroundColor: '#333', borderRadius: '8px', color: theme.textDim, fontWeight: '900', fontSize: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        0 <span style={{fontSize:'10px', fontWeight:'normal', textTransform:'uppercase'}}>Ngày</span>
                     </div>
-                    <div style={{ padding: '10px 12px', backgroundColor: theme.red, borderRadius: '8px', color: '#fff', fontWeight: '900', fontSize: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        {eventTimeLeft.hours} <span style={{fontSize:'10px', fontWeight:'normal', textTransform:'uppercase'}}>Giờ</span>
+                    <div style={{ padding: '10px 12px', backgroundColor: '#333', borderRadius: '8px', color: theme.textDim, fontWeight: '900', fontSize: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        0 <span style={{fontSize:'10px', fontWeight:'normal', textTransform:'uppercase'}}>Giờ</span>
                     </div>
-                    <div style={{ padding: '10px 12px', backgroundColor: theme.red, borderRadius: '8px', color: '#fff', fontWeight: '900', fontSize: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        {eventTimeLeft.mins} <span style={{fontSize:'10px', fontWeight:'normal', textTransform:'uppercase'}}>Phút</span>
+                    <div style={{ padding: '10px 12px', backgroundColor: '#333', borderRadius: '8px', color: theme.textDim, fontWeight: '900', fontSize: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        0 <span style={{fontSize:'10px', fontWeight:'normal', textTransform:'uppercase'}}>Phút</span>
                     </div>
-                    <div style={{ padding: '10px 12px', backgroundColor: '#333', borderRadius: '8px', color: theme.gold, fontWeight: '900', fontSize: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        {eventTimeLeft.secs} <span style={{fontSize:'10px', fontWeight:'normal', textTransform:'uppercase'}}>Giây</span>
+                    <div style={{ padding: '10px 12px', backgroundColor: '#222', borderRadius: '8px', color: theme.textDim, fontWeight: '900', fontSize: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        0 <span style={{fontSize:'10px', fontWeight:'normal', textTransform:'uppercase'}}>Giây</span>
                     </div>
                 </div>
             </div>
@@ -641,7 +590,6 @@ function App() {
                     })}
                 </div>
 
-                {/* NÚT ĐIỂM DANH ĐÃ KHÓA */}
                 <button 
                     disabled={true}
                     onClick={(e) => handleCheckIn(e)} 
@@ -986,7 +934,6 @@ function App() {
                             <input value={accountName} onChange={(e) => setAccountName(e.target.value)} placeholder="Họ và Tên Chủ Tài Khoản" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '10px', fontSize: '13px' }} />
                             <input value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} placeholder="Số Tài Khoản Nhận Tiền" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '15px', fontSize: '13px' }} />
                             
-                            {/* NÚT THANH KHOẢN ĐÃ KHÓA */}
                             <button 
                                 disabled={true}
                                 onClick={() => handleLiquidateVND(liquidateVND, isEligibleForVND)} 
@@ -1009,7 +956,6 @@ function App() {
                                 </div>
                             </div>
                             
-                            {/* NÚT GHÉP VỐN ĐÃ KHÓA */}
                             <button 
                                 disabled={true}
                                 onClick={() => handleTopUp(costUSDT, costVND)} 
