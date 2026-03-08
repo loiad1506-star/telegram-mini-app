@@ -11,19 +11,11 @@ function App() {
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
-    
-    const [bankName, setBankName] = useState('');
-    const [accountName, setAccountName] = useState(''); 
-    const [bankAccount, setBankAccount] = useState('');
 
     const [referrals, setReferrals] = useState(0); 
-    const [withdrawAmount, setWithdrawAmount] = useState(''); 
     
     const [checkInStreak, setCheckInStreak] = useState(0);
-    const [milestones, setMilestones] = useState<any>({});
     
-    const [giftCodeInput, setGiftCodeInput] = useState('');
-
     const [userId, setUserId] = useState('');
     const [userProfile, setUserProfile] = useState({
         name: 'Đang tải...',
@@ -64,18 +56,6 @@ function App() {
         blue: '#5E92F3',
         premium: '#E0B0FF' 
     };
-
-    const MILESTONE_LIST = [
-        { req: 3, reward: 10, key: 'milestone3', rank: 'Đại Úy 🎖️' },
-        { req: 10, reward: 20, key: 'milestone10', rank: 'Thiếu Tá 🎖️' },
-        { req: 20, reward: 40, key: 'milestone20', rank: 'Trung Tá 🎖️' },
-        { req: 50, reward: 80, key: 'milestone50', rank: 'Thượng Tá 🎖️' },
-        { req: 80, reward: 150, key: 'milestone80', rank: 'Đại Tá 🎖️' },
-        { req: 120, reward: 200, key: 'milestone120', rank: 'Thiếu Tướng 🌟' },
-        { req: 200, reward: 300, key: 'milestone200', rank: 'Trung Tướng 🌟🌟' },
-        { req: 350, reward: 500, key: 'milestone350', rank: 'Thượng Tướng 🌟🌟🌟' },
-        { req: 500, reward: 700, key: 'milestone500', rank: 'Đại Tướng 🌟🌟🌟🌟' }
-    ];
 
     const STREAK_REWARDS = [0.25, 0.75, 1.5, 1.75, 2.5, 3.5, 4.5];
 
@@ -155,13 +135,6 @@ function App() {
                 if (data.lastCheckInDate) setLastCheckIn(data.lastCheckInDate);
                 setCheckInStreak(data.checkInStreak || 0);
                 
-                setMilestones({
-                    milestone3: data.milestone3, milestone10: data.milestone10, 
-                    milestone20: data.milestone20, milestone50: data.milestone50,
-                    milestone80: data.milestone80, milestone120: data.milestone120,
-                    milestone200: data.milestone200, milestone350: data.milestone350, milestone500: data.milestone500
-                });
-                
                 const premium = data.isPremium || false;
                 setIsPremiumUser(premium);
                 const daysLimit = premium ? 7 : 15;
@@ -219,22 +192,6 @@ function App() {
         return "Tân Binh 🔰";
     };
 
-    // Hàm gọi nạp/rút/điểm danh (đã bị khóa ở UI nên các hàm này tạm thời không được kích hoạt từ nút bấm)
-    const handleClaimGiftCode = () => {
-        if (!giftCodeInput.trim()) return alert("⚠️ Vui lòng nhập mã Giftcode!");
-        fetch(`${BACKEND_URL}/api/claim-giftcode`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, code: giftCodeInput })
-        }).then(res => res.json()).then(data => {
-            if (data.success) {
-                setBalance(data.balance);
-                setGiftCodeInput('');
-                alert(`🎉 Chúc mừng! Bạn nhận được +${data.reward} SWGT từ mã quà tặng!`);
-            } else { alert(data.message); }
-        }).catch(() => alert("⚠️ Lỗi kết nối máy chủ!"));
-    };
-
     const handleSaveWallet = () => {
         if (withdrawMethod === 'gate' && !gatecode) return alert("⚠️ Vui lòng nhập Gatecode/UID của bạn!");
         if (withdrawMethod === 'erc20' && !wallet) return alert("⚠️ Vui lòng nhập địa chỉ ví ERC20!");
@@ -243,26 +200,6 @@ function App() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId, wallet, gatecode, fullName, email, phone })
         }).then(() => alert('✅ Đã lưu thông tin thanh toán thành công!'));
-    };
-
-    const handleClaimMilestone = (milestoneReq: number, reward: number, e: React.MouseEvent) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        const floatX = rect.left + rect.width / 2;
-        const floatY = rect.top;
-
-        fetch(`${BACKEND_URL}/api/claim-milestone`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, milestone: milestoneReq })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if(data.success) {
-                setBalance(data.balance);
-                setMilestones((prev: any) => ({ ...prev, [`milestone${milestoneReq}`]: true }));
-                triggerFloatAnim(reward, floatX, floatY); 
-            } else { alert(data.message || "❌ Chưa đủ điều kiện nhận hoặc đã nhận rồi!"); }
-        });
     };
 
     const redeemItem = (itemName: string, cost: number) => {
@@ -621,12 +558,6 @@ function App() {
     );
 
     const renderRewards = () => {
-        let nextTarget = 3; let nextReward = "+10 SWGT";
-        for (let m of MILESTONE_LIST) {
-            if (referrals < m.req) { nextTarget = m.req; nextReward = `+${m.reward} SWGT`; break; }
-        }
-        let progressPercent = Math.min((referrals / nextTarget) * 100, 100);
-
         return (
             <div style={{ padding: '0 20px 20px 20px', paddingBottom: '100px' }}>
                 
