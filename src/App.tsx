@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect } from 'react';
 
 function App() {
@@ -46,8 +45,10 @@ function App() {
     const [animations, setAnimations] = useState<{id: number, text: string, x: number, y: number}[]>([]);
     const [serverDateVN, setServerDateVN] = useState<string>('');
 
-    const [isShaking, setIsShaking] = useState(false);
-    const [openedReward, setOpenedReward] = useState<{type: string, name: string} | null>(null);
+    const [eventTimeLeft, setEventTimeLeft] = useState({ days: 0, hours: 0, mins: 0, secs: 0 });
+
+    const [isSpinning, setIsSpinning] = useState(false);
+    const [spinResultMsg, setSpinResultMsg] = useState('');
 
     const BACKEND_URL = 'https://swc-bot-brain.onrender.com';
 
@@ -85,6 +86,37 @@ function App() {
             setAnimations(prev => prev.filter(a => a.id !== newAnim.id));
         }, 1000);
     };
+
+    useEffect(() => {
+        const calculateNextSunday = () => {
+            const now = new Date();
+            const dayOfWeek = now.getDay();
+            const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+            const nextSunday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysUntilSunday);
+            nextSunday.setHours(23, 59, 59, 999);
+            return nextSunday.getTime();
+        };
+
+        const targetTime = calculateNextSunday();
+
+        const eventInterval = setInterval(() => {
+            const now = new Date().getTime();
+            const distance = targetTime - now;
+
+            if (distance <= 0) {
+                setEventTimeLeft({ days: 0, hours: 0, mins: 0, secs: 0 });
+            } else {
+                setEventTimeLeft({
+                    days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+                    hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+                    mins: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+                    secs: Math.floor((distance % (1000 * 60)) / 1000)
+                });
+            }
+        }, 1000);
+
+        return () => clearInterval(eventInterval);
+    }, []);
 
     useEffect(() => {
         if (!unlockDateMs) return;
@@ -188,7 +220,25 @@ function App() {
     };
 
     const handleCheckIn = (e: React.MouseEvent) => {
-        return alert("🚧 Tính năng Điểm danh hiện đang được tạm khóa để nâng cấp hệ thống!");
+        if (isCheckedInToday) return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        const floatX = rect.left + rect.width / 2;
+        const floatY = rect.top;
+
+        fetch(`${BACKEND_URL}/api/checkin`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId })
+        }).then(res => res.json()).then(data => {
+            if (data.success) {
+                setBalance(data.balance);
+                setLastCheckIn(data.lastCheckInDate);
+                setCheckInStreak(data.streak);
+                triggerFloatAnim(data.reward, floatX, floatY); 
+                alert(`🔥 Điểm danh thành công (Chuỗi ${data.streak} ngày)!\nBạn nhận được +${data.reward} SWGT.`);
+                fetchUserData(userId); 
+            } else { alert(data.message || "❌ Hôm nay bạn đã điểm danh rồi!"); }
+        }).catch(() => alert("⚠️ Mạng chậm, vui lòng thử lại sau giây lát!"));
     };
 
     const handleClaimGiftCode = () => {
@@ -246,11 +296,34 @@ function App() {
     };
 
     const handleLiquidateVND = (vndAmount: string, isEligible: boolean) => {
-        return alert("🚧 Tính năng Thanh khoản hiện đang được tạm khóa để bảo trì!");
+        if (!isEligible) return alert("⚠️ Số dư quy đổi chưa đạt tối thiểu 5.000 VNĐ.");
+        if (!bankName || !bankAccount || !accountName) return alert("⚠️ Vui lòng nhập Tên Ngân Hàng, Chủ Tài Khoản và Số Tài Khoản để nhận tiền!");
+        if (window.confirm(`Xác nhận thanh lý ${balance} SWGT để nhận ${vndAmount} VNĐ về tài khoản ngân hàng?`)) {
+            fetch(`${BACKEND_URL}/api/liquidate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, vndAmount, bankName, accountName, bankAccount }) 
+            }).then(res => res.json()).then(data => {
+                if(data.success) {
+                    setBalance(data.balance); setBankName(''); setBankAccount(''); setAccountName('');
+                    alert(`✅ Lệnh thanh khoản đã gửi! Vui lòng chờ Admin chuyển khoản cho bạn.`);
+                } else { alert(data.message); }
+            });
+        }
     };
 
     const handleTopUp = (usdtAmount: string, vndAmount: string) => {
-        return alert("🚧 Tính năng Nạp ghép vốn hiện đang được tạm khóa để bảo trì!");
+        if (window.confirm(`Bạn muốn nộp thêm số tiền tương đương ${usdtAmount} USDT để đủ 500 SWGT rút Token về ví?`)) {
+            fetch(`${BACKEND_URL}/api/topup`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, usdtAmount, vndAmount }) 
+            }).then(res => res.json()).then(data => {
+                if(data.success) {
+                    alert(`✅ Yêu cầu đã ghi nhận! Bot Telegram vừa gửi tin nhắn hướng dẫn thanh toán cho bạn.`);
+                }
+            });
+        }
     };
 
     const handleCopyLink = () => {
@@ -282,7 +355,7 @@ function App() {
         if (balance < cost) return alert(`⚠️ Bạn cần thêm ${cost - balance} SWGT nữa để đổi quyền lợi này!`);
         
         let finalEmail = "";
-        if (itemName.includes('Ebook') || itemName.includes('Audio') || itemName.includes('Combo') || itemName.includes('Gói')) {
+        if (itemName.includes('Ebook') || itemName.includes('Audio') || itemName.includes('Combo')) {
             const promptInput = window.prompt(`📧 Nhập địa chỉ Gmail của bạn để Admin gửi tài liệu [${itemName}]:`);
             if (promptInput === null) return; 
             if (!promptInput.trim() || !promptInput.includes('@')) {
@@ -305,12 +378,14 @@ function App() {
         }
     };
 
-    const handleOpenChest = () => {
-        if (balance < 20) return alert("⚠️ Bạn cần tối thiểu 20 SWGT để mua búa đập rương!");
-        setIsShaking(true);
-        setOpenedReward(null);
+    const handleSpin = () => {
+        if (balance < 20) return alert("⚠️ Bạn không đủ 20 SWGT để mua vé quay!");
+        if (isSpinning) return;
 
-        fetch(`${BACKEND_URL}/api/spin-wheel`, {
+        setIsSpinning(true);
+        setSpinResultMsg('Đang quay...');
+
+        fetch(`${BACKEND_URL}/api/spin`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId })
@@ -318,36 +393,28 @@ function App() {
         .then(res => res.json())
         .then(data => {
             setTimeout(() => {
-                setIsShaking(false);
+                setIsSpinning(false);
                 if (data.success) {
-                    setBalance(data.newBalance);
-                    setOpenedReward({ 
-                        type: data.rewardType || (data.reward > 0 ? 'swgt' : 'none'), 
-                        name: data.rewardName || (data.reward > 0 ? `${data.reward} SWGT` : 'Chúc bạn may mắn lần sau!') 
-                    });
-
-                    if (data.rewardType === 'ebook' || data.rewardType === 'audio') {
-                        setTimeout(() => {
-                            const emailInput = window.prompt(`🎉 Chúc mừng bạn đã trúng ${data.rewardName}!\n\n📧 Vui lòng nhập GMAIL của bạn để Admin gửi tài liệu này cho bạn nhé:`);
-                            if (emailInput && emailInput.trim().includes('@')) {
-                                fetch(`${BACKEND_URL}/api/submit-game-email`, {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ userId, email: emailInput.trim(), rewardName: data.rewardName })
-                                });
-                            } else {
-                                alert("⚠️ Bạn chưa nhập đúng định dạng Gmail. Admin sẽ liên hệ qua tin nhắn Bot để lấy mail sau.");
-                            }
-                        }, 500);
+                    setBalance(data.balance);
+                    setSpinResultMsg(`🎉 Kết quả: ${data.rewardName}`);
+                    
+                    if (data.rewardType === 'item') {
+                        alert(`🎁 JACKPOT: Chúc mừng bạn đã trúng [${data.rewardName}]!\nAdmin sẽ chủ động liên hệ gửi File cho bạn qua Telegram ngay lập tức!`);
+                    } else if (data.rewardType === 'swgt' && data.rewardValue > 0) {
+                        alert(`💰 Chúc mừng! Bạn quay trúng ${data.rewardName}! Số dư đã được cập nhật.`);
+                    } else {
+                        alert(`😭 Rất tiếc, bạn quay trúng ô mất lượt. Chúc bạn may mắn lần sau!`);
                     }
                 } else {
-                    alert(data.message || "❌ Có lỗi xảy ra, không thể mở rương!");
+                    setSpinResultMsg('Lỗi quay thưởng!');
+                    alert(data.message);
                 }
-            }, 1500); 
+            }, 1500);
         })
         .catch(() => {
-            setIsShaking(false);
-            alert("⚠️ Lỗi kết nối mạng!");
+            setIsSpinning(false);
+            setSpinResultMsg('Lỗi mạng!');
+            alert("⚠️ Mạng chậm, vui lòng thử lại!");
         });
     };
 
@@ -523,26 +590,26 @@ function App() {
     const renderHome = () => (
         <div style={{ padding: '0 20px 20px 20px' }}>
             
-            {/* KHỐI CẢNH BÁO ĐÃ CHUYỂN SANG TRẠNG THÁI KHÓA */}
-            <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', border: `1px solid ${theme.border}`, borderRadius: '15px', padding: '20px', textAlign: 'center', marginBottom: '20px' }}>
-                <h3 style={{ margin: '0 0 10px 0', color: theme.textDim, fontSize: '16px', fontWeight: '900', textTransform: 'uppercase' }}>
-                    🔒 ĐÃ ĐÓNG CỔNG KHAI THÁC
+            {/* ĐỒNG HỒ ĐẾM NGƯỢC FOMO */}
+            <div style={{ backgroundColor: 'rgba(255, 59, 48, 0.1)', border: `1px dashed ${theme.red}`, borderRadius: '15px', padding: '20px', textAlign: 'center', marginBottom: '20px', animation: 'pulseGlowRed 2s infinite' }}>
+                <h3 style={{ margin: '0 0 10px 0', color: theme.red, fontSize: '16px', fontWeight: '900', textTransform: 'uppercase' }}>
+                    🚨 CẢNH BÁO: ĐÓNG CỔNG KHAI THÁC SWGT MIỄN PHÍ
                 </h3>
-                <p style={{ margin: '0 0 15px 0', color: theme.textDim, fontSize: '13px', lineHeight: '1.5' }}>
-                    Sự kiện Airdrop khai thác SWGT miễn phí đã chính thức kết thúc. Cảm ơn bạn đã đồng hành cùng cộng đồng!
+                <p style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '13px', lineHeight: '1.5' }}>
+                    99% Tổng cung Airdrop đã được khai thác. Hệ thống sẽ chính thức đóng cổng khai thác vào <b style={{color: theme.gold}}>23:59 Chủ Nhật Tuần Này!</b>
                 </p>
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', opacity: 0.5 }}>
-                    <div style={{ padding: '10px 12px', backgroundColor: '#333', borderRadius: '8px', color: theme.textDim, fontWeight: '900', fontSize: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        0 <span style={{fontSize:'10px', fontWeight:'normal', textTransform:'uppercase'}}>Ngày</span>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                    <div style={{ padding: '10px 12px', backgroundColor: theme.red, borderRadius: '8px', color: '#fff', fontWeight: '900', fontSize: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        {eventTimeLeft.days} <span style={{fontSize:'10px', fontWeight:'normal', textTransform:'uppercase'}}>Ngày</span>
                     </div>
-                    <div style={{ padding: '10px 12px', backgroundColor: '#333', borderRadius: '8px', color: theme.textDim, fontWeight: '900', fontSize: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        0 <span style={{fontSize:'10px', fontWeight:'normal', textTransform:'uppercase'}}>Giờ</span>
+                    <div style={{ padding: '10px 12px', backgroundColor: theme.red, borderRadius: '8px', color: '#fff', fontWeight: '900', fontSize: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        {eventTimeLeft.hours} <span style={{fontSize:'10px', fontWeight:'normal', textTransform:'uppercase'}}>Giờ</span>
                     </div>
-                    <div style={{ padding: '10px 12px', backgroundColor: '#333', borderRadius: '8px', color: theme.textDim, fontWeight: '900', fontSize: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        0 <span style={{fontSize:'10px', fontWeight:'normal', textTransform:'uppercase'}}>Phút</span>
+                    <div style={{ padding: '10px 12px', backgroundColor: theme.red, borderRadius: '8px', color: '#fff', fontWeight: '900', fontSize: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        {eventTimeLeft.mins} <span style={{fontSize:'10px', fontWeight:'normal', textTransform:'uppercase'}}>Phút</span>
                     </div>
-                    <div style={{ padding: '10px 12px', backgroundColor: '#222', borderRadius: '8px', color: theme.textDim, fontWeight: '900', fontSize: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        0 <span style={{fontSize:'10px', fontWeight:'normal', textTransform:'uppercase'}}>Giây</span>
+                    <div style={{ padding: '10px 12px', backgroundColor: '#333', borderRadius: '8px', color: theme.gold, fontWeight: '900', fontSize: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        {eventTimeLeft.secs} <span style={{fontSize:'10px', fontWeight:'normal', textTransform:'uppercase'}}>Giây</span>
                     </div>
                 </div>
             </div>
@@ -591,14 +658,15 @@ function App() {
                 </div>
 
                 <button 
-                    disabled={true}
                     onClick={(e) => handleCheckIn(e)} 
-                    style={{ width: '100%', backgroundColor: '#333', color: theme.textDim, padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'not-allowed', fontSize: '15px', transition: 'all 0.3s' }}
+                    disabled={isCheckedInToday}
+                    style={{ width: '100%', backgroundColor: isCheckedInToday ? '#333' : theme.green, color: isCheckedInToday ? theme.textDim : '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: isCheckedInToday ? 'not-allowed' : 'pointer', fontSize: '15px', transition: 'all 0.3s' }}
                 >
-                    🔒 TẠM KHÓA ĐIỂM DANH
+                    {isCheckedInToday ? "✅ ĐÃ NHẬN HÔM NAY" : "✋ BẤM ĐIỂM DANH NGAY"}
                 </button>
             </div>
 
+            {/* KHỐI HƯỚNG DẪN CỘNG ĐỒNG */}
             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                 <h2 style={{ color: theme.textLight, margin: '0 0 15px 0', fontSize: '18px' }}>🎯 Hướng dẫn Xây Dựng Hệ Thống</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -637,80 +705,6 @@ function App() {
         </div>
     );
 
-    const renderGame = () => {
-        return (
-            <div style={{ padding: '0 20px 20px 20px', paddingBottom: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div style={{ textAlign: 'center', marginBottom: '20px', marginTop: '10px' }}>
-                    <div style={{ fontSize: '40px', marginBottom: '5px' }}>🏴‍☠️</div>
-                    <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '20px', fontWeight: '900', textTransform: 'uppercase' }}>Đảo Kho Báu</h2>
-                    <p style={{ color: theme.textDim, fontSize: '13px', margin: 0, padding: '0 20px' }}>Dùng 20 SWGT để mua búa đập rương. Cơ hội trúng ngay Sách, Audio hoặc giải thưởng 50 SWGT tiền mặt!</p>
-                </div>
-
-                <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '30px 20px', width: '100%', boxSizing: 'border-box', border: `1px solid ${theme.border}`, textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-                    
-                    {!openedReward ? (
-                        <>
-                            <div className={isShaking ? "chest-shake" : ""} style={{ fontSize: '100px', margin: '20px 0', textShadow: '0 10px 20px rgba(0,0,0,0.5)' }}>
-                                🧰
-                            </div>
-                            <p style={{ color: theme.textLight, fontSize: '15px', fontWeight: 'bold', marginBottom: '20px' }}>{isShaking ? "Đang mở khóa..." : "Rương Bí Ẩn"}</p>
-                            
-                            <button 
-                                onClick={handleOpenChest} 
-                                disabled={isShaking}
-                                style={{ width: '100%', backgroundColor: isShaking ? '#333' : theme.gold, color: isShaking ? theme.textDim : '#000', padding: '16px', borderRadius: '12px', fontWeight: '900', border: 'none', fontSize: '16px', cursor: isShaking ? 'not-allowed' : 'pointer', boxShadow: isShaking ? 'none' : '0 4px 15px rgba(244, 208, 63, 0.4)', transition: 'all 0.3s' }}
-                            >
-                                {isShaking ? "⏳ ĐANG ĐẬP RƯƠNG..." : "🔨 ĐẬP RƯƠNG (20 SWGT)"}
-                            </button>
-                        </>
-                    ) : (
-                        <div className="pop-in" style={{ padding: '10px 0' }}>
-                            <div style={{ fontSize: '70px', marginBottom: '15px' }}>
-                                {openedReward.type === 'none' ? '😢' : (openedReward.type === 'swgt' ? '💸' : (openedReward.type === 'vip_invite' ? '👑' : '🎁'))}
-                            </div>
-                            
-                            {openedReward.type !== 'none' ? (
-                                <div style={{ backgroundColor: openedReward.type === 'swgt' ? 'rgba(244, 208, 63, 0.15)' : (openedReward.type === 'vip_invite' ? 'rgba(224, 176, 255, 0.15)' : 'rgba(52, 199, 89, 0.15)'), border: `1px dashed ${openedReward.type === 'swgt' ? theme.gold : (openedReward.type === 'vip_invite' ? theme.premium : theme.green)}`, padding: '10px 20px', borderRadius: '10px', margin: '0 auto 15px auto', display: 'inline-block' }}>
-                                    <h3 style={{ color: openedReward.type === 'swgt' ? theme.gold : (openedReward.type === 'vip_invite' ? theme.premium : theme.green), margin: 0, fontSize: '20px', fontWeight: '900' }}>
-                                        {openedReward.name}
-                                    </h3>
-                                </div>
-                            ) : (
-                                <h3 style={{ color: theme.textDim, margin: '0 0 15px 0', fontSize: '20px', fontWeight: '900' }}>
-                                    {openedReward.name}
-                                </h3>
-                            )}
-
-                            <p style={{ color: theme.textLight, fontSize: '13px', margin: '0 0 25px 0', lineHeight: '1.5', padding: '0 10px' }}>
-                                {openedReward.type === 'none' ? "Rất tiếc, rương trống không! Hãy thử lại vận may nhé." 
-                                : (openedReward.type === 'swgt' ? "Chúc mừng! Số tiền đã được cộng thẳng vào Két sắt của bạn." 
-                                : (openedReward.type === 'vip_invite' ? "Đẳng cấp! Bạn đã sưu tập đủ bộ bí kíp. Hãy kiểm tra tin nhắn Bot để nhận Link vào Kênh Kín VIP."
-                                : "Tuyệt vời! Admin sẽ sớm gửi file tài liệu này qua Gmail và phần Chat cho bạn."))}
-                            </p>
-                            <button 
-                                onClick={() => setOpenedReward(null)} 
-                                style={{ width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '14px', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', cursor: 'pointer' }}
-                            >
-                                ĐÓNG LẠI & CHƠI TIẾP
-                            </button>
-                        </div>
-                    )}
-                </div>
-
-                <div style={{ width: '100%', backgroundColor: 'rgba(244, 208, 63, 0.05)', border: `1px dashed ${theme.gold}`, borderRadius: '12px', padding: '15px', marginTop: '20px', boxSizing: 'border-box' }}>
-                    <h4 style={{ color: theme.gold, margin: '0 0 10px 0', fontSize: '14px' }}>📊 DANH SÁCH KHO BÁU:</h4>
-                    <ul style={{ color: theme.textDim, fontSize: '13px', margin: 0, paddingLeft: '20px', lineHeight: '1.8' }}>
-                        <li>Trúng <b style={{color: '#fff'}}>5 - 50 SWGT</b> (Tỉ lệ cao)</li>
-                        <li>Trúng <b style={{color: theme.gold}}>Ebook: Logic Kiếm Tiền</b> (Siêu hiếm)</li>
-                        <li>Trúng <b style={{color: theme.gold}}>Audio: Nhân Tính Đen Trắng</b> (Siêu hiếm)</li>
-                        <li>Trúng <b style={{color: theme.premium}}>Vé vào Kênh Kín VIP</b> (Chỉ mở khóa khi bạn đã sưu tập đủ Ebook và Audio)</li>
-                        <li>Rương rỗng (Kém may mắn)</li>
-                    </ul>
-                </div>
-            </div>
-        );
-    }
-
     const renderRewards = () => {
         let nextTarget = 3; let nextReward = "+10 SWGT";
         for (let m of MILESTONE_LIST) {
@@ -718,11 +712,39 @@ function App() {
         }
         let progressPercent = Math.min((referrals / nextTarget) * 100, 100);
 
-        void nextReward; void progressPercent;
-
         return (
             <div style={{ padding: '0 20px 20px 20px', paddingBottom: '100px' }}>
                 
+                {/* 0. MINI GAME: VÒNG QUAY NHÂN PHẨM */}
+                <div style={{ backgroundColor: '#1C1C1E', borderRadius: '15px', padding: '20px', border: `2px solid ${theme.gold}`, marginBottom: '30px', textAlign: 'center', boxShadow: '0 0 20px rgba(244, 208, 63, 0.2)' }}>
+                    <div style={{ fontSize: '45px', marginBottom: '10px', animation: isSpinning ? 'spin 0.5s linear infinite' : 'none' }}>
+                        🎡
+                    </div>
+                    <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '18px', fontWeight: '900', textTransform: 'uppercase' }}>Vòng Quay Nhân Phẩm</h2>
+                    <p style={{ color: theme.textLight, fontSize: '13px', margin: '0 0 15px 0', lineHeight: '1.5' }}>
+                        Thử vận may - Rinh ngay Jackpot!<br/>Phí quay: <b style={{color: theme.gold}}>20 SWGT/lượt</b>.
+                    </p>
+                    
+                    <div style={{ backgroundColor: '#000', padding: '10px', borderRadius: '8px', marginBottom: '15px', border: `1px dashed ${theme.border}` }}>
+                        <p style={{ color: theme.green, fontSize: '12px', margin: 0, fontWeight: 'bold' }}>
+                            {spinResultMsg || "Giải thưởng: Lên đến 100 SWGT hoặc Combo Sách VIP!"}
+                        </p>
+                    </div>
+
+                    <button 
+                        onClick={handleSpin} 
+                        disabled={isSpinning}
+                        style={{ 
+                            width: '100%', backgroundColor: isSpinning ? '#333' : theme.gold, color: isSpinning ? theme.textDim : '#000', 
+                            padding: '12px 0', borderRadius: '8px', fontWeight: '900', fontSize: '15px', cursor: isSpinning ? 'not-allowed' : 'pointer',
+                            boxShadow: isSpinning ? 'none' : '0 4px 10px rgba(244, 208, 63, 0.4)', transition: 'all 0.2s'
+                        }}
+                    >
+                        {isSpinning ? "ĐANG QUAY..." : "QUAY NGAY (20 SWGT)"}
+                    </button>
+                </div>
+
+                {/* 1. KHU VỰC KHO TRI THỨC */}
                 <div style={{ textAlign: 'center', marginBottom: '20px', marginTop: '10px' }}>
                     <div style={{ fontSize: '40px', marginBottom: '5px' }}>📚</div>
                     <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '20px', fontWeight: '900', textTransform: 'uppercase' }}>Kho Tàng Tri Thức</h2>
@@ -730,6 +752,7 @@ function App() {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '30px' }}>
+                    {/* Nhóm 1 */}
                     <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '12px', border: `1px solid ${theme.border}`, position: 'relative', overflow: 'hidden' }}>
                         <div style={{ position: 'absolute', top: 0, right: 0, backgroundColor: '#333', color: '#fff', padding: '5px 15px', borderBottomLeftRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}>CẤP ĐỘ 1</div>
                         <div style={{ fontSize: '30px', marginBottom: '10px' }}>🎧</div>
@@ -741,6 +764,7 @@ function App() {
                         </div>
                     </div>
 
+                    {/* Nhóm 2 */}
                     <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '12px', border: `1px solid ${theme.border}`, position: 'relative', overflow: 'hidden' }}>
                         <div style={{ position: 'absolute', top: 0, right: 0, backgroundColor: '#5E92F3', color: '#fff', padding: '5px 15px', borderBottomLeftRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}>CẤP ĐỘ 2</div>
                         <div style={{ fontSize: '30px', marginBottom: '10px' }}>🎧 🎧</div>
@@ -752,6 +776,7 @@ function App() {
                         </div>
                     </div>
 
+                    {/* Nhóm 3 */}
                     <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '12px', border: `1px solid ${theme.green}`, position: 'relative', overflow: 'hidden' }}>
                         <div style={{ position: 'absolute', top: 0, right: 0, backgroundColor: theme.green, color: '#fff', padding: '5px 15px', borderBottomLeftRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}>CẤP ĐỘ 3</div>
                         <div style={{ fontSize: '30px', marginBottom: '10px' }}>📘 🎧 🎧</div>
@@ -763,6 +788,7 @@ function App() {
                         </div>
                     </div>
 
+                    {/* Nhóm 4 */}
                     <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.1)', padding: '20px', borderRadius: '12px', border: `1px solid ${theme.gold}`, position: 'relative', overflow: 'hidden' }}>
                         <div style={{ position: 'absolute', top: 0, right: 0, backgroundColor: theme.gold, color: '#000', padding: '5px 15px', borderBottomLeftRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}>VIP</div>
                         <div style={{ fontSize: '30px', marginBottom: '10px' }}>👑 📚</div>
@@ -775,6 +801,7 @@ function App() {
                     </div>
                 </div>
 
+                {/* 2. KHU VỰC GROUP VIP */}
                 <h3 style={{color: '#fff', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', marginBottom: '15px', fontSize: '16px', textTransform: 'uppercase'}}>💎 QUYỀN LỰC VIP (ROAD TO $1M)</h3>
                 
                 <div style={{ backgroundColor: theme.cardBg, padding: '20px', borderRadius: '15px', marginBottom: '15px', border: `1px solid ${theme.border}`}}>
@@ -796,6 +823,7 @@ function App() {
                     <button onClick={() => redeemItem('Vé vào Group VIP @swctradings (Khách Crossline)', 2000)} style={{backgroundColor: '#333', color: theme.gold, border: `1px solid ${theme.gold}`, padding: '10px 0', width: '100%', borderRadius: '8px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer'}}>DÙNG 2000 SWGT ĐỂ VÀO NHÓM</button>
                 </div>
 
+                {/* 3. KHU VỰC NHIỆM VỤ CŨ & BẢNG XẾP HẠNG */}
                 <h3 style={{color: '#fff', paddingBottom: '10px', marginBottom: '15px', fontSize: '16px'}}>🚀 9 CỘT MỐC THƯỞNG NÓNG</h3>
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '10px' }}>
@@ -869,10 +897,11 @@ function App() {
 
     const renderWallet = () => {
         const isUnder500 = balance > 0 && balance < 500;
-        const bidRate = 25400; 
-        const askRate = 27000; 
+        
+        const bidRate = 25000; // Tỷ giá thu mua VNĐ mới
+        const askRate = 27000; // Tỷ giá ghép vốn USDT
 
-        const liquidateVNDNum = Math.floor(balance * 0.007 * bidRate); 
+        const liquidateVNDNum = Math.floor(balance * 0.005 * bidRate); // Giá mới 0.005
         const liquidateVND = liquidateVNDNum.toLocaleString('vi-VN');
         const shortfall = 500 - balance;
         const costUSDT = (shortfall * 0.022).toFixed(2);
@@ -882,6 +911,7 @@ function App() {
 
         return (
             <div style={{ padding: '0 20px 20px 20px' }}>
+                {/* 1. KHỐI HIỂN THỊ SỐ DƯ */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
                     <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '25px 20px', border: `1px solid ${theme.gold}`, textAlign: 'center', boxShadow: '0 4px 15px rgba(244, 208, 63, 0.1)' }}>
                         <p style={{ color: theme.textDim, fontSize: '14px', margin: '0 0 5px 0', fontWeight: 'bold', textTransform: 'uppercase' }}>💰 TỔNG TÀI SẢN SWGT</p>
@@ -902,6 +932,7 @@ function App() {
                     </div>
                 </div>
 
+                {/* 2. KHỐI ĐẾM NGƯỢC */}
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⏳ Tình trạng Mở khóa ({lockDaysLimit} Ngày)</h3>
                     
@@ -923,6 +954,7 @@ function App() {
                     )}
                 </div>
 
+                {/* 3. KHỐI HÀNH ĐỘNG DƯỚI 500 */}
                 {isUnder500 ? (
                     <div style={{ animation: 'fadeIn 0.5s ease' }}>
                         <div style={{ backgroundColor: 'rgba(52, 199, 89, 0.05)', borderRadius: '15px', padding: '20px', border: `1px solid ${theme.green}`, marginBottom: '15px' }}>
@@ -933,13 +965,11 @@ function App() {
                             <input value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="Tên Ngân hàng (VD: Vietcombank)" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '10px', fontSize: '13px' }} />
                             <input value={accountName} onChange={(e) => setAccountName(e.target.value)} placeholder="Họ và Tên Chủ Tài Khoản" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '10px', fontSize: '13px' }} />
                             <input value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} placeholder="Số Tài Khoản Nhận Tiền" style={{ width: '100%', padding: '12px', borderRadius: '8px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textLight, boxSizing: 'border-box', marginBottom: '15px', fontSize: '13px' }} />
-                            
                             <button 
-                                disabled={true}
                                 onClick={() => handleLiquidateVND(liquidateVND, isEligibleForVND)} 
-                                style={{ width: '100%', backgroundColor: '#333', color: theme.textDim, padding: '14px', borderRadius: '8px', fontWeight: 'bold', border: 'none', cursor: 'not-allowed' }}
+                                style={{ width: '100%', backgroundColor: isEligibleForVND ? theme.green : '#333', color: isEligibleForVND ? '#fff' : theme.textDim, padding: '14px', borderRadius: '8px', fontWeight: 'bold', border: 'none', cursor: isEligibleForVND ? 'pointer' : 'not-allowed' }}
                             >
-                                🔒 TẠM KHÓA THANH KHOẢN
+                                {isEligibleForVND ? `BÁN LẤY ${liquidateVND} VNĐ` : `🔒 CẦN ĐẠT MIN 5.000 VNĐ`}
                             </button>
                         </div>
 
@@ -955,17 +985,11 @@ function App() {
                                     <span style={{ color: theme.gold, fontSize: '12px' }}>(~{costVND} VNĐ)</span>
                                 </div>
                             </div>
-                            
-                            <button 
-                                disabled={true}
-                                onClick={() => handleTopUp(costUSDT, costVND)} 
-                                style={{ width: '100%', backgroundColor: '#333', color: theme.textDim, padding: '14px', borderRadius: '8px', fontWeight: 'bold', border: 'none', cursor: 'not-allowed' }}
-                            >
-                                🔒 TẠM KHÓA GHÉP VỐN
-                            </button>
+                            <button onClick={() => handleTopUp(costUSDT, costVND)} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '14px', borderRadius: '8px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>NẠP THÊM ĐỂ ĐỦ 500 SWGT</button>
                         </div>
                     </div>
                 ) : (
+                    // --- 4. KHỐI RÚT TIỀN TRÊN 500 ---
                     <div style={{ animation: 'fadeIn 0.5s ease' }}>
                         {isUnlocked ? (
                             <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', textAlign: 'center', border: `1px solid ${theme.border}`, marginBottom: '20px' }}>
@@ -989,6 +1013,7 @@ function App() {
                     </div>
                 )}
 
+                {/* 5. KHỐI THIẾT LẬP THANH TOÁN */}
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>⚙️ Thiết lập thanh toán</h3>
                     
@@ -1043,19 +1068,20 @@ function App() {
         );
     };
 
-    void bankName; void setBankName; void accountName; void setAccountName;
-    void bankAccount; void setBankAccount; void withdrawAmount; void setWithdrawAmount;
-    void milestones; void handleClaimGiftCode; void handleClaimMilestone;
-    void triggerFloatAnim;
-
     return (
         <div style={{ backgroundColor: theme.bg, minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '90px', boxSizing: 'border-box' }}>
             <style>{`
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+                
+                /* Hiệu ứng thanh cuộn */
                 ::-webkit-scrollbar { height: 6px; }
                 ::-webkit-scrollbar-track { background: #1C1C1E; border-radius: 10px; }
                 ::-webkit-scrollbar-thumb { background: #F4D03F; border-radius: 10px; }
-                @keyframes spin { 100% { transform: rotate(360deg); } }
+                
+                /* Hiệu ứng viền Avatar xoay và nhấp nháy */
+                @keyframes spin { 
+                    100% { transform: rotate(360deg); } 
+                }
                 @keyframes pulseGlowRed {
                     0%, 100% { box-shadow: 0 0 5px #FF3B30, inset 0 0 5px #FF3B30; }
                     50% { box-shadow: 0 0 15px #FF3B30, inset 0 0 10px #FF3B30; }
@@ -1064,45 +1090,57 @@ function App() {
                     0%, 100% { box-shadow: 0 0 5px #00FFFF, inset 0 0 5px #00FFFF; }
                     50% { box-shadow: 0 0 15px #00FFFF, inset 0 0 10px #00FFFF; }
                 }
-                @keyframes shakeChest {
-                    0% { transform: translate(1px, 1px) rotate(0deg) scale(1); }
-                    10% { transform: translate(-1px, -2px) rotate(-5deg) scale(1.1); }
-                    20% { transform: translate(-3px, 0px) rotate(5deg) scale(1.1); }
-                    30% { transform: translate(3px, 2px) rotate(0deg) scale(1.1); }
-                    40% { transform: translate(1px, -1px) rotate(5deg) scale(1.1); }
-                    50% { transform: translate(-1px, 2px) rotate(-5deg) scale(1.1); }
-                    60% { transform: translate(-3px, 1px) rotate(0deg) scale(1.1); }
-                    70% { transform: translate(3px, 1px) rotate(-5deg) scale(1.1); }
-                    80% { transform: translate(-1px, -1px) rotate(5deg) scale(1.1); }
-                    90% { transform: translate(1px, 2px) rotate(0deg) scale(1.1); }
-                    100% { transform: translate(1px, -2px) rotate(-5deg) scale(1); }
-                }
-                .chest-shake { animation: shakeChest 1s cubic-bezier(.36,.07,.19,.97) both infinite; }
-                .pop-in { animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-                @keyframes popIn {
-                    from { opacity: 0; transform: scale(0.5); }
-                    to { opacity: 1; transform: scale(1); }
-                }
+
+                /* Hiệu ứng Navigation Bottom Tab động */
                 .nav-item {
                     transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-                    cursor: pointer; width: 25%; display: flex; flex-direction: column; align-items: center; opacity: 0.6;
+                    cursor: pointer;
+                    width: 33%;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    opacity: 0.6;
                 }
-                .nav-item.active { opacity: 1; transform: translateY(-4px); }
-                .nav-item:active { transform: scale(0.92); }
-                .nav-icon { font-size: 24px; margin-bottom: 4px; transition: all 0.3s ease; }
-                .nav-item.active .nav-icon { animation: bounceTab 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-shadow: 0 0 15px rgba(244, 208, 63, 0.9); }
-                @keyframes bounceTab { 0% { transform: scale(1); } 50% { transform: scale(1.25); } 100% { transform: scale(1); } }
+                .nav-item.active {
+                    opacity: 1;
+                    transform: translateY(-4px); /* Nhích nhẹ lên khi Active */
+                }
+                .nav-item:active {
+                    transform: scale(0.92); /* Thu nhỏ khi bấm */
+                }
+                .nav-icon {
+                    font-size: 26px;
+                    margin-bottom: 6px;
+                    transition: all 0.3s ease;
+                }
+                .nav-item.active .nav-icon {
+                    animation: bounceTab 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                    text-shadow: 0 0 15px rgba(244, 208, 63, 0.9); /* Phát sáng mờ cho icon */
+                }
+                @keyframes bounceTab {
+                    0% { transform: scale(1); }
+                    50% { transform: scale(1.25); }
+                    100% { transform: scale(1); }
+                }
+
+                /* Hiệu ứng số tiền thưởng bay lên */
                 @keyframes floatUp {
                     0% { opacity: 1; transform: translate(-50%, 0) scale(1); }
                     100% { opacity: 0; transform: translate(-50%, -80px) scale(1.5); }
                 }
                 .floating-reward {
-                    position: fixed; color: #F4D03F; font-weight: 900; font-size: 24px; pointer-events: none; z-index: 9999;
+                    position: fixed;
+                    color: #F4D03F;
+                    font-weight: 900;
+                    font-size: 24px;
+                    pointer-events: none;
+                    z-index: 9999;
                     animation: floatUp 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
                     text-shadow: 0px 0px 8px rgba(244, 208, 63, 0.8), 0px 2px 4px rgba(0,0,0,1);
                 }
             `}</style>
             
+            {/* RENDER HIỆU ỨNG TIỀN BAY LÊN */}
             {animations.map(anim => (
                 <div key={anim.id} className="floating-reward" style={{ left: anim.x, top: anim.y }}>
                     {anim.text}
@@ -1112,31 +1150,26 @@ function App() {
             {renderHeader()}
             <div style={{ marginTop: '10px' }}>
                 {activeTab === 'home' && renderHome()}
-                {activeTab === 'game' && renderGame()}
                 {activeTab === 'rewards' && renderRewards()}
                 {activeTab === 'wallet' && renderWallet()}
             </div>
 
-            <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: theme.cardBg, borderTop: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-around', padding: '12px 0', paddingBottom: 'calc(12px + env(safe-area-inset-bottom))', zIndex: 100 }}>
+            {/* THANH ĐIỀU HƯỚNG TÍCH HỢP CLASS ĐỘNG MỚI */}
+            <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: theme.cardBg, borderTop: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-around', padding: '15px 0', paddingBottom: 'calc(15px + env(safe-area-inset-bottom))', zIndex: 100 }}>
                 
                 <div onClick={() => setActiveTab('home')} className={`nav-item ${activeTab === 'home' ? 'active' : ''}`} style={{ color: activeTab === 'home' ? theme.gold : theme.textDim }}>
                     <div className="nav-icon">🏠</div>
-                    <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Trang chủ</span>
-                </div>
-
-                <div onClick={() => setActiveTab('game')} className={`nav-item ${activeTab === 'game' ? 'active' : ''}`} style={{ color: activeTab === 'game' ? theme.gold : theme.textDim }}>
-                    <div className="nav-icon">🏦</div>
-                    <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Đập Rương</span>
+                    <span style={{ fontSize: '14px', fontWeight: 'bold' }}>Trang chủ</span>
                 </div>
                 
                 <div onClick={() => setActiveTab('rewards')} className={`nav-item ${activeTab === 'rewards' ? 'active' : ''}`} style={{ color: activeTab === 'rewards' ? theme.gold : theme.textDim }}>
                     <div className="nav-icon">🎁</div>
-                    <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Phần Thưởng</span>
+                    <span style={{ fontSize: '14px', fontWeight: 'bold' }}>Phần thưởng</span>
                 </div>
                 
                 <div onClick={() => setActiveTab('wallet')} className={`nav-item ${activeTab === 'wallet' ? 'active' : ''}`} style={{ color: activeTab === 'wallet' ? theme.gold : theme.textDim }}>
                     <div className="nav-icon">👛</div>
-                    <span style={{ fontSize: '12px', fontWeight: 'bold' }}>Ví</span>
+                    <span style={{ fontSize: '14px', fontWeight: 'bold' }}>Ví</span>
                 </div>
 
             </div>
