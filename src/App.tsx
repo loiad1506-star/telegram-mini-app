@@ -153,9 +153,10 @@ function App() {
     };
 
     const handleWithdraw = () => {
-        // ĐIỀU KIỆN 1 F1 ƯU TIÊN
-        if (referrals < 1) {
-            return alert("⚠️ LỆNH RÚT BỊ TỪ CHỐI!\n\nTheo quy định mới: Để được duyệt Rút Token hoặc Giao dịch, tài khoản của bạn phải có ít nhất 1 lượt giới thiệu thành công (Cấp bậc từ Tân Binh trở lên). Vui lòng liên hệ Admin để được hỗ trợ!");
+        // LUẬT MỚI: Dưới 1500 SWGT thì bắt buộc phải có ít nhất 1 F1. 
+        // Trên 1500 SWGT (VIP) thì được đặc cách rút luôn!
+        if (balance < 1500 && referrals < 1) {
+            return alert("⚠️ LỆNH RÚT BỊ TỪ CHỐI!\n\nTheo quy định mới: Để được duyệt Rút Token, tài khoản của bạn phải thuộc nhóm Đặc Quyền VIP (Tài sản từ 1500 SWGT trở lên) HOẶC phát sinh ít nhất 1 lượt giới thiệu bạn bè thành công. Vui lòng liên hệ Admin để được hỗ trợ!");
         }
 
         const amount = Number(withdrawAmount);
@@ -378,7 +379,7 @@ function App() {
                 <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '20px', border: `1px dashed ${theme.gold}` }}>
                     <p style={{fontSize: '13px', color: theme.gold, margin: 0, lineHeight: '1.5', textAlign: 'justify'}}>
                         <span style={{fontWeight: 'bold'}}>📌 LƯU Ý QUAN TRỌNG:</span><br/> 
-                        Bảng này tính TỔNG TÀI SẢN vinh danh những Đại sứ đã đồng hành cùng dự án trong suốt thời gian diễn ra sự kiện!
+                        Sự kiện Airdrop đã khép lại. Bảng này tính TỔNG TÀI SẢN vinh danh những Đại sứ đã đồng hành cùng dự án trong suốt thời gian qua.
                     </p>
                 </div>
 
@@ -710,7 +711,7 @@ function App() {
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.green}` }}>
                     <h3 style={{ margin: '0 0 10px 0', color: theme.green, fontSize: '16px', textAlign: 'center' }}>🔓 MỞ CỔNG GIAO DỊCH CHÍNH THỨC</h3>
                     <div style={{ padding: '15px', backgroundColor: 'rgba(52, 199, 89, 0.1)', borderRadius: '10px', color: theme.textLight, fontSize: '13px', textAlign: 'center', lineHeight: '1.5' }}>
-                        Tất cả các tài khoản hợp lệ (có cấp bậc từ <b>Tân Binh</b> trở lên) đều đã được mở khóa và *ƯU TIÊN* tự do để Giao dịch rút Token hoặc Bán thanh khoản VNĐ trước.
+                        Tất cả lệnh đóng băng 15 ngày đã được gỡ bỏ. Hệ thống cho phép các tài khoản hợp lệ được tự do Rút Token hoặc Bán thanh khoản VNĐ.
                     </div>
                 </div>
 
