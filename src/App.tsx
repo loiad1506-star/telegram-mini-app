@@ -466,7 +466,7 @@ function App() {
                     SỰ KIỆN AIRDROP ĐÃ KẾT THÚC
                 </h3>
                 <p style={{ margin: 0, color: theme.textLight, fontSize: '13px', lineHeight: '1.5' }}>
-                    Toàn bộ chương trình khai thác SWGT miễn phí (Điểm danh, Nhiệm vụ) đã chính thức khép lại. Hiện tại hệ thống <b>CHỈ MỞ CỔNG GIAO DỊCH</b> cho các tài khoản hợp lệ.
+                    Toàn bộ chương trình khai thác SWGT miễn phí (Điểm danh, Nhiệm vụ) đã chính thức khép lại. Hiện tại hệ thống <b>CHỈ MỞ CỔNG RÚT TIỀN VÀ GIAO DỊCH</b> cho các tài khoản hợp lệ.
                 </p>
             </div>
 
@@ -696,23 +696,24 @@ function App() {
                     </div>
                 </div>
 
-                {/* LINK MỜI ĐƯỢC MỞ LẠI (LÀM CÔNG CỤ ĐỂ KHÁCH ĐẠT 1 F1) */}
+                {/* LINK MỜI ĐƯỢC MỞ LẠI KÈM NÚT CHIA SẺ TRỰC TIẾP */}
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>🔗 Link Mời (Mở Khóa Rút Tiền)</h3>
                     <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '8px', color: theme.gold, fontSize: '13px', wordBreak: 'break-all', marginBottom: '15px', border: `1px dashed ${theme.border}` }}>
                         https://t.me/Dau_Tu_SWC_bot?start={userId || 'ref'}
                     </div>
-                    <button onClick={handleCopyLink} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>📋 COPY LINK MỜI</button>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button onClick={handleCopyLink} style={{ flex: 1, backgroundColor: theme.gold, color: '#000', padding: '12px 0', borderRadius: '8px', fontWeight: 'bold', border: 'none', cursor: 'pointer', fontSize: '13px' }}>
+                            📋 COPY LINK
+                        </button>
+                        <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: theme.blue, color: '#fff', padding: '12px 0', borderRadius: '8px', fontWeight: 'bold', border: 'none', fontSize: '13px', textDecoration: 'none', boxSizing: 'border-box' }}>
+                            ✈️ CHIA SẺ NGAY
+                        </a>
+                    </div>
                 </div>
 
                 <h3 style={{color: theme.gold, paddingBottom: '10px', marginBottom: '15px', fontSize: '17px', textAlign: 'center', fontWeight: '900'}}>🤝 BẢNG VÀNG ĐẠI SỨ</h3>
                 {renderWealthBoard()}
-
-                <div style={{ textAlign: 'center', paddingTop: '5px', marginBottom: '25px' }}>
-                    <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', textDecoration: 'none', boxSizing: 'border-box' }}>
-                        ✈️ GỬI LINK CHIA SẺ NGAY
-                    </a>
-                </div>
             </div>
         );
     };
