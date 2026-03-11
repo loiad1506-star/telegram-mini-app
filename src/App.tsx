@@ -612,10 +612,10 @@ function App() {
 
                     {/* Nhóm 4 */}
                     <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.1)', padding: '20px', borderRadius: '12px', border: `1px solid ${theme.gold}`, position: 'relative', overflow: 'hidden' }}>
-                        <div style={{ position: 'absolute', top: 0, right: 0, backgroundColor: theme.gold, color: '#000', padding: '5px 15px', borderBottomLeftRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}>VIP</div>
+                        <div style={{ position: 'absolute', top: 0, right: 0, backgroundColor: theme.gold, color: '#000', padding: '5px 15px', borderBottomLeftRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}>VIP</div>• Ebook: Logic Kiếm Tiền<br/>• Audio: Nhân Tính Đen Trắng<br/>• Audio: Tuyệt Mật Nhân Tính</p>
                         <div style={{ fontSize: '30px', marginBottom: '10px' }}>👑 📚</div>
                         <h4 style={{ margin: '0 0 8px 0', color: theme.gold, fontSize: '16px' }}>Combo Thượng Lưu</h4>
-                        <p style={{ color: theme.textLight, fontSize: '13px', margin: '0 0 10px 0', lineHeight: '1.4' }}>• [COMBO EBOOK] Bản gốc, rõ đẹp về Kinh doanh, Khởi nghiệp & Làm giàu.</p>
+                        <p style={{ color: theme.textLight, fontSize: '13px', margin: '0 0 10px 0', lineHeight: '1.4' }}>• [COMBO EBOOK] Bản gốc, rõ đẹp về Kinh doanh, Khởi nghiệp & Làm giàu. </p>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px' }}>
                             <span style={{ color: theme.gold, fontWeight: 'bold', fontSize: '18px' }}>400 SWGT</span>
                             <button onClick={() => redeemItem('Gói 4: Combo Ebook Kinh Doanh Khởi Nghiệp', 400)} style={{ backgroundColor: theme.gold, color: '#000', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>ĐỔI COMBO</button>
