@@ -21,6 +21,7 @@ function App() {
     
     const [checkInStreak, setCheckInStreak] = useState(0);
     const [milestones, setMilestones] = useState<any>({});
+    const [giftCodeInput, setGiftCodeInput] = useState('');
     
     const [userId, setUserId] = useState('');
     const [userProfile, setUserProfile] = useState({
@@ -32,8 +33,11 @@ function App() {
     const [lastCheckIn, setLastCheckIn] = useState<string | null>(null);
     const [leaderboard, setLeaderboard] = useState<any[]>([]);
     const [isPremiumUser, setIsPremiumUser] = useState(false);
-    const [boardType, setBoardType] = useState('weekly'); 
+    const [boardType, setBoardType] = useState('all'); 
     const [serverDateVN, setServerDateVN] = useState<string>('');
+
+    const [isSpinning, setIsSpinning] = useState(false);
+    const [spinResultMsg, setSpinResultMsg] = useState('');
 
     const BACKEND_URL = 'https://swc-bot-brain.onrender.com';
 
@@ -134,7 +138,8 @@ function App() {
         if (count >= 20) return "Trung Tá 🎖️";
         if (count >= 10) return "Thiếu Tá 🎖️";
         if (count >= 3) return "Đại Úy 🎖️";
-        return "Tân Binh 🔰";
+        if (count >= 1) return "Tân Binh 🔰";
+        return "Tài Khoản Mới";
     };
 
     const handleSaveWallet = () => {
@@ -148,6 +153,11 @@ function App() {
     };
 
     const handleWithdraw = () => {
+        // ĐIỀU KIỆN 1 F1 ƯU TIÊN
+        if (referrals < 1) {
+            return alert("⚠️ LỆNH RÚT BỊ TỪ CHỐI!\n\nTheo quy định mới: Để được duyệt Rút Token hoặc Giao dịch, tài khoản của bạn phải có ít nhất 1 lượt giới thiệu thành công (Cấp bậc từ Tân Binh trở lên). Vui lòng liên hệ Admin để được hỗ trợ!");
+        }
+
         const amount = Number(withdrawAmount);
         if (!amount || amount < 500) return alert("⚠️ Bạn cần rút tối thiểu 500 SWGT!");
         if (amount > balance) return alert("⚠️ Số dư của bạn không đủ để rút mức này!");
@@ -167,7 +177,7 @@ function App() {
             .then(data => {
                 if(data.success) {
                     setBalance(data.balance); setWithdrawAmount(''); 
-                    alert(`✅ Yêu cầu rút tiền đã được gửi thành công!\nCổng rút Token SWGT đã mở, Admin sẽ xử lý và chuyển Token cho bạn sớm nhất.`);
+                    alert(`✅ Yêu cầu rút tiền đã được gửi thành công!\nBộ phận kiểm toán sẽ đối soát tài khoản và giải ngân Token cho bạn sớm nhất.`);
                 } else { alert(data.message || "❌ Lỗi xử lý!"); }
             });
         }
@@ -176,7 +186,7 @@ function App() {
     const handleLiquidateVND = (vndAmount: string, isEligible: boolean) => {
         if (!isEligible) return alert("⚠️ Số dư quy đổi chưa đạt tối thiểu 5.000 VNĐ.");
         if (!bankName || !bankAccount || !accountName) return alert("⚠️ Vui lòng nhập Tên Ngân Hàng, Chủ Tài Khoản và Số Tài Khoản để nhận tiền!");
-        if (window.confirm(`Xác nhận thanh lý ${balance} SWGT để nhận ${vndAmount} VNĐ về tài khoản ngân hàng?`)) {
+        if (window.confirm(`Xác nhận bán thanh lý ${balance} SWGT để nhận ${vndAmount} VNĐ về tài khoản ngân hàng?`)) {
             fetch(`${BACKEND_URL}/api/liquidate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -231,19 +241,54 @@ function App() {
         }
     };
 
-    const renderHeader = () => {
-        const isFireEffect = (Number(userId || 1) % 2) !== 0; 
-        const effectColor = isFireEffect ? '#FF3B30' : '#00FFFF'; 
-        const pulseAnim = isFireEffect ? 'pulseGlowRed 2s infinite' : 'pulseGlowCyan 2s infinite';
-        
-        const militaryRank = getMilitaryRank(referrals);
+    const handleSpin = () => {
+        if (balance < 20) return alert("⚠️ Bạn không đủ 20 SWGT để mua vé đập rương!");
+        if (isSpinning) return;
 
+        setIsSpinning(true);
+        setSpinResultMsg('Đang mở rương...');
+
+        fetch(`${BACKEND_URL}/api/spin`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId })
+        })
+        .then(res => res.json())
+        .then(data => {
+            setTimeout(() => {
+                setIsSpinning(false);
+                if (data.success) {
+                    setBalance(data.balance);
+                    setSpinResultMsg(`🎉 Kết quả: ${data.rewardName}`);
+                    
+                    if (data.rewardType === 'item') {
+                        alert(`🎁 JACKPOT: Chúc mừng bạn đã trúng [${data.rewardName}]!\nAdmin sẽ chủ động liên hệ gửi File cho bạn qua Telegram ngay lập tức!`);
+                    } else if (data.rewardType === 'swgt' && data.rewardValue > 0) {
+                        alert(`💰 Chúc mừng! Bạn trúng ${data.rewardName}! Số dư đã được cập nhật.`);
+                    } else {
+                        alert(`😭 Rất tiếc, rương rỗng. Chúc bạn may mắn lần sau!`);
+                    }
+                } else {
+                    setSpinResultMsg('Lỗi mở rương!');
+                    alert(data.message);
+                }
+            }, 1500);
+        })
+        .catch(() => {
+            setIsSpinning(false);
+            setSpinResultMsg('Lỗi mạng!');
+            alert("⚠️ Mạng chậm, vui lòng thử lại!");
+        });
+    };
+
+    const renderHeader = () => {
+        const militaryRank = getMilitaryRank(referrals);
         let myRank = 0;
         if (referrals > 0) {
             const strictlyBetter = leaderboard.filter(u => u.referralCount > referrals).length;
             myRank = strictlyBetter + 1;
         }
-        let vipLevel = "Tân Binh 🥉";
+        let vipLevel = referrals >= 1 ? "Tân Binh 🥉" : "Thành Viên";
         let wreathColor = "#8E8E93"; 
         if (myRank === 1 && referrals >= 5) { vipLevel = "🏆 TOP 1 SERVER"; wreathColor = "#F4D03F"; }
         else if (myRank === 2 && referrals >= 5) { vipLevel = "🔥 TOP 2 SERVER"; wreathColor = "#C0C0C0"; }
@@ -271,29 +316,18 @@ function App() {
                     </div>
                     
                     <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
-                        <div style={{ position: 'relative', width: '52px', height: '52px', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
-                            <div style={{
-                                position: 'absolute',
-                                top: '-4px', left: '-4px', right: '-4px', bottom: '-4px',
-                                borderRadius: '50%',
-                                border: `2px dashed ${effectColor}`,
-                                animation: `spin 4s linear infinite, ${pulseAnim}`,
-                                zIndex: 0
-                            }}></div>
-                            <div style={{ width: '100%', height: '100%', borderRadius: '50%', padding: '2px', backgroundColor: theme.bg, zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                                {userProfile.photoUrl ? (
-                                    <img src={userProfile.photoUrl} alt="avatar" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-                                ) : (
-                                    <div style={{ width: '100%', height: '100%', borderRadius: '50%', backgroundColor: theme.cardBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.gold, fontSize: '20px' }}>👤</div>
-                                )}
-                            </div>
+                        <div style={{ width: '52px', height: '52px', borderRadius: '50%', padding: '2px', backgroundColor: theme.bg, zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: `2px solid ${wreathColor}` }}>
+                            {userProfile.photoUrl ? (
+                                <img src={userProfile.photoUrl} alt="avatar" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                            ) : (
+                                <div style={{ width: '100%', height: '100%', borderRadius: '50%', backgroundColor: theme.cardBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.gold, fontSize: '20px' }}>👤</div>
+                            )}
                         </div>
                         <div style={{ position: 'absolute', bottom: '-10px', zIndex: 11, display: 'flex', alignItems: 'center', backgroundColor: '#000', padding: '2px 8px', borderRadius: '12px', border: `1px solid ${wreathColor}`, boxShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
                             <span style={{ color: wreathColor, fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                                 {vipLevel}
                             </span>
                         </div>
-                        <div style={{ position: 'absolute', top: '0px', right: '-2px', width: '12px', height: '12px', backgroundColor: theme.green, borderRadius: '50%', border: `2px solid ${theme.bg}`, zIndex: 12 }}></div>
                     </div>
                 </div>
             </div>
@@ -344,7 +378,7 @@ function App() {
                 <div style={{ backgroundColor: 'rgba(244, 208, 63, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '20px', border: `1px dashed ${theme.gold}` }}>
                     <p style={{fontSize: '13px', color: theme.gold, margin: 0, lineHeight: '1.5', textAlign: 'justify'}}>
                         <span style={{fontWeight: 'bold'}}>📌 LƯU Ý QUAN TRỌNG:</span><br/> 
-                        Sự kiện Airdrop đã khép lại. Bảng này tính TỔNG TÀI SẢN vinh danh những Đại sứ đã đồng hành cùng dự án trong suốt thời gian qua.
+                        Bảng này tính TỔNG TÀI SẢN vinh danh những Đại sứ đã đồng hành cùng dự án trong suốt thời gian diễn ra sự kiện!
                     </p>
                 </div>
 
@@ -464,17 +498,36 @@ function App() {
         return (
             <div style={{ padding: '0 20px 20px 20px', paddingBottom: '100px' }}>
                 
-                {/* 0. MINI GAME: VÒNG QUAY NHÂN PHẨM (KHÓA) */}
-                <div style={{ backgroundColor: '#1C1C1E', borderRadius: '15px', padding: '20px', border: `1px solid ${theme.border}`, marginBottom: '30px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '45px', marginBottom: '10px', opacity: 0.5 }}>🎡</div>
-                    <h2 style={{ color: theme.textDim, margin: '0 0 5px 0', fontSize: '18px', fontWeight: '900', textTransform: 'uppercase' }}>Vòng Quay Nhân Phẩm</h2>
-                    <p style={{ color: theme.textDim, fontSize: '13px', margin: '0 0 15px 0', lineHeight: '1.5' }}>Trò chơi giải trí đã chính thức khép lại.</p>
-                    <button disabled style={{ width: '100%', backgroundColor: '#333', color: theme.textDim, padding: '12px 0', borderRadius: '8px', fontWeight: '900', fontSize: '15px', cursor: 'not-allowed' }}>
-                        ⛔ TẠM ĐÓNG VÒNG QUAY
+                {/* 0. MINI GAME: RƯƠNG BÍ ẨN (MỞ) */}
+                <div style={{ backgroundColor: '#1C1C1E', borderRadius: '15px', padding: '20px', border: `2px solid ${theme.gold}`, marginBottom: '30px', textAlign: 'center', boxShadow: '0 0 20px rgba(244, 208, 63, 0.2)' }}>
+                    <div style={{ fontSize: '45px', marginBottom: '10px', animation: isSpinning ? 'spin 0.5s linear infinite' : 'none' }}>
+                        🎁
+                    </div>
+                    <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '18px', fontWeight: '900', textTransform: 'uppercase' }}>Rương Kho Báu Bí Ẩn</h2>
+                    <p style={{ color: theme.textLight, fontSize: '13px', margin: '0 0 15px 0', lineHeight: '1.5' }}>
+                        Cơ hội cuối cùng để gia tăng tài sản trước khi đóng cửa!<br/>Mở rương: <b style={{color: theme.gold}}>20 SWGT/lượt</b>.
+                    </p>
+                    
+                    <div style={{ backgroundColor: '#000', padding: '10px', borderRadius: '8px', marginBottom: '15px', border: `1px dashed ${theme.border}` }}>
+                        <p style={{ color: theme.green, fontSize: '12px', margin: 0, fontWeight: 'bold' }}>
+                            {spinResultMsg || "Phần thưởng: Lên đến 50 SWGT hoặc Combo Sách VIP!"}
+                        </p>
+                    </div>
+
+                    <button 
+                        onClick={handleSpin} 
+                        disabled={isSpinning}
+                        style={{ 
+                            width: '100%', backgroundColor: isSpinning ? '#333' : theme.gold, color: isSpinning ? theme.textDim : '#000', 
+                            padding: '12px 0', borderRadius: '8px', fontWeight: '900', fontSize: '15px', cursor: isSpinning ? 'not-allowed' : 'pointer',
+                            boxShadow: isSpinning ? 'none' : '0 4px 10px rgba(244, 208, 63, 0.4)', transition: 'all 0.2s'
+                        }}
+                    >
+                        {isSpinning ? "ĐANG ĐẬP RƯƠNG..." : "MỞ RƯƠNG (20 SWGT)"}
                     </button>
                 </div>
 
-                {/* 1. KHU VỰC KHO TRI THỨC (VẪN MỞ ĐỂ KHÁCH MUA SÁCH BẰNG SWGT) */}
+                {/* 1. KHU VỰC KHO TRI THỨC (CỬA HÀNG MỞ) */}
                 <div style={{ textAlign: 'center', marginBottom: '20px', marginTop: '10px' }}>
                     <div style={{ fontSize: '40px', marginBottom: '5px' }}>📚</div>
                     <h2 style={{ color: theme.gold, margin: '0 0 5px 0', fontSize: '20px', fontWeight: '900', textTransform: 'uppercase' }}>Kho Tàng Tri Thức</h2>
@@ -592,7 +645,7 @@ function App() {
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>🎟️ Nhập Mã Giftcode</h3>
                     <div style={{ display: 'flex', gap: '10px' }}>
-                        <input disabled placeholder="Sự kiện mã thưởng đã đóng" style={{ flex: 1, padding: '14px', borderRadius: '10px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textDim, fontSize: '14px' }} />
+                        <input value={giftCodeInput} onChange={(e) => setGiftCodeInput(e.target.value)} disabled placeholder="Sự kiện mã thưởng đã đóng" style={{ flex: 1, padding: '14px', borderRadius: '10px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textDim, fontSize: '14px' }} />
                         <button disabled style={{ backgroundColor: '#333', color: theme.textDim, padding: '0 20px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'not-allowed' }}>ĐÓNG</button>
                     </div>
                 </div>
@@ -653,11 +706,11 @@ function App() {
                     </div>
                 </div>
 
-                {/* 2. MỞ KHÓA TOÀN BỘ GIAO DỊCH */}
+                {/* 2. THÔNG BÁO MỞ KHÓA GIAO DỊCH */}
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.green}` }}>
-                    <h3 style={{ margin: '0 0 10px 0', color: theme.green, fontSize: '16px', textAlign: 'center' }}>🔓 TÀI KHOẢN ĐÃ ĐƯỢC MỞ KHÓA</h3>
+                    <h3 style={{ margin: '0 0 10px 0', color: theme.green, fontSize: '16px', textAlign: 'center' }}>🔓 MỞ CỔNG GIAO DỊCH CHÍNH THỨC</h3>
                     <div style={{ padding: '15px', backgroundColor: 'rgba(52, 199, 89, 0.1)', borderRadius: '10px', color: theme.textLight, fontSize: '13px', textAlign: 'center', lineHeight: '1.5' }}>
-                        Cổng khai thác miễn phí đã đóng. Hệ thống hiện cho phép tất cả các tài khoản hợp lệ thực hiện <b>Giao dịch rút Token hoặc Bán thanh khoản VNĐ.</b>
+                        Tất cả các tài khoản hợp lệ (có cấp bậc từ <b>Tân Binh</b> trở lên) đều đã được mở khóa tự do để Giao dịch rút Token hoặc Bán thanh khoản VNĐ.
                     </div>
                 </div>
 
