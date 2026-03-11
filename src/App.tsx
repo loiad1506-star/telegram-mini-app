@@ -215,6 +215,28 @@ function App() {
         }
     };
 
+    const handleClaimGiftCode = () => {
+        if (!giftCodeInput.trim()) return alert("⚠️ Vui lòng nhập mã Giftcode!");
+        fetch(`${BACKEND_URL}/api/claim-giftcode`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, code: giftCodeInput })
+        }).then(res => res.json()).then(data => {
+            if (data.success) {
+                setBalance(data.balance);
+                setGiftCodeInput('');
+                alert(`🎉 Chúc mừng! Bạn nhận được +${data.reward} SWGT từ mã quà tặng!`);
+            } else { alert(data.message); }
+        }).catch(() => alert("⚠️ Lỗi kết nối máy chủ!"));
+    };
+
+    const handleCopyLink = () => {
+        const link = `https://t.me/Dau_Tu_SWC_bot?start=${userId || 'ref'}`;
+        navigator.clipboard.writeText(link)
+            .then(() => alert('✅ Đã sao chép link mời thành công! Hãy gửi cho bạn bè để đủ điều kiện rút tiền nhé!'))
+            .catch(() => alert('❌ Lỗi sao chép!'));
+    };
+
     const redeemItem = (itemName: string, cost: number) => {
         if (balance < cost) return alert(`⚠️ Bạn cần thêm ${cost - balance} SWGT nữa để đổi quyền lợi này!`);
         
@@ -283,7 +305,12 @@ function App() {
     };
 
     const renderHeader = () => {
+        const isFireEffect = (Number(userId || 1) % 2) !== 0; 
+        const effectColor = isFireEffect ? '#FF3B30' : '#00FFFF'; 
+        const pulseAnim = isFireEffect ? 'pulseGlowRed 2s infinite' : 'pulseGlowCyan 2s infinite';
+        
         const militaryRank = getMilitaryRank(referrals);
+
         let myRank = 0;
         if (referrals > 0) {
             const strictlyBetter = leaderboard.filter(u => u.referralCount > referrals).length;
@@ -317,18 +344,29 @@ function App() {
                     </div>
                     
                     <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '5px' }}>
-                        <div style={{ width: '52px', height: '52px', borderRadius: '50%', padding: '2px', backgroundColor: theme.bg, zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: `2px solid ${wreathColor}` }}>
-                            {userProfile.photoUrl ? (
-                                <img src={userProfile.photoUrl} alt="avatar" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-                            ) : (
-                                <div style={{ width: '100%', height: '100%', borderRadius: '50%', backgroundColor: theme.cardBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.gold, fontSize: '20px' }}>👤</div>
-                            )}
+                        <div style={{ position: 'relative', width: '52px', height: '52px', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+                            <div style={{
+                                position: 'absolute',
+                                top: '-4px', left: '-4px', right: '-4px', bottom: '-4px',
+                                borderRadius: '50%',
+                                border: `2px dashed ${effectColor}`,
+                                animation: `spin 4s linear infinite, ${pulseAnim}`,
+                                zIndex: 0
+                            }}></div>
+                            <div style={{ width: '100%', height: '100%', borderRadius: '50%', padding: '2px', backgroundColor: theme.bg, zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                                {userProfile.photoUrl ? (
+                                    <img src={userProfile.photoUrl} alt="avatar" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                                ) : (
+                                    <div style={{ width: '100%', height: '100%', borderRadius: '50%', backgroundColor: theme.cardBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.gold, fontSize: '20px' }}>👤</div>
+                                )}
+                            </div>
                         </div>
                         <div style={{ position: 'absolute', bottom: '-10px', zIndex: 11, display: 'flex', alignItems: 'center', backgroundColor: '#000', padding: '2px 8px', borderRadius: '12px', border: `1px solid ${wreathColor}`, boxShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
                             <span style={{ color: wreathColor, fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                                 {vipLevel}
                             </span>
                         </div>
+                        <div style={{ position: 'absolute', top: '0px', right: '-2px', width: '12px', height: '12px', backgroundColor: theme.green, borderRadius: '50%', border: `2px solid ${theme.bg}`, zIndex: 12 }}></div>
                     </div>
                 </div>
             </div>
@@ -428,7 +466,7 @@ function App() {
                     SỰ KIỆN AIRDROP ĐÃ KẾT THÚC
                 </h3>
                 <p style={{ margin: 0, color: theme.textLight, fontSize: '13px', lineHeight: '1.5' }}>
-                    Toàn bộ chương trình khai thác SWGT miễn phí (Điểm danh, Mời bạn bè, Nhiệm vụ) đã chính thức khép lại. Hiện tại hệ thống <b>CHỈ MỞ CỔNG RÚT TIỀN VÀ GIAO DỊCH</b> cho các tài khoản hợp lệ.
+                    Toàn bộ chương trình khai thác SWGT miễn phí (Điểm danh, Nhiệm vụ) đã chính thức khép lại. Hiện tại hệ thống <b>CHỈ MỞ CỔNG GIAO DỊCH</b> cho các tài khoản hợp lệ.
                 </p>
             </div>
 
@@ -642,26 +680,39 @@ function App() {
                     </div>
                 </div>
                 
-                {/* GIFTCODE KHÓA */}
+                {/* GIFTCODE ĐƯỢC MỞ LẠI */}
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
                     <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>🎟️ Nhập Mã Giftcode</h3>
                     <div style={{ display: 'flex', gap: '10px' }}>
-                        <input value={giftCodeInput} onChange={(e) => setGiftCodeInput(e.target.value)} disabled placeholder="Sự kiện mã thưởng đã đóng" style={{ flex: 1, padding: '14px', borderRadius: '10px', border: `1px solid ${theme.border}`, backgroundColor: '#000', color: theme.textDim, fontSize: '14px' }} />
-                        <button disabled style={{ backgroundColor: '#333', color: theme.textDim, padding: '0 20px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'not-allowed' }}>ĐÓNG</button>
+                        <input 
+                            value={giftCodeInput} 
+                            onChange={(e) => setGiftCodeInput(e.target.value)} 
+                            placeholder="Nhập mã thưởng BQT tặng..." 
+                            style={{ flex: 1, padding: '14px', borderRadius: '10px', border: `1px solid ${theme.green}`, backgroundColor: '#000', color: theme.gold, fontSize: '14px', textTransform: 'uppercase', boxSizing: 'border-box' }} 
+                        />
+                        <button onClick={handleClaimGiftCode} style={{ backgroundColor: theme.green, color: '#fff', padding: '0 20px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
+                            NHẬN
+                        </button>
                     </div>
                 </div>
 
-                {/* LINK MỜI KHÓA */}
+                {/* LINK MỜI ĐƯỢC MỞ LẠI (LÀM CÔNG CỤ ĐỂ KHÁCH ĐẠT 1 F1) */}
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '25px', border: `1px solid ${theme.border}` }}>
-                    <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>🔗 Link Lan Tỏa</h3>
-                    <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '8px', color: theme.textDim, fontSize: '13px', textAlign: 'center', marginBottom: '15px', border: `1px dashed ${theme.red}` }}>
-                        Chương trình Đại sứ giới thiệu thành viên mới đã chính thức kết thúc.
+                    <h3 style={{ margin: '0 0 15px 0', color: theme.textLight, fontSize: '16px' }}>🔗 Link Mời (Mở Khóa Rút Tiền)</h3>
+                    <div style={{ backgroundColor: '#000', padding: '15px', borderRadius: '8px', color: theme.gold, fontSize: '13px', wordBreak: 'break-all', marginBottom: '15px', border: `1px dashed ${theme.border}` }}>
+                        https://t.me/Dau_Tu_SWC_bot?start={userId || 'ref'}
                     </div>
-                    <button disabled style={{ width: '100%', backgroundColor: '#333', color: theme.textDim, padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'not-allowed' }}>⛔ ĐÃ ĐÓNG CỔNG MỜI</button>
+                    <button onClick={handleCopyLink} style={{ width: '100%', backgroundColor: theme.gold, color: '#000', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>📋 COPY LINK MỜI</button>
                 </div>
 
                 <h3 style={{color: theme.gold, paddingBottom: '10px', marginBottom: '15px', fontSize: '17px', textAlign: 'center', fontWeight: '900'}}>🤝 BẢNG VÀNG ĐẠI SỨ</h3>
                 {renderWealthBoard()}
+
+                <div style={{ textAlign: 'center', paddingTop: '5px', marginBottom: '25px' }}>
+                    <a href={`https://t.me/share/url?url=https://t.me/Dau_Tu_SWC_bot?start=${userId}&text=Vào%20nhận%20ngay%20SWGT%20miễn%20phí%20từ%20hệ%20sinh%20thái%20công%20nghệ%20uST%20này%20anh%20em!`} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', backgroundColor: theme.blue, color: '#fff', padding: '14px 0', borderRadius: '10px', fontWeight: 'bold', border: 'none', fontSize: '14px', textDecoration: 'none', boxSizing: 'border-box' }}>
+                        ✈️ GỬI LINK CHIA SẺ NGAY
+                    </a>
+                </div>
             </div>
         );
     };
@@ -711,7 +762,7 @@ function App() {
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.green}` }}>
                     <h3 style={{ margin: '0 0 10px 0', color: theme.green, fontSize: '16px', textAlign: 'center' }}>🔓 MỞ CỔNG GIAO DỊCH CHÍNH THỨC</h3>
                     <div style={{ padding: '15px', backgroundColor: 'rgba(52, 199, 89, 0.1)', borderRadius: '10px', color: theme.textLight, fontSize: '13px', textAlign: 'center', lineHeight: '1.5' }}>
-                        Tất cả lệnh đóng băng 15 ngày đã được gỡ bỏ. Hệ thống cho phép các tài khoản hợp lệ được tự do Rút Token hoặc Bán thanh khoản VNĐ.
+                        Tất cả lệnh đóng băng 15 ngày đã được gỡ bỏ. Hệ thống cho phép các tài khoản hợp lệ (từ <b>Tân Binh</b> hoặc có tài sản trên 1500 SWGT) được tự do Rút Token hoặc Bán thanh khoản VNĐ.
                     </div>
                 </div>
 
