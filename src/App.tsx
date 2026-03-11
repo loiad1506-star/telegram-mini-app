@@ -710,7 +710,7 @@ function App() {
                 <div style={{ backgroundColor: theme.cardBg, borderRadius: '15px', padding: '20px', marginBottom: '20px', border: `1px solid ${theme.green}` }}>
                     <h3 style={{ margin: '0 0 10px 0', color: theme.green, fontSize: '16px', textAlign: 'center' }}>🔓 MỞ CỔNG GIAO DỊCH CHÍNH THỨC</h3>
                     <div style={{ padding: '15px', backgroundColor: 'rgba(52, 199, 89, 0.1)', borderRadius: '10px', color: theme.textLight, fontSize: '13px', textAlign: 'center', lineHeight: '1.5' }}>
-                        Tất cả các tài khoản hợp lệ (có cấp bậc từ <b>Tân Binh</b> trở lên) đều đã được mở khóa tự do để Giao dịch rút Token hoặc Bán thanh khoản VNĐ.
+                        Tất cả các tài khoản hợp lệ (có cấp bậc từ <b>Tân Binh</b> trở lên) đều đã được mở khóa và *ƯU TIÊN* tự do để Giao dịch rút Token hoặc Bán thanh khoản VNĐ trước.
                     </div>
                 </div>
 
