@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 
 function App() {
     const [activeTab, setActiveTab] = useState('home');
-    const [userId, setUserId] = useState('');
     const [userProfile, setUserProfile] = useState({
         name: 'Đang tải...',
         username: '',
@@ -47,7 +46,6 @@ function App() {
             tg.expand();
             const user = tg.initDataUnsafe?.user;
             if (user) {
-                const uid = user.id.toString();
                 setUserId(uid);
                 setUserProfile({
                     name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
