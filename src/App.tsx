@@ -9,7 +9,6 @@ function App() {
         photoUrl: ''
     });
     const [referrals, setReferrals] = useState(0); 
-    const [isPremiumUser, setIsPremiumUser] = useState(false);
 
     // Link API Backend và các Link điều hướng
     const BACKEND_URL = 'https://swc-bot-brain.onrender.com';
@@ -36,7 +35,6 @@ function App() {
             .then(res => res.json())
             .then(data => {
                 setReferrals(data.referralCount || 0); 
-                setIsPremiumUser(data.isPremium || false);
             })
             .catch(err => console.error("Lỗi kết nối Backend:", err));
     };
@@ -91,7 +89,6 @@ function App() {
         return (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 20px', backgroundColor: theme.bg, borderBottom: `1px solid ${theme.border}` }}>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                    {/* CHỖ THAY LOGO: Thay đổi "/logo.png" thành link ảnh của anh nếu cần */}
                     <img src="/logo.png" alt="SWC Logo" style={{ width: '45px', height: '45px', borderRadius: '50%', border: `2px solid ${theme.gold}`, marginRight: '12px', objectFit: 'cover' }} onError={(e) => { e.currentTarget.src = 'https://ui-avatars.com/api/?name=SWC&background=F4D03F&color=000'; }} />
                     <div>
                         <h1 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: theme.gold, textTransform: 'uppercase', letterSpacing: '1px' }}>Club SWC Pass</h1>
@@ -268,7 +265,7 @@ function App() {
                 <p style={{ color: theme.textLight, fontSize: '14px', margin: '0 0 20px 0', lineHeight: '1.5' }}>
                     Vòng gọi vốn kín ưu đãi dành riêng cho hệ thống nội bộ sẽ chính thức đóng vào ngày <b>31/03</b>. Đừng để lỡ nhịp đập của kỷ nguyên BĐS số hóa!
                 </p>
-                <a href={EVENT_WEBINAR_LINK} target="_blank" rel="noreferrer" style={{ display: 'block', backgroundColor: theme.red, color: '#fff', padding: '15px', borderRadius: '10px', fontWeight: '900', textDecoration: 'none', textAlign: 'center', fontSize: '15px', textTransform: 'uppercase', boxShadow: '0 4px 10px rgba(255, 59, 48, 0.4)' }}>
+                <a href={WEBINAR_LINK} target="_blank" rel="noreferrer" style={{ display: 'block', backgroundColor: theme.red, color: '#fff', padding: '15px', borderRadius: '10px', fontWeight: '900', textDecoration: 'none', textAlign: 'center', fontSize: '15px', textTransform: 'uppercase', boxShadow: '0 4px 10px rgba(255, 59, 48, 0.4)' }}>
                     ĐĂNG KÝ WEBINAR TÌM HIỂU
                 </a>
             </div>
@@ -276,7 +273,7 @@ function App() {
     );
 
     return (
-        <div style={{ backgroundColor: theme.bg, minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '90px', boxSizing: 'border-box' }}>
+        <div style={{ backgroundColor: theme.bg, minHeight: '100vh', fontFamily: 'sans-serif', paddingBottom: '80px', boxSizing: 'border-box' }}>
             <style>{`
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
                 
