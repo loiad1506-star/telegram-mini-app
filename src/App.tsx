@@ -46,13 +46,13 @@ function App() {
             tg.expand();
             const user = tg.initDataUnsafe?.user;
             if (user) {
-                setUserId(uid);
+                const currentUid = user.id.toString();
                 setUserProfile({
                     name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
                     username: user.username ? `@${user.username}` : '@nguoidung',
                     photoUrl: user.photo_url || ''
                 });
-                fetchUserData(uid);
+                fetchUserData(currentUid);
             }
         }
     }, []);
