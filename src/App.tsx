@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 const PRICE_CHANGE_DATE = new Date('2026-04-07T00:00:00+07:00');
 
@@ -8,8 +8,9 @@ function getPrices() {
     : { essential: 240, plus: 600, ultimate: 2600, changed: false };
 }
 
-function getCountdownTo(target) {
-  const diff = Math.max(0, target - new Date());
+function getCountdownTo(target: Date) {
+  // Thay vì lấy Date trừ Date (gây lỗi TS2363), ta dùng .getTime() để lấy số milliseconds
+  const diff = Math.max(0, target.getTime() - new Date().getTime());
   return {
     days: Math.floor(diff / 86400000),
     hours: Math.floor((diff % 86400000) / 3600000),
@@ -47,13 +48,41 @@ const G = {
   border2: '#2A2A2A',
 };
 
+// Định nghĩa các type dùng chung
+type BtnVariant = 'gold' | 'purple' | 'ghost' | 'dark' | 'red' | 'blue';
+
+interface BtnProps {
+  href?: string;
+  children: React.ReactNode;
+  style?: React.CSSProperties;
+  variant?: BtnVariant;
+}
+
+interface PriceCardProps {
+  tier: string;
+  price: number;
+  oldPrice: number;
+  per?: string;
+  badge?: string;
+  color: string;
+  highlight?: boolean;
+  features: { inc: boolean; label: string }[];
+  href: string;
+  btnLabel: string;
+  btnVariant?: BtnVariant;
+}
+
 export default function App() {
-  const [tab, setTab] = useState('home');
+  const [tab, setTab] = useState<string>('home');
   const [prices, setPrices] = useState(getPrices());
   const [cdPrice, setCdPrice] = useState(getCountdownTo(PRICE_CHANGE_DATE));
-  const [openFaq, setOpenFaq] = useState(null);
-  const [openKnowledge, setOpenKnowledge] = useState(null);
-  const scrollRef = useRef(null);
+  
+  // Khai báo rõ kiểu dữ liệu cho state
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [openKnowledge, setOpenKnowledge] = useState<string | null>(null);
+  
+  // Ref cần được gán kiểu HTMLDivElement để có thuộc tính scrollTop
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const t = setInterval(() => {
@@ -67,14 +96,14 @@ export default function App() {
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
   }, [tab]);
 
-  const Btn = ({ href, children, style = {}, variant = 'gold' }) => {
-    const base = {
+  const Btn = ({ href, children, style = {}, variant = 'gold' }: BtnProps) => {
+    const base: React.CSSProperties = {
       display: 'block', width: '100%', padding: '14px 20px',
       borderRadius: 12, fontWeight: 800, fontSize: 14,
       textDecoration: 'none', textAlign: 'center',
       cursor: 'pointer', border: 'none', letterSpacing: '0.3px',
     };
-    const variants = {
+    const variants: Record<BtnVariant, React.CSSProperties> = {
       gold:   { background: `linear-gradient(135deg, ${G.gold} 0%, ${G.gold2} 100%)`, color: '#000' },
       purple: { background: `linear-gradient(135deg, ${G.purple} 0%, #9333EA 100%)`, color: '#fff' },
       ghost:  { background: 'transparent', color: G.gold, border: `1.5px solid ${G.gold}` },
@@ -85,7 +114,7 @@ export default function App() {
     return <a href={href} target="_blank" rel="noreferrer" style={{ ...base, ...variants[variant], ...style }}>{children}</a>;
   };
 
-  const PadNum = ({ v, label }) => (
+  const PadNum = ({ v, label }: { v: number; label: string }) => (
     <div style={{ textAlign: 'center' }}>
       <div style={{
         background: 'rgba(240,192,64,0.12)', border: `1.5px solid ${G.gold}`,
@@ -103,7 +132,7 @@ export default function App() {
     <span style={{ color: G.gold, fontSize: 24, fontWeight: 900, alignSelf: 'flex-start', paddingTop: 8, lineHeight: 1 }}>:</span>
   );
 
-  const Section = ({ title, children, style = {} }) => (
+  const Section = ({ title, children, style = {} }: { title?: React.ReactNode; children: React.ReactNode; style?: React.CSSProperties }) => (
     <div style={{
       background: G.card, borderRadius: 16,
       border: `1px solid ${G.border}`, marginBottom: 16,
@@ -118,23 +147,24 @@ export default function App() {
     </div>
   );
 
-  const Tag = ({ children, color = G.gold, bg }) => (
+  const Tag = ({ children, color = G.gold, bg, style = {} }: { children: React.ReactNode; color?: string; bg?: string; style?: React.CSSProperties }) => (
     <span style={{
       display: 'inline-block', padding: '3px 10px', borderRadius: 20,
       fontSize: 11, fontWeight: 700,
       color, background: bg || `${color}18`,
       border: `1px solid ${color}40`,
+      ...style
     }}>{children}</span>
   );
 
-  const InfoRow = ({ label, value, accent }) => (
+  const InfoRow = ({ label, value, accent }: { label: string; value: React.ReactNode; accent?: string }) => (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: `1px solid ${G.border}` }}>
       <span style={{ color: G.muted, fontSize: 13 }}>{label}</span>
       <span style={{ color: accent || G.text, fontSize: 13, fontWeight: 600, textAlign: 'right', maxWidth: '55%' }}>{value}</span>
     </div>
   );
 
-  const Accordion = ({ items, state, setState }) => (
+  const Accordion = ({ items, state, setState }: { items: { q: string; a: React.ReactNode }[]; state: number | null; setState: (v: number | null) => void }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {items.map((item, i) => (
         <div key={i} style={{ background: G.card2, borderRadius: 12, border: `1px solid ${G.border}`, overflow: 'hidden' }}>
@@ -266,7 +296,7 @@ export default function App() {
     const { essential, plus, ultimate, changed } = prices;
     const OLD = { essential: 240, plus: 600, ultimate: 2600 };
 
-    const PriceCard = ({ tier, price, oldPrice, per, badge, color, highlight, features, href, btnLabel, btnVariant = 'gold' }) => (
+    const PriceCard = ({ tier, price, oldPrice, per, badge, color, highlight, features, href, btnLabel, btnVariant = 'gold' }: PriceCardProps) => (
       <div style={{
         background: highlight ? `${color}08` : G.card,
         border: `${highlight ? '2px' : '1px'} solid ${highlight ? color : G.border}`,
@@ -553,9 +583,11 @@ export default function App() {
 
         {knowledge.map((cat, ci) => (
           <Section key={ci} title={`${cat.icon} ${cat.cat}`}>
-            <Accordion items={cat.items} state={openKnowledge === `${ci}` ? openFaq : null}
-              setState={(v) => {
-                setOpenKnowledge(v !== null ? `${ci}` : null);
+            <Accordion 
+              items={cat.items} 
+              state={openKnowledge === String(ci) ? openFaq : null}
+              setState={(v: number | null) => {
+                setOpenKnowledge(v !== null ? String(ci) : null);
                 setOpenFaq(v);
               }}
             />
